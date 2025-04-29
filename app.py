@@ -56,13 +56,13 @@ def summarize_contract(contract_text, user_instruction):
 # App Streamlit
 def main():
     
-    st.title("Análise Jurídica de Contratos")
+    st.title("Resumo automático de Contratos")
     st.write("Envie seu contrato (PDF ou DOCX) e receba um resumo jurídico automático!")
 
     uploaded_file = st.file_uploader("Faça upload do contrato", type=["pdf", "docx"])
     user_instruction = st.text_area(
         "Deseja direcionar a análise? (Exemplo: 'Resuma apenas as obrigações das partes.')",
-        placeholder="Deixe em branco para análise padrão (nome das partes, objetivo principal do contrato, obrigações, prazos, preço e forma de pagamento, vigência, multas e penalidades, rescisão e extinção, confidencialidade, foro de eleição)."
+        placeholder="Deixe em branco para resumo padrão (nome das partes, objetivo principal do contrato, obrigações, prazos, preço e forma de pagamento, vigência, multas e penalidades, rescisão e extinção, confidencialidade, foro de eleição)."
     )
 
     if uploaded_file is not None:
@@ -79,14 +79,14 @@ def main():
             st.error("❌ Não foi possível extrair o texto do contrato enviado.")
             return
 
-        if st.button("Analisar Contrato"):
-            with st.spinner('💬 Analisando contrato, aguarde...'):
+        if st.button("Resumir Contrato"):
+            with st.spinner('💬 Resumindo contrato, aguarde...'):
                 try:
                     resumo = summarize_contract(contract_text, user_instruction)
-                    st.success("✅ Análise concluída!")
+                    st.success("✅ Resumo concluída!")
                     st.markdown(resumo)
                 except Exception as e:
-                    st.error(f"Erro ao gerar análise: {e}")
+                    st.error(f"Erro ao gerar resumo: {e}")
 
     
 if __name__ == "__main__":

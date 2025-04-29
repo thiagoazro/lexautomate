@@ -57,8 +57,8 @@ def summarize_contract(contract_text, user_instruction, area_direito):
 # App Streamlit
 def main():
     
-    st.title("Validação de Cláusulas Contratuais")
-    st.write("Envie seu contrato (PDF ou DOCX) e receba análise da cláusula contratual específica!")
+    st.title("Análise de Cláusulas Contratuais")
+    st.write("Envie seu contrato (PDF ou DOCX) e receba análise completa de cláusula contratual específica!")
 
     uploaded_file = st.file_uploader("Faça upload do contrato", type=["pdf", "docx"])
     area_direito = st.selectbox("Área do Direito", ["Civil", "Trabalhista", "Previdenciário", "Tributário", "Família", "Societário"])

@@ -36,21 +36,21 @@ def main():
     menu = st.sidebar.selectbox(
         "Escolha a funcionalidade:",
         [
-            "Análise e Resumo de Contratos",
-            "Criação de Petições",
-            "Análise de Cláusulas Contratuais"
+            "Resumo de Contratos",
+            "Análise de Cláusulas Contratuais",
+            "Criação de Petições"
         ]
     )
 
     # Direcionamento conforme opção escolhida
-    if menu == "Análise e Resumo de Contratos":
+    if menu == "Resumo de Contratos":
         app.main()  # Chama o app.py
-
-    elif menu == "Criação de Petições":
-        app2.main()  # Chama o app2.py
 
     elif menu == "Análise de Cláusulas Contratuais":
         app3.main()  # Chama o app3.py
+    
+    elif menu == "Criação de Petições":
+        app2.main()  # Chama o app2.py
 
     st.markdown("---")
     st.caption("© 2025 LexAutomate - Todos os direitos reservados.")
