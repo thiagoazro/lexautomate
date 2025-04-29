@@ -46,3 +46,34 @@ Clone o repositório:
 
 ```bash
 git clone https://github.com/seu-usuario/lexautomate.git
+```
+
+Acesse a pasta do projeto:
+
+```bash
+cd lexautomate
+```
+
+Instale as dependências:
+
+```bash
+pip install -r requirements.txt
+```
+
+Execute a aplicação:
+
+```bash
+streamlit run app.py
+```
+
+---
+
+## Contato
+
+Desenvolvido por Thiago Azeredo  
+Email: thiagoazro@gmail.com  
+LinkedIn: [Thiago Azeredo no LinkedIn](https://www.linkedin.com/in/thiagoazro/)
+
+---
+
+© 2025 LexAutomate - Todos os direitos reservados.
