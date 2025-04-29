@@ -40,7 +40,7 @@ def extract_text_from_docx(file_bytes):
 
 def summarize_contract(contract_text, user_instruction):
     system_message = "Você é um assistente jurídico especializado em análise de contratos com mais de 10 anos de experiência. Seja objetivo, claro e profissional."
-    user_message = f"Contrato:\n{contract_text}\n\nInstrução do usuário: {user_instruction if user_instruction else 'Resuma nome das partes, objetivo principal do contrato, obrigações, vigência, multa e confidencialidade.'}"
+    user_message = f"Contrato:\n{contract_text}\n\nInstrução do usuário: {user_instruction if user_instruction else 'Resuma nome das partes, objetivo principal do contrato, obrigações, prazos, preço e forma de pagamento, vigência, multas epenalidades, rescisão e extinção, confidencialidade, foro de eleição'}"
 
     response = client.chat.completions.create(
         messages=[
@@ -82,8 +82,8 @@ def main():
 
     uploaded_file = st.file_uploader("Faça upload do contrato", type=["pdf", "docx"])
     user_instruction = st.text_area(
-        "Deseja direcionar a análise? (Exemplo: 'Resuma apenas o nome das partes')",
-        placeholder="Deixe em branco para análise padrão (nome das partes, objetivo principal do contrato, obrigações, vigência, multa e confidencialidade)."
+        "Deseja direcionar a análise? (Exemplo: 'Resuma apenas as obrigações das partes.')",
+        placeholder="Deixe em branco para análise padrão (nome das partes, objetivo principal do contrato, obrigações, prazos, preço e forma de pagamento, vigência, multas e penalidades, rescisão e extinção, confidencialidade, foro de eleição)."
     )
 
     if uploaded_file is not None:
