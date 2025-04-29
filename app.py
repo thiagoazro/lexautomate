@@ -56,28 +56,7 @@ def summarize_contract(contract_text, user_instruction):
 # App Streamlit
 def main():
     
-    # Carrega o ícone personalizado
-    icon_path = "lexautomate_icon.png"
-    if os.path.exists(icon_path):
-        icon = Image.open(icon_path)
-    else:
-        icon = "🧠"  # fallback emoji
-
-    # Configura a página
-    st.set_page_config(
-        page_title="LexAutomate - Legal Technology",
-        page_icon=icon,
-        layout="centered"
-    )
-
-    # Logo da LexAutomate
-    logo_path = "logo_lexautomate.png"
-    if os.path.exists(logo_path):
-        st.image(Image.open(logo_path), width=200)
-    else:
-        st.warning("Logo da LexAutomate não encontrada. Adicione 'logo_lexautomate.png' na pasta do projeto.")
-
-    st.title("LexAutomate - Análise Jurídica de Contratos")
+    st.title("Análise Jurídica de Contratos")
     st.write("Envie seu contrato (PDF ou DOCX) e receba um resumo jurídico automático!")
 
     uploaded_file = st.file_uploader("Faça upload do contrato", type=["pdf", "docx"])
@@ -109,8 +88,6 @@ def main():
                 except Exception as e:
                     st.error(f"Erro ao gerar análise: {e}")
 
-    st.markdown("---")
-    st.caption("© 2025 LexAutomate - Legal Technology. Todos os direitos reservados.")
-
+    
 if __name__ == "__main__":
     main()
