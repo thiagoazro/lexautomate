@@ -5,8 +5,6 @@ from io import BytesIO
 from openai import AzureOpenAI
 from PIL import Image
 import os
-  
-
 
 # Configurações do Azure OpenAI
 AZURE_OPENAI_ENDPOINT = 'https://lexautomate.openai.azure.com/'  # seu endpoint
@@ -55,25 +53,26 @@ def summarize_contract(contract_text, user_instruction):
 
 # App Streamlit
 def main():
-    
     st.title("Geração de Petições Judiciais")
-    st.write("Envie seu documento (PDF ou DOCX) e solicite a petição que deseja gerar!")
+    st.write("Envie seus documentos (PDF ou DOCX) e solicite a petição que deseja gerar!")
 
-    uploaded_file = st.file_uploader("Faça upload do documento", type=["pdf", "docx"])
+    uploaded_files = st.file_uploader("Faça upload dos documentos", type=["pdf", "docx"], accept_multiple_files=True)  # Alterado para aceitar múltiplos arquivos
     user_instruction = st.text_area(
         "Qual petição deseja gerar? (Exemplo: 'Com base na petição inicial anexada, redija uma contestação que contenha os seguintes campos:')",
         placeholder="Especifique de forma clara e precisa qual modalidade de petição deseja gerar."
     )
 
-    if uploaded_file is not None:
-        with st.spinner('🔍 Gerando petição...'):
-            if uploaded_file.name.endswith(".pdf"):
-                contract_text = extract_text_from_pdf(uploaded_file.read())
-            elif uploaded_file.name.endswith(".docx"):
-                contract_text = extract_text_from_docx(uploaded_file.read())
-            else:
-                st.error("❌ Formato não suportado. Envie apenas PDF ou DOCX.")
-                return
+    if uploaded_files:  # Verifique se algum arquivo foi enviado
+        contract_text = ""
+        with st.spinner('🔍 Extraindo texto dos documentos...'):
+            for uploaded_file in uploaded_files:
+                if uploaded_file.name.endswith(".pdf"):
+                    contract_text += extract_text_from_pdf(uploaded_file.read()) + "\n"  # Adicione uma nova linha entre os textos dos PDFs
+                elif uploaded_file.name.endswith(".docx"):
+                    contract_text += extract_text_from_docx(uploaded_file.read()) + "\n"
+                else:
+                    st.error(f"❌ Formato não suportado: {uploaded_file.name}")
+                    return
 
         if not contract_text.strip():
             st.error("❌ Não foi possível gerar a petição.")
@@ -87,8 +86,6 @@ def main():
                     st.markdown(resumo)
                 except Exception as e:
                     st.error(f"Erro ao gerar peça judicial: {e}")
-
-
 
 if __name__ == "__main__":
     main()
