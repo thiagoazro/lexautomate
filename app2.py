@@ -57,7 +57,7 @@ def summarize_contract(contract_text, user_instruction):
 def main():
     
     st.title("Geração de Petições Judiciais")
-    st.write("Envie seu documento (PDF ou DOCX) e peça a petição que deseja gerar!")
+    st.write("Envie seu documento (PDF ou DOCX) e solicite a petição que deseja gerar!")
 
     uploaded_file = st.file_uploader("Faça upload do documento", type=["pdf", "docx"])
     user_instruction = st.text_area(

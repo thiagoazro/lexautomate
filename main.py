@@ -36,20 +36,20 @@ def main():
     menu = st.sidebar.selectbox(
         "Escolha a funcionalidade:",
         [
-            "Resumo de Contrato",
-            "Geração de Petições",
-            "Validação de Cláusulas"
+            "Análise e Resumo de Contratos",
+            "Criação de Petições",
+            "Análise de Cláusulas Contratuais"
         ]
     )
 
     # Direcionamento conforme opção escolhida
-    if menu == "Resumo de Contrato":
+    if menu == "Análise e Resumo de Contratos":
         app.main()  # Chama o app.py
 
-    elif menu == "Geração de Petições":
+    elif menu == "Criação de Petições":
         app2.main()  # Chama o app2.py
 
-    elif menu == "Validação de Cláusulas":
+    elif menu == "Análise de Cláusulas Contratuais":
         app3.main()  # Chama o app3.py
 
     st.markdown("---")
