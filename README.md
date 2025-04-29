@@ -1,79 +1,84 @@
 
-# LexAutomate - Inteligência Jurídica Automatizada
+# LexAutomate - Plataforma de Análise Jurídica com IA
 
-O LexAutomate é uma aplicação que utiliza Inteligência Artificial para análise automática de contratos jurídicos, oferecendo resumos estruturados de forma rápida, segura e precisa.  
-O projeto foi desenvolvido com Python, Streamlit e Azure OpenAI Service, garantindo alta performance e confiabilidade.
+Este projeto implementa uma plataforma jurídica baseada em Inteligência Artificial, composta por três módulos:
 
----
+- **Resumo de Contratos**: Extrai e resume informações principais de documentos jurídicos (contratos em PDF ou DOCX).
+- **Geração de Petições**: Gera petições jurídicas automáticas a partir de instruções fornecidas pelo usuário.
+- **Validação de Cláusulas**: Analisa e valida cláusulas contratuais com base nas áreas de Direito selecionadas (Civil, Penal, Trabalhista, Previdenciário ou Tributário).
 
-## Funcionalidades
-
-- Upload de contratos nos formatos PDF ou DOCX.
-- Análise automatizada utilizando modelos de linguagem da Azure.
-- Geração de resumos jurídicos estruturados, contendo:
-  - Nome das partes
-  - Objetivo principal do contrato
-  - Obrigações principais
-  - Prazo de vigência
-  - Cláusulas de multa
-  - Cláusulas de confidencialidade
-- Direcionamento da análise com perguntas específicas do usuário.
+O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, integrado com o serviço **Azure OpenAI**.
 
 ---
 
 ## Tecnologias Utilizadas
 
-- Python 3.12
-- Streamlit
-- Azure OpenAI Service
-- GitHub Actions (CI/CD automático)
-- Azure App Service (Hospedagem)
+- **Python 3.12**
+- **Streamlit** (Frontend Web)
+- **Azure OpenAI Service** (Modelo GPT-4o)
+- **Azure App Service** (Hospedagem)
+- **GitHub Actions** (Deploy contínuo)
+- **Bibliotecas auxiliares**:
+  - `PyMuPDF`
+  - `python-docx`
+  - `Pillow`
+  - `openai`
 
 ---
 
-## Deploy
+## Estrutura do Projeto
 
-O projeto está implantado automaticamente no Azure App Service através de pipelines configurados com GitHub Actions.
-
-Acesse a aplicação em produção:  
-[https://lexautomate-site-ame2cta6c7dyfyda.brazilsouth-01.azurewebsites.net](https://lexautomate-site-ame2cta6c7dyfyda.brazilsouth-01.azurewebsites.net)
-
----
-
-## Como Rodar Localmente
-
-Clone o repositório:
-
-```bash
-git clone https://github.com/seu-usuario/lexautomate.git
+```
+/
+├── app.py        # Módulo 1: Resumo de Contratos
+├── app2.py       # Módulo 2: Geração de Petições
+├── app3.py       # Módulo 3: Validação de Cláusulas
+├── main.py       # Arquivo principal para navegação entre os módulos
+├── requirements.txt
+├── logo_lexautomate.png
+├── lexautomate_icon.png
 ```
 
-Acesse a pasta do projeto:
+---
+
+## Como Executar Localmente
+
+1. Clone o repositório:
 
 ```bash
+git clone https://github.com/thiagoazro/lexautomate.git
 cd lexautomate
 ```
 
-Instale as dependências:
+2. Instale as dependências:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Execute a aplicação:
+3. Rode o projeto:
 
 ```bash
-streamlit run app.py
+streamlit run main.py
 ```
+
+---
+
+## Como Funciona o Deploy
+
+- O projeto utiliza **GitHub Actions** para build automático.
+- A cada `git push` no ramo `main`, o workflow é disparado e faz o deploy diretamente no **Azure App Service**.
+
+---
+
+## Sobre o Projeto
+
+**LexAutomate** é uma plataforma desenvolvida para otimizar operações jurídicas utilizando IA, oferecendo análises precisas de contratos, geração de peças jurídicas e validações de cláusulas conforme a legislação brasileira.
 
 ---
 
 ## Contato
 
-Desenvolvido por Thiago Azeredo  
-Email: thiagoazro@gmail.com  
-LinkedIn: [Thiago Azeredo no LinkedIn](https://www.linkedin.com/in/thiagoazro/)
-
----
-
-© 2025 LexAutomate - Todos os direitos reservados.
+**Thiago Azeredo Rodrigues**  
+Fundador da LexAutomate  
+[Adicionar LinkedIn ou E-mail profissional]
