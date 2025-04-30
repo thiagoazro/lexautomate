@@ -59,7 +59,7 @@ def main():
     st.title("Resumo automático de Contratos")
     st.write("Envie seu contrato (PDF ou DOCX) e receba um resumo jurídico automático!")
 
-    uploaded_file = st.file_uploader("Faça upload do contrato", type=["pdf", "docx"])
+    uploaded_file = st.file_uploader("Faça upload do contrato", type=["pdf", "docx"], accept_multiple_files=True)
     user_instruction = st.text_area(
         "Deseja direcionar a análise? (Exemplo: 'Resuma apenas as obrigações das partes.')",
         placeholder="Deixe em branco para resumo padrão (nome das partes, objetivo principal do contrato, obrigações, prazos, preço e forma de pagamento, vigência, multas e penalidades, rescisão e extinção, confidencialidade, foro de eleição)."
