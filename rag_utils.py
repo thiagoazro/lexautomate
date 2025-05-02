@@ -4,9 +4,19 @@ from pinecone import Pinecone
 from openai import AzureOpenAI
 import os
 
+# Configs Pinecone
+PINECONE_API_KEY = "pcsk_3hauhv_LYhcF6L6vCkkUc5U3WxkBjC2TALRB9GzAkkAN5GihNkJ27XFKxtSgP24NipbtLt" # <-- Sua chave Pinecone API Key
+PINECONE_INDEX_NAME = "lexautomate" # <-- O nome do seu índice Pinecone (confirmado na última msg)
 
-PINECONE_API_KEY = "pcsk_3hauhv_LYhcF6L6vCkkUc5U3WxkBjC2TALRB9GzAkkAN5GihNkJ27XFKxtSgP24NipbtLt"
-PINECONE_INDEX_NAME = "lexautomate"
+# Configs Azure OpenAI (valores dos seus arquivos app*.py e última decisão do modelo)
+AZURE_OPENAI_ENDPOINT = 'https://lexautomate.openai.azure.com/' # <-- Seu endpoint Azure (dos seus arquivos)
+AZURE_OPENAI_API_KEY = '6ZJIKi1REnxeAALGOQQ2mFi7KL78gCyVYMq3yzv0xKae620iLHzdJQQJ99BDACYeBjFXJ3w3AAABACOGHcjA' # <-- Sua chave Azure API Key (dos seus arquivos - CUIDADO AO EXPOR!)
+AZURE_OPENAI_DEPLOYMENT_LLM = 'lexautomate_agent' # <-- Nome da deployment do modelo de GERAÇÃO (dos seus arquivos)
+
+# IMPORTANTE: Substitua a string abaixo pelo nome EXATO da sua implantação do text-embedding-3-large no Azure!
+AZURE_OPENAI_DEPLOYMENT_EMBEDDING = 'NOME_DA_SUA_DEPLOYMENT_TEXT_EMBEDDING_3_LARGE' # <--- VOCÊ PRECISA PREENCHER ISTO!
+
+AZURE_API_VERSION = '2024-02-15-preview' # <-- Versão da API Azure (dos seus arquivos)
 
 
 # Cacheia a conexão com Pinecone para não reconectar a cada interação no Streamlit
