@@ -4,10 +4,10 @@ from pinecone import Pinecone
 from openai import AzureOpenAI
 import os
 
-# --- Configurações (melhor usar variáveis de ambiente) ---
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "SUA_CHAVE_API_PINECONE")
-PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "lexautomate-juridico")
-# ... outras configs ...
+
+PINECONE_API_KEY = "pcsk_3hauhv_LYhcF6L6vCkkUc5U3WxkBjC2TALRB9GzAkkAN5GihNkJ27XFKxtSgP24NipbtLt"
+PINECONE_INDEX_NAME = "lexautomate"
+
 
 # Cacheia a conexão com Pinecone para não reconectar a cada interação no Streamlit
 @st.cache_resource
