@@ -1,5 +1,5 @@
 # ingest_data.py
-import os
+"""import os
 import uuid # Para gerar IDs únicos
 # Importe suas funções de extração de texto, por exemplo:
 from app import extract_text_from_pdf # Assumindo que as funções estão em app.py
@@ -189,4 +189,4 @@ if __name__ == "__main__":
         os.makedirs(DATA_DIR)
         print(f"Diretório '{DATA_DIR}' criado. Coloque seus arquivos PDF e DOCX aqui.")
     else:
-        ingest_documents()
+        ingest_documents()"""
