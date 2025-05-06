@@ -30,21 +30,58 @@ def get_pinecone_index():
     print("INFO: Inicializando conexão com Pinecone...")
     try:
         pc = Pinecone(api_key=PINECONE_API_KEY)
-        # Verifica se o índice existe antes de tentar conectar
-        if PINECONE_INDEX_NAME not in pc.list_indexes().names:
-             st.error(f"Erro Crítico: Índice Pinecone '{PINECONE_INDEX_NAME}' não encontrado. Verifique o nome ou crie o índice no console Pinecone.")
-             print(f"ERRO: Índice Pinecone '{PINECONE_INDEX_NAME}' não encontrado.")
-             return None # Retorna None para indicar falha na conexão
+
+        # Chama list_indexes() para obter o objeto IndexList
+        # CORREÇÃO: Chame o método .names() para obter a lista de nomes
+        print("INFO: Obtendo lista de índices...")
+        # Obtenha o objeto IndexList primeiro para verificar o formato, se necessário
+        index_list_object = pc.list_indexes()
+
+        # CORREÇÃO: Verifique se o objeto retornado tem o método 'names' e chame-o
+        if hasattr(index_list_object, 'names') and callable(index_list_object.names):
+            index_names = index_list_object.names() # <-- CORREÇÃO: Chamar o método
+            print(f"INFO: Nomes de índices obtidos via .names(): {index_names}")
+        elif isinstance(index_list_object, list): # Fallback para o caso anterior (se a biblioteca mudar)
+             print("AVISO: pc.list_indexes() retornou uma lista diretamente. Adaptando...")
+             index_names = [index_info.get('name') for index_info in index_list_object if isinstance(index_info, dict) and 'name' in index_info]
+             print(f"INFO: Nomes de índices obtidos via lista de dicionários: {index_names}")
+        else:
+            st.error(f"Erro Crítico: Resultado inesperado ao listar índices do Pinecone. Tipo: {type(index_list_object)}. Resultado: {index_list_object}. Verifique a versão da biblioteca pinecone-client ou o estado do serviço.")
+            print(f"ERRO: Resultado inesperado de pc.list_indexes(). Tipo: {type(index_list_object)}. Resultado: {index_list_object}")
+            return None
+
+
+        if not index_names:
+             st.error(f"Erro Crítico: A lista de nomes de índices do Pinecone está vazia. Verifique se há índices na sua conta.")
+             print("ERRO: A lista de nomes de índices retornada está vazia.")
+             return None
+
+        # Verifica se o índice desejado existe na lista de nomes
+        if PINECONE_INDEX_NAME not in index_names:
+             st.error(f"Erro Crítico: Índice Pinecone '{PINECONE_INDEX_NAME}' não encontrado na sua conta. Índices disponíveis: {', '.join(index_names) if index_names else 'Nenhum índice encontrado'}. Verifique o nome configurado ou crie o índice no console Pinecone.")
+             print(f"ERRO: Índice Pinecone '{PINECONE_INDEX_NAME}' não encontrado na lista: {index_names}")
+             return None
+
+        # Se chegou aqui, o índice existe e a conexão básica funcionou
         index = pc.Index(PINECONE_INDEX_NAME)
-        # Testa a conexão buscando estatísticas (opcional mas útil)
-        index.describe_index_stats()
-        print(f"INFO: Conexão com índice Pinecone '{PINECONE_INDEX_NAME}' estabelecida com sucesso.")
-        st.sidebar.success("Pinecone Conectado", icon="🌲") # Feedback visual
-        return index
+
+        # Testa a conexão buscando estatísticas (opcional mas útil para confirmar acesso ao índice)
+        try:
+            index.describe_index_stats()
+            print(f"INFO: Conexão com índice Pinecone '{PINECONE_INDEX_NAME}' estabelecida com sucesso.")
+            st.sidebar.success("Pinecone Conectado", icon="🌲") # Feedback visual
+            return index
+        except Exception as stats_error:
+            st.warning(f"Conexão básica com Pinecone OK, mas falha ao obter estatísticas do índice '{PINECONE_INDEX_NAME}': {stats_error}. O índice pode não estar totalmente pronto ou haver um problema de permissão/rede secundário.")
+            print(f"AVISO: Falha ao obter estatísticas do índice: {stats_error}")
+            # Optamos por retornar o índice, pois a conexão inicial funcionou
+            return index
+
     except Exception as e:
         st.error(f"Falha Crítica ao conectar ao Pinecone: {e}")
         print(f"ERRO: Falha ao conectar ao Pinecone: {e}")
         return None
+
 
 @st.cache_resource # Cacheia para não recriar o cliente a cada interação
 def get_openai_client():
@@ -57,10 +94,17 @@ def get_openai_client():
             api_key=AZURE_OPENAI_API_KEY,
         )
         # Testa a conexão listando modelos (opcional mas útil)
-        client.models.list()
-        print("INFO: Cliente Azure OpenAI inicializado com sucesso.")
-        st.sidebar.success("Azure OpenAI Conectado", icon="🤖") # Feedback visual
-        return client
+        # Pode ser removido se causar lentidão ou se a permissão for restrita
+        try:
+            client.models.list()
+            print("INFO: Cliente Azure OpenAI inicializado com sucesso.")
+            st.sidebar.success("Azure OpenAI Conectado", icon="🤖") # Feedback visual
+            return client
+        except Exception as models_error:
+             st.warning(f"Conexão básica com Azure OpenAI OK, mas falha ao listar modelos: {models_error}. Verifique permissões ou estado do serviço. Continuar tentando usar o cliente...")
+             print(f"AVISO: Falha ao listar modelos do Azure OpenAI: {models_error}")
+             return client # Retorna o cliente mesmo que listar modelos falhe
+
     except Exception as e:
          st.error(f"Falha Crítica ao inicializar cliente Azure OpenAI: {e}")
          print(f"ERRO: Falha ao inicializar cliente Azure OpenAI: {e}")
