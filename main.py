@@ -96,7 +96,7 @@ abas_titulos = [
     "📄 Resumo de Documento", # Adicionando emojis
     "✍️ Geração de Peça Jurídica",
     "🔎 Validação de Cláusula",
-    "🤖 Consultor Jurídico" # NOVA ABA
+    "🤖 Consultor Jurídico" # NOVA ABA PETICOE
 ]
 abas = st.tabs(abas_titulos)
 
