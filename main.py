@@ -2,33 +2,103 @@ import streamlit as st
 from app import resumo_interface
 from app2 import peticao_interface
 from app3 import validacao_interface
+from app4 import consultor_juridico_interface # Importa a nova interface do app4
+
+# Importa a constante do nome do modelo LLM diretamente do rag_utils
+# para evitar o uso de st.secrets aqui, já que as chaves estão hardcoded em rag_utils.
+from rag_utils import AZURE_OPENAI_DEPLOYMENT_LLM
 
 st.set_page_config(
-    page_title="Plataforma Jurídica Inteligente",
-    page_icon="https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/lexautomate_icon.png",
+    page_title="LexAutomate - Plataforma Jurídica Inteligente",
+    page_icon="https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/lexautomate_icon.png", # Use o seu ícone
     layout="wide"
 )
 
-# Logo e título lado a lado
-col1, col2 = st.columns([1, 4])
-with col1:
-    st.image("https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/logo_lexautomate.png", width=250)
-with col2:
-    st.markdown("""
-    ## LexAutomate - Plataforma Jurídica Inteligente  
-    ### Resumos, Geração de Peças Jurídicas e Análise de Cláusulas com IA  
-    <small>Versão 1.2.0 - HITL e RAG</small>  
-    <small>Criado por Thiago Azeredo Rodrigues</small>
+# --- INÍCIO: Conteúdo da Barra Lateral (Sidebar) ---
+with st.sidebar:
+    st.image("https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/logo_lexautomate.png", width=200)
+    st.markdown("## Instruções de Uso")
+    st.markdown("---")
 
+    with st.expander("Guia - Resumo de Documento", expanded=False):
+        st.markdown("""
+        - **Objetivo:** Gerar um resumo estruturado de documentos jurídicos.
+        - **Como Usar:**
+            1. Vá para a aba "Resumo de Documento".
+            2. Envie um ou mais arquivos PDF ou DOCX.
+            3. (Opcional) Forneça uma instrução específica para direcionar o resumo.
+            4. Clique em "Gerar Resumo com RAG".
+            5. Revise, edite se necessário, e salve/exporte o resultado.
+        - **Dica:** Se a resposta não for ideal, ajuste sua instrução no campo de prompt e gere novamente.
+        """)
+
+    with st.expander("Guia - Geração de Peça Jurídica", expanded=False):
+        st.markdown("""
+        - **Objetivo:** Criar rascunhos de peças processuais com base em fatos e documentos.
+        - **Como Usar:**
+            1. Vá para a aba "Geração de Peça Jurídica".
+            2. Envie documentos com a situação do cliente (fatos, provas).
+            3. Escreva uma instrução detalhada para a IA (tipo de peça, partes, teses principais, etc.).
+            4. Clique em "Gerar Peça Processual".
+            5. Revise cuidadosamente, edite o rascunho gerado e exporte.
+        - **Dica:** Se a resposta não for ideal, ajuste sua instrução no campo de prompt e gere novamente.
+        """)
+
+    with st.expander("Guia - Validação de Cláusula", expanded=False):
+        st.markdown("""
+        - **Objetivo:** Analisar cláusulas contratuais quanto à validade, riscos e conformidade.
+        - **Como Usar:**
+            1. Vá para a aba "Validação de Cláusula".
+            2. Envie o contrato (PDF, DOCX).
+            3. Especifique a cláusula ou ponto a ser analisado na instrução.
+            4. Clique em "Analisar/Validar Cláusulas".
+            5. Revise a análise, edite e exporte.
+        - **Dica:** Se a resposta não for ideal, ajuste sua instrução no campo de prompt e gere novamente.
+        """)
+
+    with st.expander("Guia - Consultor Jurídico (Chat)", expanded=False): # NOVA SEÇÃO
+        st.markdown("""
+        - **Objetivo:** Obter respostas para perguntas jurídicas gerais, discutir teses, legislação e jurisprudência.
+        - **Como Usar:**
+            1. Vá para a aba "Consultor Jurídico".
+            2. Digite sua pergunta no campo de chat na parte inferior.
+            3. LexConsult usará a base de conhecimento para fornecer uma resposta fundamentada.
+            4. Você pode continuar a conversa fazendo perguntas de acompanhamento.
+        """)
+
+    st.markdown("---")
+    st.markdown("### 🧠 Dicas Avançadas (Prompts)")
+    st.markdown("""
+    - **Seja Específico:** Quanto mais detalhes você fornecer no prompt, melhor será o resultado.
+    - **Peças:** Indique tipo, foro, partes, valor da causa, teses desejadas.
+    - **Análise:** Aponte a cláusula exata e o tipo de análise (validade, riscos, sugestões).
+    - Consulte o [guia completo de prompts](https://medium.com/@thiagoazro/engenharia-de-prompt-e-modelos-de-linguagem-um-aliado-para-os-profissionais-do-direito-af86658e470b) para mais ideias.
+    """)
+    st.markdown("---")
+    # Usa a constante importada de rag_utils.py para o nome do modelo
+    st.caption(f"LexAutomate v1.2.2 (Chat Integrado) - LLM: {AZURE_OPENAI_DEPLOYMENT_LLM}")
+
+# --- FIM: Conteúdo da Barra Lateral (Sidebar) ---
+
+
+col1_main, col2_main = st.columns([1, 4])
+with col1_main:
+    st.image("https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/logo_lexautomate.png", width=250)
+with col2_main:
+    st.markdown("""
+    ## LexAutomate - Plataforma Jurídica Inteligente
+    ### Resumos, Geração de Peças, Análise de Cláusulas e Consultoria Jurídica com IA
+    <small>Criado por Thiago Azeredo Rodrigues</small>
     """, unsafe_allow_html=True)
 
 # Abas principais
-abas = st.tabs([
+abas_titulos = [
     "Resumo de Documento",
     "Geração de Peça Jurídica",
     "Validação de Cláusula",
-    "Instruções de Uso"
-])
+    "Consultor Jurídico" # NOVA ABA
+]
+abas = st.tabs(abas_titulos)
 
 with abas[0]:
     resumo_interface()
@@ -39,69 +109,10 @@ with abas[1]:
 with abas[2]:
     validacao_interface()
 
-with abas[3]:
-    st.header("Instruções de Uso da LexAutomate")
+with abas[3]: # NOVA ABA PARA O CONSULTOR
+    consultor_juridico_interface()
 
-    st.markdown("""
-### Como usar cada funcionalidade
 
-**1. Resumo de Documento**
-- Envie um arquivo PDF ou DOCX contendo o contrato ou petição.
-- A IA irá gerar um resumo jurídico estruturado com base nas cláusulas principais.
-- Você pode revisar e editar o texto antes de exportar.
-
-**2. Geração de Peça Jurídica**
-- Faça upload de um ou mais documentos com os fatos ou fundamentos.
-- Escreva um prompt com instruções específicas (ex: tipo de peça, área do direito, estrutura desejada).
-- A IA irá redigir uma peça completa em Markdown formatado.
-
-**3. Validação de Cláusula**
-- Envie um contrato e especifique qual cláusula deseja analisar.
-- A IA avalia validade, riscos e legalidade com base no contexto jurídico brasileiro.
-
----
-
-### Dicas para melhorar os resultados:
-
-- Use linguagem clara e objetiva nos prompts.
-- Especifique **o tipo de peça** (ex: "petição inicial trabalhista").
-- Informe **estado/foro**, **partes envolvidas** e **valores** quando possível.
-- Você pode indicar **estrutura da peça** ou **modelo desejado**.
-
----
-
-### 🧠 Técnicas avançadas de uso com prompts estratégicos
-
-Você pode **refinar seus comandos (prompts)** para guiar a IA na geração de peças mais precisas e contextualizadas. Veja alguns exemplos:
-
-- **Geração específica de peças:**  
-  *“Gere uma petição inicial com base no contrato anexo, estruturando os pedidos conforme o descumprimento das obrigações ora listadas.”*
-
-- **Recurso com contra-argumentação:**  
-  *“Redija um recurso ordinário com base na petição inicial e na sentença anexas, rebatendo especialmente os fundamentos da improcedência do pedido de equiparação salarial. Utilize como estrutura do documento a ser gerado o modelo de Recurso Ordinário anexado.”*
-
-- **Cláusulas críticas:**  
-  *“Analise a cláusula de exclusividade do contrato à luz da jurisprudência atual.”*
-
-- **Validação de cláusulas:**  
-  *“Verifique a validade da cláusula de confidencialidade do contrato anexo, considerando a legislação brasileira e jurisprudência atual.”*
-
-- **Análise de riscos:**  
-  *“Identifique os riscos associados à cláusula de rescisão unilateral do contrato, considerando a legislação brasileira e jurisprudência atual.”*
-
-- **Contestação processual guiada:**  
-  *“Gere uma contestação processual com base na petição inicial e nos documentos anexos, abordando os seguintes pontos: [listar pontos específicos] e as seguintes teses defensivas: [listar as teses mais assertivas para defesa de forma].”*
-
----
-
-### 📘 Leia mais: guia de prompts jurídicos eficazes
-
-Aprofunde-se nas melhores estratégias lendo o artigo:
-
-**[Engenharia de Prompt e Modelos de Linguagem: Um Aliado para os Profissionais do Direito](https://medium.com/@thiagoazro/engenharia-de-prompt-e-modelos-de-linguagem-um-aliado-para-os-profissionais-do-direito-af86658e470b)**
-    """)
-
-# Rodapé
 st.markdown("""
 <hr style='margin-top: 3rem;'>
 <div style='text-align: center; font-size: 0.8rem; color: gray;'>

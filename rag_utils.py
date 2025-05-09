@@ -6,37 +6,33 @@ from azure.search.documents.models import VectorizedQuery
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 import os
-import time
-import uuid
+import time # Mantido, pode ser útil para debugging ou futuras expansões
+import uuid # Mantido, pode ser útil para futuras expansões
 import traceback
 import re # Para processar Markdown
 
 from io import BytesIO
 from docx import Document as DocxDocument
 from docx.shared import Pt
-from docx.enum.text import WD_LINE_SPACING # Importado para espaçamento de linha
+from docx.enum.text import WD_LINE_SPACING
 
-# FPDF não é mais necessário
-# from fpdf import FPDF
-
-# --- Configurações (Suas Chaves e Endpoints) ---
+# --- Configurações (Suas Chaves e Endpoints - COMO NO SEU ARQUIVO ORIGINAL) ---
 AZURE_OPENAI_ENDPOINT = 'https://lexautomate.openai.azure.com/'
-AZURE_OPENAI_API_KEY = '6ZJIKi1REnxeAALGOQQ2mFi7KL78gCyVYMq3yzv0xKae620iLHzdJQQJ99BDACYeBjFXJ3w3AAABACOGHcjA'
+AZURE_OPENAI_API_KEY = '6ZJIKi1REnxeAALGOQQ2mFi7KL78gCyVYMq3yzv0xKae620iLHzdJQQJ99BDACYeBjFXJ3w3AAABACOGHcjA' # SUA CHAVE REAL
 AZURE_OPENAI_DEPLOYMENT_LLM = 'lexautomate_agent'
 AZURE_OPENAI_DEPLOYMENT_EMBEDDING = 'text-embedding-3-large'
 AZURE_API_VERSION = '2024-02-15-preview'
 
 AZURE_SEARCH_ENDPOINT = "https://lexautomate-rag2.search.windows.net"
-AZURE_SEARCH_KEY = "igJqXTXsYEC6gpIzFvjOvjm0WtSgd0Xrw8TNMDkwK9AzSeC5ft3H"
+AZURE_SEARCH_KEY = "igJqXTXsYEC6gpIzFvjOvjm0WtSgd0Xrw8TNMDkwK9AzSeC5ft3H" # SUA CHAVE REAL
 AZURE_SEARCH_INDEX_NAME = "docs-index"
 
 DOCINTEL_ENDPOINT = "https://lexautomate-orc.cognitiveservices.azure.com/"
-DOCINTEL_KEY = "FtqfVcECaQkohYtXfqvJYP2ttF2lx9fR9eyn13Yjww2n5Az9iVGTJQQJ99BEACYeBjFXJ3w3AAALACOGcxBe"
+DOCINTEL_KEY = "FtqfVcECaQkohYtXfqvJYP2ttF2lx9fR9eyn13Yjww2n5Az9iVGTJQQJ99BEACYeBjFXJ3w3AAALACOGcxBe" # SUA CHAVE REAL
 
-# --- Inicialização dos Clientes ---
+# --- Inicialização dos Clientes (COMO NO SEU ARQUIVO ORIGINAL) ---
 @st.cache_resource
 def get_openai_client():
-    # ... (código mantido da resposta #73) ...
     print("INFO: Inicializando cliente Azure OpenAI...")
     if not all([AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_API_VERSION, AZURE_OPENAI_DEPLOYMENT_LLM, AZURE_OPENAI_DEPLOYMENT_EMBEDDING]):
          print("ERRO: Configurações OpenAI incompletas."); st.error("ERRO: Configs OpenAI.")
@@ -50,7 +46,6 @@ def get_openai_client():
 
 @st.cache_resource
 def get_azure_search_client():
-    # ... (código mantido da resposta #73) ...
     print("INFO: Inicializando cliente Azure AI Search...")
     if not all([AZURE_SEARCH_ENDPOINT, AZURE_SEARCH_INDEX_NAME, AZURE_SEARCH_KEY]):
         print("ERRO: Configs AI Search incompletas."); st.error("ERRO: Configs AI Search.")
@@ -64,7 +59,6 @@ def get_azure_search_client():
 
 @st.cache_resource
 def get_docintel_client():
-    # ... (código mantido da resposta #73) ...
     print("INFO: Inicializando cliente Document Intelligence...")
     if not all([DOCINTEL_ENDPOINT, DOCINTEL_KEY]):
          print("ERRO: Configs Document Intelligence incompletas."); st.error("ERRO: Configs Doc Intel.")
@@ -77,9 +71,8 @@ def get_docintel_client():
     except Exception as e: print(f"ERRO CRÍTICO Doc Intel: {traceback.format_exc()}"); st.error(f"Falha Doc Intel: {e}"); return None
 
 
-# --- Funções Auxiliares RAG ---
+# --- Funções Auxiliares RAG (COMO NO SEU ARQUIVO ORIGINAL) ---
 def chunk_text(text, max_chunk_size=1000, chunk_overlap=100):
-    # ... (código mantido da resposta #73) ...
     if not text: return []
     chunks = []; start = 0
     while start < len(text):
@@ -90,21 +83,19 @@ def chunk_text(text, max_chunk_size=1000, chunk_overlap=100):
     return [c for c in chunks if c]
 
 def get_embedding(text_chunk, client_openai):
-    # ... (código mantido da resposta #73) ...
     if not text_chunk or client_openai is None: return None
     try:
         processed_chunk = ' '.join(text_chunk.replace('\n', ' ').split())
-        if not processed_chunk: return None
+        if not processed_chunk: return None # Retorna None se o chunk ficar vazio após o processamento
         response = client_openai.embeddings.create(input=processed_chunk, model=AZURE_OPENAI_DEPLOYMENT_EMBEDDING)
         return response.data[0].embedding
     except Exception as e: print(f"ERRO: Falha get_embedding: {traceback.format_exc()}"); st.error(f"Erro API Embedding: {e}"); return None
 
 def find_relevant_chunks_azure_search(query_text, search_client, client_openai, top_k=5):
-    # ... (código mantido da resposta #73) ...
     if not query_text or search_client is None or client_openai is None: return []
     query_embedding = get_embedding(query_text, client_openai)
-    if query_embedding is None: return []
-    print(f"INFO: Buscando top_{top_k} chunks...")
+    if query_embedding is None: return [] # Não prossegue se não houver embedding
+    print(f"INFO: Buscando top_{top_k} chunks para a query: '{query_text[:100]}...'")
     try:
         vectorized_query = VectorizedQuery(vector=query_embedding, k_nearest_neighbors=top_k, fields="content_vector")
         results = search_client.search(search_text=None, vector_queries=[vectorized_query], select=["id", "content", "arquivo"], top=top_k)
@@ -113,15 +104,14 @@ def find_relevant_chunks_azure_search(query_text, search_client, client_openai, 
         return relevant_texts
     except Exception as e: print(f"ERRO: Falha busca vetorial: {traceback.format_exc()}"); st.error(f"Erro busca vetorial: {e}"); return []
 
-# --- Função Principal RAG ---
+# --- Função Principal RAG (COMO NO SEU ARQUIVO ORIGINAL) ---
 def generate_response_with_rag(system_message, user_instruction, context_document_text, search_client, client_openai, top_k_chunks=5):
-    # ... (código mantido da resposta #73) ...
     if client_openai is None or search_client is None:
          st.error("Erro interno: Clientes IA não disponíveis."); return "Erro interno nos serviços de IA."
     retrieved_chunks = []
-    with st.spinner(f"Consultando base ({AZURE_SEARCH_INDEX_NAME})..."):
+    with st.spinner(f"Consultando base ({AZURE_SEARCH_INDEX_NAME})..."): # Spinner na UI é melhor, mas mantendo consistência
         retrieved_chunks = find_relevant_chunks_azure_search(user_instruction, search_client, client_openai, top_k=top_k_chunks)
-    context_string = ""
+    context_string = "" # Nome da variável alterado para evitar conflito com 'context_string_from_search' nas novas funções
     if retrieved_chunks:
         context_string = "---\n**Contexto Recuperado da Base de Conhecimento Jurídico:**\n---\n"
         for i, chunk in enumerate(retrieved_chunks, 1): context_string += f"**Contexto {i}:**\n{chunk}\n\n"
@@ -138,7 +128,7 @@ def generate_response_with_rag(system_message, user_instruction, context_documen
         f"---\nFim do Documento Fornecido\n---"
     )
     final_response = "Erro: Falha ao gerar resposta."
-    with st.spinner(f"Gerando resposta com IA ({AZURE_OPENAI_DEPLOYMENT_LLM})..."):
+    with st.spinner(f"Gerando resposta com IA ({AZURE_OPENAI_DEPLOYMENT_LLM})..."): # Spinner na UI é melhor
         try:
             response = client_openai.chat.completions.create(
                 model=AZURE_OPENAI_DEPLOYMENT_LLM,
@@ -149,10 +139,87 @@ def generate_response_with_rag(system_message, user_instruction, context_documen
                 final_response = response.choices[0].message.content.strip()
             else: st.error("Erro: Resposta API LLM inválida."); final_response = "Erro: Resposta IA vazia."
         except Exception as e: print(f"ERRO CRÍTICO: Falha chat.completions: {traceback.format_exc()}"); st.error(f"Erro LLM: {e}"); final_response = f"Erro ao gerar resposta."
-        return final_response
+    return final_response
 
-# --- Função de Exportação DOCX ATUALIZADA ---
+# --- INÍCIO: Novas Funções para o App4 (Consultor Jurídico / Chat RAG) ---
 
+MAX_CHAT_HISTORY_MESSAGES = 10 # Exemplo: manter as últimas 5 trocas (usuário + assistente)
+
+def build_messages_for_llm_chat(system_message, chat_history, user_instruction_with_context):
+    """
+    Constrói a lista de mensagens para o LLM para o modo chat,
+    incluindo o system prompt, um histórico limitado e a pergunta atual com contexto RAG.
+    """
+    messages = [{"role": "system", "content": system_message}]
+    if chat_history:
+        start_index = max(0, len(chat_history) - MAX_CHAT_HISTORY_MESSAGES)
+        for msg in chat_history[start_index:]:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": user_instruction_with_context})
+    return messages
+
+def generate_consultor_response_with_rag(system_message, user_instruction, chat_history, search_client, client_openai, top_k_chunks=3):
+    """
+    Gera uma resposta para o chat do Consultor Jurídico usando RAG sobre a base de conhecimento.
+    """
+    if client_openai is None or search_client is None:
+        print("ERRO (Consultor): Clientes OpenAI ou Search não disponíveis.")
+        # Não use st.error() aqui, pois esta função pode ser chamada de um contexto não-Streamlit.
+        return "Desculpe, estou com problemas para acessar meus serviços de IA no momento."
+
+    retrieved_chunks = []
+    query_for_search = user_instruction
+    
+    print(f"INFO (Consultor): Buscando na base com query: '{query_for_search[:100]}...'")
+    # O spinner é melhor tratado na UI (app4.py)
+    retrieved_chunks = find_relevant_chunks_azure_search(query_for_search, search_client, client_openai, top_k=top_k_chunks)
+
+    context_string_from_search = ""
+    if retrieved_chunks:
+        context_string_from_search = "---\n**Contexto Relevante da Base de Conhecimento Encontrado:**\n---\n"
+        for i, chunk in enumerate(retrieved_chunks, 1):
+            context_string_from_search += f"**Referência {i}:**\n{chunk}\n\n"
+        context_string_from_search += "---\nFim do Contexto Relevante\n---"
+    else:
+        context_string_from_search = "\n(Para esta pergunta específica, não encontrei informações diretamente relevantes na minha base de conhecimento atual.)\n"
+
+    user_instruction_with_context_for_llm = (
+        f"Pergunta do Usuário: '{user_instruction}'\n\n"
+        f"{context_string_from_search}\n\n"
+        f"Com base no contexto acima e em seu conhecimento geral, por favor, responda à pergunta do usuário de forma completa e didática."
+    )
+
+    messages_for_llm = build_messages_for_llm_chat(
+        system_message,
+        chat_history, # Passa o histórico como está
+        user_instruction_with_context_for_llm
+    )
+    
+    final_response = "Desculpe, não consegui processar sua solicitação para o consultor no momento."
+    print(f"INFO (Consultor): Enviando para LLM ({AZURE_OPENAI_DEPLOYMENT_LLM}) com {len(messages_for_llm)} mensagens.")
+    # O spinner é melhor tratado na UI (app4.py)
+    try:
+        response = client_openai.chat.completions.create(
+            model=AZURE_OPENAI_DEPLOYMENT_LLM,
+            messages=messages_for_llm,
+            temperature=0.5,
+            max_tokens=2000,
+            top_p=0.95,
+        )
+        if response.choices and response.choices[0].message and response.choices[0].message.content:
+            final_response = response.choices[0].message.content.strip()
+        else:
+            print("ERRO (Consultor): Resposta da API LLM inválida.")
+            # st.error() não deve ser usado aqui
+    except Exception as e:
+        print(f"ERRO CRÍTICO (Consultor): Falha chat.completions: {traceback.format_exc()}")
+        final_response = f"Erro ao gerar resposta do consultor. Tente novamente mais tarde." # Mensagem genérica
+    return final_response
+
+# --- FIM: Novas Funções para o App4 ---
+
+
+# --- Função de Exportação DOCX (COMO NO SEU ARQUIVO ORIGINAL) ---
 def gerar_docx(texto_markdown):
     print("INFO: Gerando arquivo DOCX com interpretação de Markdown...")
     try:
@@ -204,7 +271,7 @@ def gerar_docx(texto_markdown):
                 continue
 
             if linha_strip: 
-                partes = re.split(r'(\*\*.+?\*\*)', linha_original) 
+                partes = re.split(r'(\*\*.+?\*\*)', linha_original) # Corrigido regex para negrito
                 for parte in partes:
                     if parte.startswith('**') and parte.endswith('**') and len(parte) > 4:
                         texto_do_negrito = parte[2:-2]
@@ -213,7 +280,12 @@ def gerar_docx(texto_markdown):
                     elif parte:
                         paragrafo_docx.add_run(parte)
             else: 
-                paragrafo_docx.paragraph_format.space_after = Pt(6)
+                # Linha vazia, pode adicionar um pouco mais de espaço se não for precedida por um título
+                # Isso ajuda a simular parágrafos separados por linhas em branco no Markdown
+                if not (linha_idx > 0 and re.match(r'^(#+)\s+(.*)', linhas[linha_idx-1].strip())) and \
+                   not (linha_idx > 0 and (linhas[linha_idx-1].strip().startswith('**') and linhas[linha_idx-1].strip().endswith('**') and linhas[linha_idx-1].strip().count('**') == 2)):
+                     paragrafo_docx.paragraph_format.space_after = Pt(6)
+
 
         buffer = BytesIO()
         document.save(buffer)
@@ -222,7 +294,7 @@ def gerar_docx(texto_markdown):
         return buffer.getvalue()
     except Exception as e:
         print(f"ERRO: Falha ao gerar DOCX: {e}\n{traceback.format_exc()}")
-        st.error(f"Erro ao gerar arquivo DOCX: {e}")
+        st.error(f"Erro ao gerar arquivo DOCX: {e}") # st.error pode ficar aqui, pois gerar_docx é chamado da UI.
         raise
 
 # --- FIM do rag_utils.py ---
