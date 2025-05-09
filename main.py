@@ -86,8 +86,9 @@ with col1_main:
 with col2_main:
     st.markdown("""
     ## LexAutomate - Plataforma Jurídica Inteligente
-    ### Resumos, Geração de Peças, Análise de Cláusulas e Consultoria Jurídica com IA
-    <small>Criado por Thiago Azeredo Rodrigues</small>
+    ### Resumos, Geração de Peças, Análise de Cláusulas e Consultoria Jurídica com Agentes de IA
+    #### Escolha seu agente de acordo com a tarefa desejada.
+    
     """, unsafe_allow_html=True)
 
 # Abas principais
