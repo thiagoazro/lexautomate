@@ -92,18 +92,10 @@ with col2_main:
 
 # Abas principais
 abas_titulos = [
-    "📄 Resumo de Documento",
-
-"|",
-
+    "📄 Resumo de Documento", # Adicionando emojis
     "✍️ Geração de Peça Jurídica",
-
-"|",
-
     "🔎 Validação de Cláusula",
-
-"|",
-    "🤖 Consultor Jurídico" 
+    "🤖 Consultor Jurídico" # NOVA ABA
 ]
 abas = st.tabs(abas_titulos)
 
