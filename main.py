@@ -16,8 +16,7 @@ st.set_page_config(
 
 # --- INÍCIO: Conteúdo da Barra Lateral (Sidebar) ---
 with st.sidebar:
-    st.image("https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/logo_lexautomate.png", width=200)
-    st.markdown("## Instruções de Uso")
+    st.markdown("# Instruções de Uso")
     st.markdown("---")
 
     with st.expander("Guia - Resumo de Documento", expanded=False):
@@ -93,10 +92,18 @@ with col2_main:
 
 # Abas principais
 abas_titulos = [
-    "Resumo de Documento",
-    "Geração de Peça Jurídica",
-    "Validação de Cláusula",
-    "Consultor Jurídico" # NOVA ABA
+    "📄 Resumo de Documento",
+
+"|",
+
+    "✍️ Geração de Peça Jurídica",
+
+"|",
+
+    "🔎 Validação de Cláusula",
+
+"|",
+    "🤖 Consultor Jurídico" 
 ]
 abas = st.tabs(abas_titulos)
 
