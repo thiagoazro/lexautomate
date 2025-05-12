@@ -6,6 +6,7 @@ Este projeto implementa uma plataforma jurídica baseada em Inteligência Artifi
 - **Resumo de Contratos**: Extrai e resume informações principais de documentos jurídicos (contratos em PDF ou DOCX).
 - **Geração de Petições**: Gera petições jurídicas automáticas a partir de instruções fornecidas pelo usuário.
 - **Validação de Cláusulas**: Analisa e valida cláusulas contratuais com base nas áreas de Direito selecionadas (Civil, Penal, Trabalhista, Previdenciário ou Tributário).
+- ** Chatbot Jurídico**: Consultor jurídico que interage com o usuário para responder dúvidas jurídicas.
 
 O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, integrado com o serviço **Azure OpenAI**.
 
