@@ -78,8 +78,8 @@ def validacao_interface():
             else:
                 with st.spinner("Analisando..."):
                     try:
-                        system_message_validacao = """Você é um(a) advogado(a) consultor(a) sênior, altamente especializado(a) em Direito Contratual, análise de riscos e compliance, com profundo conhecimento da legislação e jurisprudência brasileira (incluindo informações atualizadas de bases como a API Judit).
-Sua tarefa é analisar especificamente a cláusula ou o ponto do contrato indicado pelo usuário, à luz do ordenamento jurídico brasileiro. Você deve utilizar o CONTEXTO recuperado da base de conhecimento jurídica para embasar sua análise sobre validade, legalidade, abusividade, omissões, riscos e para fornecer recomendações práticas e estratégicas.
+                        system_message_validacao = """Você é um(a) advogado(a) consultor(a) sênior, altamente especializado(a) em Direito Contratual, análise de riscos e compliance, com profundo conhecimento da legislação e jurisprudência brasileira.
+Sua tarefa é analisar especificamente a cláusula ou o ponto do contrato indicado pelo usuário, à luz do ordenamento jurídico brasileiro. Você deve utilizar o CONTEXTO recuperado da base de conhecimento jurídica para embasar sua análise sobre validade, legalidade, abusividade, omissões, riscos e para fornecer recomendações práticas e estratégicas. Se pertinente, apresente desenvolvimento das teses jurídicas, com citação de dispositivos legais, doutrina e jurisprudência (utilize o contexto recuperado). 
 
 Estruture sua resposta de forma clara, objetiva e bem fundamentada, utilizando os seguintes tópicos principais, conforme aplicável:
 
