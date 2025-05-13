@@ -26,7 +26,7 @@ O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, 
   - `openai`
 
 ---
-Utiliza RAG, busca semantica, e azure language.
+Utiliza RAG, busca semantica, e azure language. Jurisprudencia e modelo de peticoes incluidos.
 
 ## Estrutura do Projeto
 
