@@ -89,7 +89,7 @@ def peticao_interface():
 Sua tarefa é redigir uma **peça jurídica completa e pronta para protocolo (após revisão humana)**, com base no conteúdo do(s) documento(s) fornecido(s), nas instruções do usuário e no CONTEXTO recuperado da base de conhecimento jurídica. Se o usuário especificar o tipo de peça (petição inicial, contestação, recurso, manifestação, etc.), siga essa instrução. Caso contrário, identifique e elabore a peça jurídica mais adequada e estratégica para a situação fática e jurídica apresentada.
 
 **Estrutura e Formatação:**
-Adote uma estrutura formal padrão da prática forense brasileira, adequada à peça em questão. Utilize **negrito** (com dois asteriscos antes e depois, como em `**I - DOS FATOS**`) para os títulos das seções principais. Inclua **uma linha em branco antes e depois de cada título de seção** para clareza. Use linguagem jurídica formal, clara e objetiva. Quando citar artigos de lei ou jurisprudência, faça-o de forma precisa.
+Adote uma estrutura formal padrão da prática forense brasileira, adequada à peça em questão. Utilize **negrito** (com dois asteriscos antes e depois, como em `**I - DOS FATOS**`) para os títulos das seções principais. Inclua **uma linha em branco antes e depois de cada título de seção** para clareza. Use linguagem jurídica formal, clara e objetiva. Quando citar artigos de lei ou jurisprudência, faça-o de forma precisa, preferencialmente com a ementa completa ou trechos pertinentes, se disponível no contexto.
 
 **Instruções Adicionais:**
 - **Endereçamento:** Correto para o juízo competente (interposição e razões).
@@ -144,9 +144,10 @@ Assim, requer o(a) Autor(a) seja a Ré compelida a [escolher: substituir o apare
 
 **III.3 - Do Dano Moral**
 A conduta da Ré extrapolou o mero dissabor cotidiano. A frustração da legítima expectativa do(a) consumidor(a) em usufruir de um bem novo, somada ao descaso da fornecedora em solucionar o problema por mais de 45 dias, configura ato ilícito passível de reparação por dano moral.
-[Citar jurisprudência relevante sobre dano moral em casos semelhantes, idealmente do contexto recuperado pela RAG/Judit].
-[...]
-O desgaste, a perda de tempo útil e o sentimento de impotência vivenciados pelo(a) Autor(a) justificam a condenação da Ré ao pagamento de indenização por danos morais, que se sugere no valor de R$ 5.000,00 (cinco mil reais), quantia esta que atende aos princípios da razoabilidade e proporcionalidade, (...).
+Nesse sentido, a jurisprudência pátria é consolidada:
+> "RECURSO INOMINADO. CONSUMIDOR. VÍCIO DO PRODUTO. APARELHO CELULAR. DEMORA EXCESSIVA E INJUSTIFICADA NA SOLUÇÃO DO PROBLEMA PELO FORNECEDOR. DESCASO COM O CONSUMIDOR. DANO MORAL CONFIGURADO. QUANTUM INDENIZATÓRIO MANTIDO. 1. A aquisição de produto que apresenta defeito e a subsequente falha do fornecedor em solucionar o vício em prazo razoável, submetendo o consumidor a um calvário para tentar resolver a questão, ultrapassa o mero dissabor e configura dano moral passível de indenização. 2. O valor arbitrado a título de danos morais deve atender aos critérios da razoabilidade e proporcionalidade, considerando a extensão do dano, a capacidade econômica das partes e o caráter pedagógico-punitivo da medida. RECURSO CONHECIDO E NÃO PROVIDO." (TJXYZ, Recurso Inominado Cível nº 07XXXXX-XX.2024.8.XX.XXXX, Turma Recursal dos Juizados Especiais, Relator(a): Juiz(a) Fulano de Tal, Julgado em DD/MM/AAAA).
+
+O desgaste, a perda de tempo útil e o sentimento de impotência vivenciados pelo(a) Autor(a) justificam a condenação da Ré ao pagamento de indenização por danos morais, que se sugere no valor de R$ 5.000,00 (cinco mil reais), quantia esta que atende aos princípios da razoabilidade e proporcionalidade, bem como ao caráter punitivo-pedagógico da medida.
 
 **IV - DOS PEDIDOS**
 Ante o exposto, requer a Vossa Excelência:
@@ -205,6 +206,9 @@ Conforme se demonstrará, a pretensão do Autor não merece prosperar em sua int
 Em que pese o Autor alegar a existência de um débito total de R$ 10.000,00, o Réu comprova, por meio do documento anexo (Doc. 02 – Comprovante de Transferência/Recibo), que em [Data do Pagamento Parcial] efetuou o pagamento da quantia de R$ 7.000,00 (sete mil reais) diretamente ao Autor, referente à obrigação ora discutida.
 [Detalhar as circunstâncias do pagamento parcial, se necessário].
 Desta forma, o valor efetivamente devido, caso exista saldo remanescente após o abatimento do montante já pago, é significativamente inferior ao pleiteado na inicial.
+A jurisprudência corrobora a necessidade de reconhecimento do pagamento devidamente comprovado:
+> "APELAÇÃO CÍVEL. AÇÃO DE COBRANÇA. DÍVIDA. PAGAMENTO PARCIAL COMPROVADO. ÔNUS DA PROVA DO AUTOR QUANTO AO FATO CONSTITUTIVO DO SEU DIREITO NÃO DESINCUMBIDO INTEGRALMENTE. NECESSIDADE DE ABATIMENTO DO VALOR PAGO. SENTENÇA REFORMADA EM PARTE. 1. Incumbe ao réu o ônus da prova quanto à existência de fato impeditivo, modificativo ou extintivo do direito do autor, nos termos do art. 373, II, do CPC. A comprovação de pagamento parcial da dívida mediante recibo ou comprovante de transação idôneo impõe o seu reconhecimento. 2. Havendo prova de pagamento parcial, este deve ser abatido do montante total da dívida cobrada, sob pena de enriquecimento ilícito do credor. RECURSO CONHECIDO E PARCIALMENTE PROVIDO." (TJABC, Apelação Cível nº XXXXXXX-XX.2023.8.XX.XXXX, Xª Câmara Cível, Relator(a): Des.(a) Ciclano de Tal, Julgado em DD/MM/AAAA).
+
 
 **III.2 - Da Impossibilidade de Cobrança do Valor Integral e do Excesso de Execução (em caso de execução) ou Cobrança Indevida**
 Considerando o pagamento parcial devidamente comprovado, a cobrança do valor integral de R$ 10.000,00 configura excesso e enriquecimento ilícito por parte do Autor.
@@ -289,8 +293,9 @@ Trecho relevante da r. sentença: "[Citar o trecho específico da sentença que 
 **III.1 - Da Configuração do Dano Moral *In Re Ipsa* na Inscrição Indevida**
 Equivoca-se o MM. Juízo *a quo* ao considerar a inscrição indevida do nome do(a) Apelante nos órgãos de proteção ao crédito como mero aborrecimento.
 É pacífico o entendimento do Colendo Superior Tribunal de Justiça (STJ) e deste Egrégio Tribunal de que a inscrição indevida em cadastro de inadimplentes gera dano moral *in re ipsa*, ou seja, presumido, independentemente da comprovação do efetivo prejuízo ou abalo psíquico.
-Nesse sentido, a Súmula nº 385 do STJ, embora trate de inscrição preexistente legítima (o que não é o caso dos autos), implicitamente reconhece o dano quando a inscrição é a única ou todas são indevidas. Mais especificamente, o STJ consolidou o entendimento de que:
-"[Citar uma ementa relevante do STJ ou do TJ local sobre dano moral presumido em inscrição indevida, idealmente do CONTEXTO recuperado pela RAG/Judit. Ex: 'A inscrição/manutenção indevida do nome do consumidor em cadastro de inadimplentes gera, por si só, o dever de indenizar por danos morais, sendo dispensável a comprovação do prejuízo.' (STJ, AgInt no AREsp XXXXXX/XX, Rel. Ministro XXXXX, Data de Julgamento XX/XX/XXXX)]".
+Nesse sentido, a jurisprudência é uníssona:
+> "APELAÇÃO CÍVEL. RESPONSABILIDADE CIVIL. DECLARATÓRIA DE INEXISTÊNCIA DE DÉBITO C/C INDENIZAÇÃO POR DANOS MORAIS. INSCRIÇÃO INDEVIDA EM CADASTRO DE INADIMPLENTES. DANO MORAL *IN RE IPSA*. CONFIGURAÇÃO. DEVER DE INDENIZAR. VALOR DA INDENIZAÇÃO. CRITÉRIOS DE RAZOABILIDADE E PROPORCIONALIDADE. 1. A inscrição ou manutenção indevida do nome da parte em cadastros de proteção ao crédito configura ato ilícito e gera dano moral *in re ipsa*, ou seja, presumido, dispensando a comprovação do efetivo prejuízo sofrido pela vítima, bastando a demonstração da ilicitude do ato. Precedentes do STJ. 2. Para a fixação do *quantum* indenizatório, devem ser observados os princípios da razoabilidade e da proporcionalidade, a gravidade da ofensa, a repercussão do dano, a condição econômica do ofensor e do ofendido, além do caráter punitivo e pedagógico da medida. RECURSO CONHECIDO E PROVIDO." (TJDEF, Apelação Cível nº 08XXXXX-XX.2022.8.XX.XXXX, Yª Câmara Cível, Relator(a): Des.(a) Beltrano de Tal, Julgado em DD/MM/AAAA).
+
 No presente caso, o(a) Apelante comprovou a inscrição indevida (Doc. ZZ) e a inexistência do débito que a originou (Docs. AA, BB). Portanto, o dano moral é patente e independe de outras provas de sofrimento, sendo este o entendimento que deveria ter sido aplicado.
 
 **III.2 - Da Violação aos Direitos da Personalidade e da Dignidade da Pessoa Humana**
