@@ -12,7 +12,7 @@ O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, 
 
 ---
 
-## Tecnologias Utilizadas #
+## Tecnologias Utilizadas ##
 
 - **Python 3.12**
 - **Streamlit** (Frontend Web)
@@ -24,6 +24,8 @@ O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, 
   - `python-docx`
   - `Pillow`
   - `openai`
+  - `joblit`
+  - `nltk`
 
 ---
 Utiliza RAG, busca semantica, e azure language. Jurisprudencia e modelo de peticoes incluidos. Google Search API incluído.
