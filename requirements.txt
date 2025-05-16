@@ -1,29 +1,25 @@
-# requirements.txt
-
-# Framework para a interface web
+# Interface e IA
 streamlit
-
-# SDK da OpenAI (para interagir com Azure OpenAI)
 openai>=1.0.0
 
-# SDKs do Azure para Search e Document Intelligence
+# Azure SDKs
 azure-search-documents>=11.4.0
 azure-ai-formrecognizer>=3.2.0
 azure-core
 
-# Bibliotecas para extração de texto de arquivos
+# Documentos e imagens
 PyMuPDF
 python-docx
-
-# Biblioteca para manipulação de imagens (logo e ícone)
 Pillow
 
-# Biblioteca para chamadas HTTP (opcional, mas útil)
+# HTTP requests
 requests
 
-#Biblioteca para salvar os modelos de trienamento de classificação
-jolib
-
+# NLP e ML
 nltk
+joblib
+scikit-learn
+matplotlib
 
-# NOTA: É uma boa prática fixar as versões exatas...
+# Reranker (se estiver usando CrossEncoder)
+sentence-transformers
