@@ -139,3 +139,4 @@ def consultor_juridico_interface():
                     key=f"chunk_preview_consultor_expander_key_app4_{chunk_id}"
                 )
                 st.markdown("---")
+

@@ -1,33 +1,23 @@
 # main.py
 import streamlit as st
-import os # É uma boa prática colocar imports de bibliotecas padrão primeiro
+import os
+
 if 'main_script_path' not in st.session_state:
     st.session_state.main_script_path = os.path.abspath(__file__)
 
-# 1. st.set_page_config() DEVE SER O PRIMEIRO COMANDO STREAMLIT
-# Mova a configuração da página para o topo, logo após 'import streamlit as st'.
 st.set_page_config(
     page_title="LexAutomate - Plataforma Jurídica Inteligente",
-    page_icon="https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/lexautomate_icon.png", # Use o seu ícone
+    page_icon="https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/lexautomate_icon.png",
     layout="wide"
 )
 
-# 2. AGORA IMPORTE OS OUTROS MÓDULOS DO SEU PROJETO
 from app import resumo_interface
 from app2 import peticao_interface
 from app3 import validacao_interface
-from app4 import consultor_juridico_interface # Importa a nova interface do app4
-
-# Importa a constante do nome do modelo LLM diretamente do rag_utils
+from app4 import consultor_juridico_interface
 from rag_utils import AZURE_OPENAI_DEPLOYMENT_LLM
 
-# Adicionar esta linha para ajudar rag_utils.py a encontrar o caminho dos modelos
-# se você estiver usando a lógica de PROJECT_ROOT_DIR baseada em st.session_state
-if 'main_script_path' not in st.session_state:
-    st.session_state.main_script_path = os.path.abspath(__file__)
-
-
-# --- INÍCIO: Conteúdo da Barra Lateral (Sidebar) ---
+# --- INÍCIO: Sidebar ---
 with st.sidebar:
     st.markdown("# Instruções de Uso")
     st.markdown("---")
@@ -41,7 +31,6 @@ with st.sidebar:
             3. (Opcional) Forneça uma instrução específica para direcionar o resumo.
             4. Clique em "Gerar Resumo com RAG".
             5. Revise, edite se necessário, e salve/exporte o resultado.
-        - **Dica:** Se a resposta não for ideal, ajuste sua instrução no campo de prompt e gere novamente.
         """)
 
     with st.expander("Guia - Geração de Peça Jurídica", expanded=False):
@@ -49,11 +38,10 @@ with st.sidebar:
         - **Objetivo:** Criar rascunhos de peças processuais com base em fatos e documentos.
         - **Como Usar:**
             1. Vá para a aba "Geração de Peça Jurídica".
-            2. Envie documentos com a situação do cliente (fatos, provas).
-            3. Escreva uma instrução detalhada para a IA (tipo de peça, partes, teses principais, etc.).
+            2. Envie documentos com a situação do cliente.
+            3. Escreva uma instrução detalhada para a IA.
             4. Clique em "Gerar Peça Processual".
-            5. Revise cuidadosamente, edite o rascunho gerado e exporte.
-        - **Dica:** Se a resposta não for ideal, ajuste sua instrução no campo de prompt e gere novamente.
+            5. Revise, edite e exporte.
         """)
 
     with st.expander("Guia - Validação de Cláusula", expanded=False):
@@ -61,73 +49,64 @@ with st.sidebar:
         - **Objetivo:** Analisar cláusulas contratuais quanto à validade, riscos e conformidade.
         - **Como Usar:**
             1. Vá para a aba "Validação de Cláusula".
-            2. Envie o contrato (PDF, DOCX).
-            3. Especifique a cláusula ou ponto a ser analisado na instrução.
+            2. Envie o contrato (PDF ou DOCX).
+            3. Especifique a cláusula a ser analisada.
             4. Clique em "Analisar/Validar Cláusulas".
-            5. Revise a análise, edite e exporte.
-        - **Dica:** Se a resposta não for ideal, ajuste sua instrução no campo de prompt e gere novamente.
         """)
 
-    with st.expander("Guia - Consultor Jurídico (Chat)", expanded=False): # NOVA SEÇÃO
+    with st.expander("Guia - Consultor Jurídico (Chat)", expanded=False):
         st.markdown("""
-        - **Objetivo:** Obter respostas para perguntas jurídicas gerais, discutir teses, legislação e jurisprudência.
+        - **Objetivo:** Obter respostas para perguntas jurídicas gerais.
         - **Como Usar:**
             1. Vá para a aba "Consultor Jurídico".
-            2. Digite sua pergunta no campo de chat na parte inferior.
-            3. LexConsult usará a base de conhecimento para fornecer uma resposta fundamentada.
-            4. Você pode continuar a conversa fazendo perguntas de acompanhamento.
+            2. Digite sua pergunta no chat.
+            3. O LexConsult fornecerá uma resposta fundamentada.
         """)
 
     st.markdown("---")
     st.markdown("### 🧠 Dicas Avançadas (Prompts)")
     st.markdown("""
-    - **Seja Específico:** Quanto mais detalhes você fornecer no prompt, melhor será o resultado.
-    - **Peças:** Indique tipo, foro, partes, valor da causa, teses desejadas.
-    - **Análise:** Aponte a cláusula exata e o tipo de análise (validade, riscos, sugestões).
-    - Consulte o [guia completo de prompts](https://medium.com/@thiagoazro/engenharia-de-prompt-e-modelos-de-linguagem-um-aliado-para-os-profissionais-do-direito-af86658e470b) para mais ideias.
+    - **Seja Específico:** Quanto mais detalhes, melhor o resultado.
+    - **Peças:** Indique tipo, partes, foro, valor da causa.
+    - **Cláusulas:** Especifique número, assunto e tipo de análise.
+    - Veja o [guia completo de prompts](https://medium.com/@thiagoazro/engenharia-de-prompt-e-modelos-de-linguagem-um-aliado-para-os-profissionais-do-direito-af86658e470b).
     """)
     st.markdown("---")
-    # Usa a constante importada de rag_utils.py para o nome do modelo
     st.caption(f"LexAutomate v1.2.2 (Chat Integrado) - LLM: {AZURE_OPENAI_DEPLOYMENT_LLM}")
+    st.markdown("---")
+    st.markdown("© 2025 LexAutomate. Todos os direitos reservados.")
+# --- FIM Sidebar ---
 
-# --- FIM: Conteúdo da Barra Lateral (Sidebar) ---
-
-
-col1_main, col2_main = st.columns([1, 4])
+# --- TOPO COM LOGO E TÍTULO ---
+col1_main, col2_main = st.columns([1, 5])
 with col1_main:
     st.image("https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/logo_lexautomate.png", width=250)
 with col2_main:
-    st.markdown("""
-    ## LexAutomate - Plataforma Jurídica Inteligente
-    ### Resumos, Geração de Peças, Análise de Cláusulas e Consultoria Jurídica com Agentes de IA
-    #### Escolha seu agente de acordo com a tarefa desejada.
-    """, unsafe_allow_html=True)
+    st.markdown("# LexAutomate: Plataforma Jurídica Inteligente")
+    st.markdown("##### IA Jurídica com Agentes Inteligentes. Escolha seu agente de acordo com a tarefa desejada.")
 
-# Abas principais
-abas_titulos = [
-    "📄 Resumo de Documento",
-    "✍️ Geração de Peça Jurídica",
-    "🔎 Validação de Cláusula",
-    "🤖 Consultor Jurídico"
-]
-abas = st.tabs(abas_titulos)
+# --- NAVEGAÇÃO ENTRE ABAS ---
+aba_selecionada = st.radio(
+    "Escolha a funcionalidade:",
+    [
+        "📄 Resumo de Documento",
+        "✍️ Geração de Peça Jurídica",
+        "📑 Validação de Cláusula",
+        "🤖 Consultor Jurídico"
+    ],
+    horizontal=True,
+    key="menu_aba_principal"
+)
 
-with abas[0]:
+# Mapeamento correto com ícones
+if aba_selecionada == "📄 Resumo de Documento":
     resumo_interface()
-
-with abas[1]:
+elif aba_selecionada == "✍️ Geração de Peça Jurídica":
     peticao_interface()
-
-with abas[2]:
+elif aba_selecionada == "📑 Validação de Cláusula":
     validacao_interface()
-
-with abas[3]:
+elif aba_selecionada == "🤖 Consultor Jurídico":
     consultor_juridico_interface()
 
 
-st.markdown("""
-<hr style='margin-top: 3rem;'>
-<div style='text-align: center; font-size: 0.8rem; color: gray;'>
-    © 2025 LexAutomate. Todos os direitos reservados.
-</div>
-""", unsafe_allow_html=True)
+

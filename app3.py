@@ -229,3 +229,4 @@ def validacao_interface():
                     key=f"chunk_preview_validacao_expander_key_app3_{chunk_id}"
                 )
                 st.markdown("---")
+

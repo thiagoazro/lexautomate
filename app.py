@@ -255,3 +255,4 @@ def resumo_interface():
                     key=f"chunk_preview_resumo_expander_key_app_{chunk_id}"
                 )
                 st.markdown("---")
+

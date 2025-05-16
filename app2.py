@@ -248,3 +248,4 @@ def peticao_interface():
                     key=f"chunk_preview_peticao_expander_key_app2_{chunk_id}"
                 )
                 st.markdown("---")
+
