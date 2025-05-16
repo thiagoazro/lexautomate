@@ -30,7 +30,7 @@ O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, 
 ---
 Utiliza RAG, busca semantica, e azure language. Jurisprudencia e modelo de peticoes incluidos. Google Search API incluído. Reranking e Classificadores Juridicos
 
-## Estrutura do Projeto #
+## Estrutura do Projeto ##
 
 ```
 /
