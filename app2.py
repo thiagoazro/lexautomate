@@ -138,17 +138,18 @@ def peticao_interface():
                 with st.spinner("LexAutomate está redigindo a peça... Por favor, aguarde."):
                     try:
                         resposta = generate_response_with_conditional_google_search(
-                            system_message=SYSTEM_PROMPT_APP2_PETICAO,
+                            system_message_base=SYSTEM_PROMPT_APP2_PETICAO,
                             user_instruction=instrucao_final_usuario_para_rag,
                             context_document_text=st.session_state.peticao_multi_texto_extraido,
                             search_client=search_client,
                             client_openai=client_openai,
                             azure_openai_deployment_llm=AZURE_OPENAI_DEPLOYMENT_LLM,       # <--- CORRIGIDO
                             azure_openai_deployment_expansion=AZURE_OPENAI_DEPLOYMENT_LLM, # <--- CORRIGIDO/ADICIONADO
-                            top_k_azure=7,
+                            top_k_initial_search_azure=7, # Ex: Buscar 7 inicialmente
+                            top_k_rerank_azure=3,         # Ex: Manter os 3 melhores após reranking
                             use_semantic_search_azure=True,
-                            enable_google_search_fallback=enable_google_search_peticao,
-                            min_azure_results_for_fallback=2,
+                            enable_google_search_trigger=enable_google_search_peticao,
+                            min_azure_results_for_google_trigger=2,
                             num_google_results=3,
                             temperature=0.2,
                             max_tokens=4000 

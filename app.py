@@ -138,17 +138,18 @@ def resumo_interface():
                 with st.spinner("LexAutomate está resumindo... Por favor, aguarde."):
                     try:
                         resposta = generate_response_with_conditional_google_search(
-                            system_message=SYSTEM_PROMPT_APP_RESUMO,
+                            system_message_base=SYSTEM_PROMPT_APP_RESUMO,
                             user_instruction=user_instruction_final,
                             context_document_text=st.session_state.resumo_multi_texto_extraido,
                             search_client=search_client,
                             client_openai=client_openai,
                             azure_openai_deployment_llm=AZURE_OPENAI_DEPLOYMENT_LLM,       # <--- CORRIGIDO
                             azure_openai_deployment_expansion=AZURE_OPENAI_DEPLOYMENT_LLM, # <--- CORRIGIDO/ADICIONADO
-                            top_k_azure=5,
+                            top_k_initial_search_azure=7, # Ex: Buscar 7 inicialmente
+                            top_k_rerank_azure=3,         # Ex: Manter os 3 melhores após reranking
                             use_semantic_search_azure=True,
-                            enable_google_search_fallback=enable_google_search_resumo,
-                            min_azure_results_for_fallback=2, 
+                            enable_google_search_trigger=enable_google_search_resumo,
+                            min_azure_results_for_google_trigger=2, 
                             num_google_results=3,
                             temperature=0.1,
                             max_tokens=3500

@@ -1,18 +1,31 @@
+# main.py
 import streamlit as st
+import os # É uma boa prática colocar imports de bibliotecas padrão primeiro
+if 'main_script_path' not in st.session_state:
+    st.session_state.main_script_path = os.path.abspath(__file__)
+
+# 1. st.set_page_config() DEVE SER O PRIMEIRO COMANDO STREAMLIT
+# Mova a configuração da página para o topo, logo após 'import streamlit as st'.
+st.set_page_config(
+    page_title="LexAutomate - Plataforma Jurídica Inteligente",
+    page_icon="https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/lexautomate_icon.png", # Use o seu ícone
+    layout="wide"
+)
+
+# 2. AGORA IMPORTE OS OUTROS MÓDULOS DO SEU PROJETO
 from app import resumo_interface
 from app2 import peticao_interface
 from app3 import validacao_interface
 from app4 import consultor_juridico_interface # Importa a nova interface do app4
 
 # Importa a constante do nome do modelo LLM diretamente do rag_utils
-# para evitar o uso de st.secrets aqui, já que as chaves estão hardcoded em rag_utils.
 from rag_utils import AZURE_OPENAI_DEPLOYMENT_LLM
 
-st.set_page_config(
-    page_title="LexAutomate - Plataforma Jurídica Inteligente",
-    page_icon="https://raw.githubusercontent.com/thiagoazro/-cone_lexautomate/main/lexautomate_icon.png", # Use o seu ícone
-    layout="wide"
-)
+# Adicionar esta linha para ajudar rag_utils.py a encontrar o caminho dos modelos
+# se você estiver usando a lógica de PROJECT_ROOT_DIR baseada em st.session_state
+if 'main_script_path' not in st.session_state:
+    st.session_state.main_script_path = os.path.abspath(__file__)
+
 
 # --- INÍCIO: Conteúdo da Barra Lateral (Sidebar) ---
 with st.sidebar:
@@ -88,15 +101,14 @@ with col2_main:
     ## LexAutomate - Plataforma Jurídica Inteligente
     ### Resumos, Geração de Peças, Análise de Cláusulas e Consultoria Jurídica com Agentes de IA
     #### Escolha seu agente de acordo com a tarefa desejada.
-    
     """, unsafe_allow_html=True)
 
 # Abas principais
 abas_titulos = [
-    "📄 Resumo de Documento", # Adicionando emojis
+    "📄 Resumo de Documento",
     "✍️ Geração de Peça Jurídica",
     "🔎 Validação de Cláusula",
-    "🤖 Consultor Jurídico" # NOVA ABA PETICOE
+    "🤖 Consultor Jurídico"
 ]
 abas = st.tabs(abas_titulos)
 
@@ -109,7 +121,7 @@ with abas[1]:
 with abas[2]:
     validacao_interface()
 
-with abas[3]: # NOVA ABA PARA O CONSULTOR
+with abas[3]:
     consultor_juridico_interface()
 
 
