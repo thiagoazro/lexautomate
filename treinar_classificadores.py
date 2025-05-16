@@ -16,9 +16,9 @@ from nltk.corpus import stopwords
 # --- Download de recursos NLTK (stopwords) ---
 try:
     nltk.data.find('corpora/stopwords')
-except LookupError: # Corrigido o nome da exceção
+except LookupError: # CORRIGIDO para LookupError
     print("Baixando recurso 'stopwords' do NLTK...")
-    nltk.download('stopwords')
+    nltk.download('stopwords', quiet=True) # Adicionado quiet=True para menos verbosidade
 # try: # Se for usar o RSLPStemmer
 #     nltk.data.find('stemmers/rslp')
 # except LookupError:
