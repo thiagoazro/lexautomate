@@ -1,13 +1,32 @@
 # app.py (versão com múltiplos documentos para resumo jurídico)
 import streamlit as st
 import os
+import uuid
+import traceback
 from rag_docintelligence import extrair_texto_documento
 from rag_utils import (
     get_openai_client,
     get_azure_search_client,
-    generate_response_with_rag,
-    gerar_docx
+    generate_response_with_conditional_google_search, # Usando a função correta
+    gerar_docx,
+    AZURE_OPENAI_DEPLOYMENT_LLM
 )
+
+# Carregar o prompt específico para este app diretamente do arquivo
+try:
+    # Assumindo que a pasta 'prompts' está no mesmo nível do script principal executado
+    SYSTEM_PROMPT_APP_RESUMO = open(os.path.join("prompts", "system_prompt_app_resumo.md"), "r", encoding="utf-8").read()
+except FileNotFoundError:
+    error_message = "Erro: Arquivo 'prompts/system_prompt_app_resumo.md' não encontrado. Verifique o caminho."
+    print(error_message)
+    st.error(error_message)
+    SYSTEM_PROMPT_APP_RESUMO = "Você é um assistente de IA. Por favor, seja breve e direto." # Fallback
+except Exception as e:
+    error_message = f"Erro ao carregar 'prompts/system_prompt_app_resumo.md': {e}"
+    print(error_message)
+    st.error(error_message)
+    SYSTEM_PROMPT_APP_RESUMO = "Você é um assistente de IA." # Fallback
+
 
 def resumo_interface():
     st.subheader("Resumo de Documento Jurídico")
@@ -26,196 +45,212 @@ def resumo_interface():
         key="resumo_multi_uploader"
     )
 
+    # Inicialização de session_state
     if 'resumo_multi_texto_extraido' not in st.session_state:
         st.session_state.resumo_multi_texto_extraido = ""
     if 'resumo_rag_response' not in st.session_state:
-        st.session_state.resumo_rag_response = None
+        st.session_state.resumo_rag_response = None # Mantido como None para consistência
     if 'resumo_edited_response' not in st.session_state:
-        st.session_state.resumo_edited_response = None
+        st.session_state.resumo_edited_response = "" # Inicializado como string vazia
     if 'resumo_final_version' not in st.session_state:
         st.session_state.resumo_final_version = None
+    if 'geracao_em_andamento_resumo' not in st.session_state:
+        st.session_state.geracao_em_andamento_resumo = False
+    if 'last_retrieved_chunks_details_resumo' not in st.session_state:
+        st.session_state.last_retrieved_chunks_details_resumo = []
 
-    if uploaded_files and not st.session_state.resumo_multi_texto_extraido:
+
+    # Limpar chunks de execuções anteriores desta aba específica
+    if not st.session_state.geracao_em_andamento_resumo and st.session_state.get('last_retrieved_chunks_details_resumo'):
+         st.session_state.last_retrieved_chunks_details_resumo = []
+
+
+    if uploaded_files and not st.session_state.resumo_multi_texto_extraido: # Processa apenas se não houver texto extraído
         textos = []
+        st.session_state.geracao_em_andamento_resumo = True
         for file in uploaded_files:
             ext = os.path.splitext(file.name)[1].lower()
-            temp_path = f"temp_resumo_multi_{file.file_id}{ext}"
+            # Usando um nome de arquivo temporário mais robusto com UUID
+            temp_file_path = f"temp_resumo_{uuid.uuid4().hex}{ext}"
             try:
-                with open(temp_path, "wb") as f:
+                with open(temp_file_path, "wb") as f:
                     f.write(file.getvalue())
                 with st.spinner(f"Extraindo texto de {file.name}..."):
-                    texto = extrair_texto_documento(temp_path, ext)
+                    texto = extrair_texto_documento(temp_file_path, ext)
                 if texto:
-                    textos.append(f"---\n**{file.name}**\n\n{texto}")
+                    textos.append(f"---\n**Documento: {file.name}**\n\n{texto}")
+                else:
+                    st.warning(f"Não foi possível extrair texto de {file.name}.")
             except Exception as e:
                 st.error(f"Erro ao processar {file.name}: {e}")
+                traceback.print_exc()
             finally:
-                if os.path.exists(temp_path):
-                    try: os.remove(temp_path)
-                    except Exception: pass
+                if os.path.exists(temp_file_path):
+                    try:
+                        os.remove(temp_file_path)
+                    except Exception as e_rm:
+                        print(f"Aviso: Falha ao remover arquivo temporário {temp_file_path}: {e_rm}")
+        
+        if textos:
+            st.session_state.resumo_multi_texto_extraido = "\n\n".join(textos)
+            st.success("Textos extraídos com sucesso.")
+        else:
+            st.session_state.resumo_multi_texto_extraido = "" 
+            st.warning("Nenhum texto pôde ser extraído dos arquivos.")
+        st.session_state.geracao_em_andamento_resumo = False
+        st.rerun() # Atualiza a UI após extração
 
-        st.session_state.resumo_multi_texto_extraido = "\n\n".join(textos)
-        st.success("Textos extraídos com sucesso.")
-        st.rerun()
 
     if st.session_state.resumo_multi_texto_extraido:
         with st.expander("Ver Texto Extraído Consolidado", expanded=False):
-            st.text_area("Texto Completo:", st.session_state.resumo_multi_texto_extraido, height=200, disabled=True)
+            st.text_area(
+                "Texto Extraído:", 
+                st.session_state.resumo_multi_texto_extraido, 
+                height=200, 
+                disabled=True, 
+                key="resumo_texto_extraido_display"
+            )
 
         st.markdown("---")
         st.markdown("### 2. Geração do Rascunho com IA")
-        prompt_resumo = st.text_area (
-    "Direcione o resumo (opcional - Deixe em branco para resumo padrão):",
-    placeholder="Ex: Gere um resumo da cláusula de penalidades.\n"
-                "Ex: Para cada contrato anexado, gere um resumo com o nome das partes e as obrigações principais.",
-    height=100,
-    key="prompt_resumo_input"
-)
+        
+        prompt_resumo_usuario = st.text_area (
+            "Direcione o resumo (opcional - Deixe em branco para resumo padrão):",
+            placeholder=(
+                "Ex: Gere um resumo da cláusula de penalidades.\n"
+                "Ex: Para cada contrato anexado, gere um resumo com o nome das partes e as obrigações principais."
+            ),
+            height=100,
+            key="prompt_resumo_input"
+        )
 
-        if st.button("Gerar Resumo com RAG", key="resumo_gerar_btn"):
-            user_instruction = prompt_resumo.strip() if prompt_resumo.strip() else "Gerar um resumo padrão do documento, destacando os pontos chave conforme a estrutura solicitada."
-            with st.spinner("Gerando resumo..."):
-                try:
-                    system_message_resumo = """Você é um assistente jurídico altamente qualificado, especialista em análise e resumo de contratos e documentos jurídicos, com profundo conhecimento do ordenamento jurídico brasileiro.
-Seu objetivo é extrair as informações essenciais do(s) documento(s) fornecido(s), utilizando o CONTEXTO recuperado da base de conhecimento jurídica (como jurisprudência e legislação atualizadas da API Judit ou similar) para complementar, validar informações ou embasar a análise quando relevante.
+        enable_google_search_resumo = st.checkbox("Habilitar busca complementar na Web (Google) para este resumo?", value=True, key="resumo_enable_google_search_app")
 
-Siga a instrução específica do usuário, se houver. Caso contrário, ou se a instrução for genérica para um resumo padrão, siga a estrutura e o estilo dos exemplos abaixo, adaptando-se ao tipo de documento fornecido (contrato, petição, decisão, etc.).
+        if st.button("Gerar Resumo com RAG", key="resumo_gerar_btn_main_app"):
+            if not st.session_state.resumo_multi_texto_extraido.strip() and not prompt_resumo_usuario.strip():
+                st.warning("Forneça documentos ou uma instrução detalhada para a IA.")
+            else:
+                st.session_state.geracao_em_andamento_resumo = True
+                st.session_state.last_retrieved_chunks_details_resumo = [] # Limpa antes de nova busca
 
-**Exemplo 1: Resumo Padrão de Contrato de Prestação de Serviços de Consultoria**
+                user_instruction_final = prompt_resumo_usuario.strip() if prompt_resumo_usuario.strip() else "Gerar um resumo padrão do documento, destacando os pontos chave conforme a estrutura solicitada."
+                
+                with st.spinner("LexAutomate está resumindo... Por favor, aguarde."):
+                    try:
+                        resposta = generate_response_with_conditional_google_search(
+                            system_message=SYSTEM_PROMPT_APP_RESUMO,
+                            user_instruction=user_instruction_final,
+                            context_document_text=st.session_state.resumo_multi_texto_extraido,
+                            search_client=search_client,
+                            client_openai=client_openai,
+                            azure_openai_deployment_llm=AZURE_OPENAI_DEPLOYMENT_LLM,       # <--- CORRIGIDO
+                            azure_openai_deployment_expansion=AZURE_OPENAI_DEPLOYMENT_LLM, # <--- CORRIGIDO/ADICIONADO
+                            top_k_azure=5,
+                            use_semantic_search_azure=True,
+                            enable_google_search_fallback=enable_google_search_resumo,
+                            min_azure_results_for_fallback=2, 
+                            num_google_results=3,
+                            temperature=0.1,
+                            max_tokens=3500
+                        )
+                        
+                        resposta_str = str(resposta).strip() if resposta is not None else ""
+                        st.session_state.resumo_rag_response = resposta_str
+                        st.session_state.resumo_edited_response = resposta_str 
+                        st.session_state.resumo_final_version = None
+                        st.session_state.last_retrieved_chunks_details_resumo = st.session_state.get('last_retrieved_chunks_details', [])
+                        st.success("Rascunho do resumo gerado com sucesso!")
+                    except Exception as e:
+                        st.error(f"Ocorreu um erro durante a geração do resumo: {e}")
+                        st.session_state.resumo_rag_response = ""
+                        st.session_state.resumo_edited_response = ""
+                        print(f"DEBUG: Erro na geração do resumo: {e}")
+                        traceback.print_exc()
+                    finally:
+                        st.session_state.geracao_em_andamento_resumo = False
+                        st.rerun() 
 
-Instrução do Usuário: "Resuma este contrato de consultoria."
+    # Garante que resumo_edited_response seja uma string para o editor
+    texto_preview_resumo = st.session_state.get('resumo_edited_response', "")
+    if not isinstance(texto_preview_resumo, str):
+        texto_preview_resumo = str(texto_preview_resumo)
+    texto_preview_resumo = texto_preview_resumo.strip()
 
-Sua Resposta Ideal:
 
-**Partes Contratantes**
-CONTRATANTE: [Nome Completo ou Razão Social da Contratante], [CPF/CNPJ nº XXX.XXX.XXX-XX ou XX.XXX.XXX/0001-XX], com sede/residente em [Endereço Completo].
-CONTRATADA: [Nome Completo ou Razão Social da Contratada], [CPF/CNPJ nº YYY.YYY.YYY-YY ou YY.YYY.YYY/0001-YY], com sede/residente em [Endereço Completo].
-
-**Objeto Principal do Contrato**
-Prestação de serviços de consultoria especializada em [Área da Consultoria, ex: otimização de processos fiscais], conforme escopo detalhado no Anexo I (se houver) ou Cláusula X.
-
-**Principais Obrigações da CONTRATADA**
-- Realizar diagnóstico inicial e apresentar relatório em até X dias.
-- Desenvolver e apresentar plano de ação customizado.
-- Prestar Y horas de consultoria mensais durante a vigência do contrato.
-- Manter sigilo sobre as informações da CONTRATANTE.
-
-**Principais Obrigações da CONTRATANTE**
-- Fornecer acesso a todas as informações e documentos necessários para a execução dos serviços.
-- Efetuar o pagamento dos honorários nos prazos e valores acordados.
-- Designar um ponto de contato para comunicação e aprovações.
-
-**Prazos Relevantes**
-Vigência do Contrato: XX meses, com início em DD/MM/AAAA e término em DD/MM/AAAA, podendo ser prorrogado.
-Prazo para entrega do Relatório Diagnóstico: DD/MM/AAAA.
-
-**Preço e Forma de Pagamento**
-Valor Total/Mensal: R$ Z.ZZZ,ZZ (reais).
-Forma de Pagamento: [Ex: Transferência bancária mensal, mediante apresentação de Nota Fiscal, até o 5º dia útil do mês subsequente à prestação dos serviços].
-Condições de Reajuste: [Ex: Anual, pelo índice IGP-M/FGV, ou ausente].
-
-**Multas e Penalidades**
-Multa por Atraso no Pagamento (Contratante): X% sobre o valor devido, acrescido de juros de Y% ao mês e correção monetária.
-Multa por Rescisão Antecipada Imotivada: [Ex: Equivalente a Z% do valor remanescente do contrato, ou X mensalidades].
-
-**Rescisão/Extinção**
-O contrato poderá ser rescindido por inadimplemento de qualquer das partes, mediante notificação prévia de X dias, ou nas hipóteses legais. A rescisão imotivada poderá sujeitar à multa prevista.
-
-**Foro de Eleição**
-Fica eleito o foro da comarca de [Cidade]/[UF] para dirimir quaisquer controvérsias oriundas deste contrato.
-
-**Exemplo 2: Resumo de Decisão Judicial (Sentença de Primeira Instância em Ação de Indenização)**
-
-Instrução do Usuário: "Faça um resumo desta sentença."
-
-Sua Resposta Ideal:
-
-**Identificação do Processo**
-Número do Processo: XXXXXXX-XX.XXXX.X.XX.XXXX
-Vara/Juízo: Xª Vara Cível da Comarca de [Nome da Comarca]/[UF]
-Partes:
-    Autor(a)/Requerente: [Nome Completo]
-    Ré(u)/Requerido(a): [Nome Completo/Razão Social]
-Tipo de Ação: Ação de Indenização por Danos Morais e Materiais
-
-**Objeto da Lide (Resumido)**
-O(A) Autor(a) pleiteou indenização por danos morais e materiais decorrentes de [breve descrição do fato gerador, ex: inscrição indevida em cadastro de inadimplentes, acidente de trânsito, falha na prestação de serviço].
-
-**Principais Fundamentos da Decisão**
-- **Danos Materiais:** O juízo reconheceu/não reconheceu o direito à indenização por danos materiais, com base em [breve menção à prova ou fundamento legal, ex: comprovantes de despesas juntados, ausência de nexo causal].
-- **Danos Morais:** Foi/Não foi acolhido o pedido de danos morais. A decisão se baseou em [breve menção ao fundamento, ex: comprovação do abalo psicológico e da conduta ilícita do réu, Súmula X do STJ, ausência de comprovação do dano extrapatrimonial].
-- **Responsabilidade Civil:** A responsabilidade do(a) Ré(u) foi/não foi configurada, considerando [ex: a presença/ausência dos elementos da responsabilidade civil - conduta, dano, nexo causal e culpa/risco].
-- **Legislação Aplicada:** [Mencionar as principais leis ou artigos citados, ex: Código Civil (arts. 186, 927), Código de Defesa do Consumidor].
-- **Contexto Jurisprudencial Relevante (se destacado na sentença):** [Mencionar brevemente se a decisão se apoiou em entendimentos consolidados ou precedentes específicos].
-
-**Dispositivo da Sentença (Resultado)**
-O pedido foi julgado [PROCEDENTE / PARCIALMENTE PROCEDENTE / IMPROCEDENTE].
-Condenações (se houver):
-    - Danos Materiais: R$ X.XXX,XX, corrigidos monetariamente e com juros.
-    - Danos Morais: R$ Y.YYY,YY, corrigidos monetariamente e com juros.
-    - Custas e Honorários: Condenação do(a) [Autor/Réu] ao pagamento das custas processuais e honorários advocatícios fixados em Z% sobre o valor da condenação/causa.
-
-**Pontos de Destaque/Observações (Opcional, se relevante)**
-[Algum ponto específico da decisão que mereça destaque, como um obiter dictum importante, uma tese jurídica particular aplicada, etc.]
-
-**Formatação Importante:**
-Utilize Markdown para formatar a resposta. Use **negrito** (asteriscos duplos, como em `**Título Principal**`) para todos os títulos dos tópicos. Inclua uma linha em branco *antes* e *depois* de cada título em negrito. O texto dentro de cada tópico deve ser corrido e objetivo. Baseie-se primariamente no(s) documento(s) fornecido(s), usando o contexto recuperado como apoio para enriquecer a análise ou confirmar informações.
-
-Agora, processe a solicitação do usuário com base no(s) documento(s) e no contexto fornecido."""
-                    resposta_rag = generate_response_with_rag(
-                        system_message=system_message_resumo,
-                        user_instruction=user_instruction,
-                        context_document_text=st.session_state.resumo_multi_texto_extraido,
-                        search_client=search_client,
-                        client_openai=client_openai,
-                        top_k_chunks=5
-                    )
-                    st.session_state.resumo_rag_response = resposta_rag
-                    st.session_state.resumo_edited_response = str(resposta_rag).strip() if resposta_rag is not None else ""
-                    st.session_state.resumo_final_version = None
-                    st.success("Rascunho gerado. Revise, edite e confira a formatação abaixo.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Ocorreu um erro ao gerar o resumo: {e}")
-                    st.session_state.resumo_rag_response = None
-                    st.session_state.resumo_edited_response = None
-
-    if st.session_state.resumo_edited_response is not None:
+    if texto_preview_resumo: # Mostra a seção de edição apenas se houver algo
         st.markdown("---")
         st.markdown("### 3. Revisão, Edição e Exportação")
-        st.markdown("#### Pré-visualização do Documento Formatado:")
-        preview_text_app1 = st.session_state.get('resumo_edited_response',"")
-        if not isinstance(preview_text_app1, str): preview_text_app1 = str(preview_text_app1)
+
+        st.markdown("#### Pré-visualização do Resumo:")
         with st.container(border=True):
-            st.markdown(preview_text_app1)
+            st.markdown(texto_preview_resumo, unsafe_allow_html=True)
+
         st.markdown("---")
-        edited_text_from_area = st.text_area(
-            "Edite o texto abaixo (use `**texto**` para negrito):",
-            value=st.session_state.resumo_edited_response,
-            height=400,
-            key="resumo_editor_multi"
+        texto_editado_resumo = st.text_area(
+            "Edite o resumo gerado (Markdown):",
+            value=texto_preview_resumo, # Usa o valor da sessão que pode ter sido atualizado
+            height=600,
+            key="resumo_editor_area_app"
         )
-        if edited_text_from_area != st.session_state.resumo_edited_response:
-            st.session_state.resumo_edited_response = edited_text_from_area
-            st.session_state.resumo_final_version = None
-            st.rerun()
-        if st.button("Salvar Versão Editada", key="resumo_salvar_btn"):
-            st.session_state.resumo_final_version = st.session_state.resumo_edited_response
-            st.success("Versão editada salva.")
-            st.rerun()
+
+        # Atualiza o estado da sessão se o texto editado mudar
+        if texto_editado_resumo != st.session_state.get('resumo_edited_response', ""):
+            st.session_state.resumo_edited_response = texto_editado_resumo
+            st.session_state.resumo_final_version = None # Reseta a versão final ao editar
+            # st.rerun() # Pode causar loop se não gerenciado com cuidado, mas força atualização
+
+        col_btn_save_resumo, col_btn_download_resumo = st.columns(2)
+
+        with col_btn_save_resumo:
+            if st.button("Salvar Versão Editada do Resumo", key="resumo_save_edited_btn_app"):
+                st.session_state.resumo_final_version = st.session_state.resumo_edited_response # Salva o conteúdo atual do editor
+                st.success("Versão do resumo salva.")
+                st.rerun() # Para atualizar o estado do botão de download
+
         if st.session_state.resumo_final_version is not None:
-            st.markdown("**Exportar Versão Salva:**")
-            final_text_to_export = st.session_state.resumo_final_version
-            file_basename = f"LexAutomate_Resumo_Multidoc"
-            try:
-                docx_data = gerar_docx(final_text_to_export)
-                st.download_button(
-                    label="Exportar para DOCX", 
-                    data=docx_data, 
-                    file_name=f"{file_basename}.docx", 
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
-                    key="resumo_export_docx_btn"
+            with col_btn_download_resumo:
+                try:
+                    docx_data = gerar_docx(st.session_state.resumo_final_version)
+                    st.download_button(
+                        label="Baixar Resumo em DOCX",
+                        data=docx_data,
+                        file_name="LexAutomate_Resumo.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key="resumo_download_docx_btn_app"
+                    )
+                except Exception as e:
+                    st.error(f"Erro ao gerar DOCX para o resumo: {e}")
+                    print(f"DEBUG: Erro ao gerar DOCX para resumo: {e}")
+                    traceback.print_exc()
+    
+    retrieved_chunks_display = st.session_state.get('last_retrieved_chunks_details_resumo', [])
+
+    if retrieved_chunks_display:
+        st.markdown("---")
+        with st.expander("🔎 Detalhes dos Documentos Recuperados pelo RAG (para a última geração de resumo)", expanded=False):
+            for i, chunk_info in enumerate(retrieved_chunks_display):
+                arquivo_origem = chunk_info.get('arquivo_origem', 'N/A')
+                score = chunk_info.get('score', None)
+                reranker_score = chunk_info.get('reranker_score', None)
+                semantic_caption = chunk_info.get('semantic_caption', None)
+                content_preview = chunk_info.get('content_preview', 'Conteúdo não disponível.')
+                chunk_id = chunk_info.get('chunk_id', f"chunk_display_resumo_expander_app_{i}")
+
+                st.markdown(f"**Chunk {i+1} (Origem: `{arquivo_origem}`)**")
+                score_text = f"{score:.4f}" if isinstance(score, (int, float)) else "N/A"
+                reranker_text = f"{reranker_score:.4f}" if isinstance(reranker_score, (int, float)) else "N/A"
+                details_md = f"> Score Busca: **{score_text}**"
+                if reranker_score is not None and reranker_text != "N/A":
+                    details_md += f" | Score Reclassificação: **{reranker_text}**"
+                st.markdown(details_md)
+
+                if semantic_caption:
+                    st.markdown(f"> Caption Semântico: *{semantic_caption}*")
+                st.text_area(
+                    label=f"Conteúdo do Chunk {i+1} (preview):",
+                    value=content_preview,
+                    height=100,
+                    disabled=True,
+                    key=f"chunk_preview_resumo_expander_key_app_{chunk_id}"
                 )
-            except Exception as e: 
-                st.error(f"Erro ao gerar DOCX: {e}")
-                st.exception(e)
+                st.markdown("---")

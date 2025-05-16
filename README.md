@@ -1,5 +1,5 @@
 
-# LexAutomate - Plataforma de Análise Jurídica com IA
+# LexAutomate - Plataforma de Análise Jurídica com IA #
 
 Este projeto implementa uma plataforma jurídica baseada em Inteligência Artificial, composta por três módulos:
 
@@ -12,7 +12,7 @@ O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, 
 
 ---
 
-## Tecnologias Utilizadas
+## Tecnologias Utilizadas #
 
 - **Python 3.12**
 - **Streamlit** (Frontend Web)
@@ -26,7 +26,7 @@ O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, 
   - `openai`
 
 ---
-Utiliza RAG, busca semantica, e azure language. Jurisprudencia e modelo de peticoes incluidos.
+Utiliza RAG, busca semantica, e azure language. Jurisprudencia e modelo de peticoes incluidos. Google Search API incluído.
 
 ## Estrutura do Projeto
 
@@ -35,6 +35,7 @@ Utiliza RAG, busca semantica, e azure language. Jurisprudencia e modelo de petic
 ├── app.py        # Módulo 1: Resumo de Contratos
 ├── app2.py       # Módulo 2: Geração de Petições
 ├── app3.py       # Módulo 3: Validação de Cláusulas
+├── app4.py       # Módulo 4: Consultor Jurídico
 ├── main.py       # Arquivo principal para navegação entre os módulos
 ├── requirements.txt
 ├── logo_lexautomate.png
