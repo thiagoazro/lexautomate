@@ -25,8 +25,8 @@ AZURE_OPENAI_DEPLOYMENT_LLM = 'lexautomate_agent'
 AZURE_OPENAI_DEPLOYMENT_EMBEDDING = 'text-embedding-3-large'
 AZURE_API_VERSION = '2024-02-15-preview'
 
-AZURE_SEARCH_ENDPOINT = "https://lexautomate-rag2.search.windows.net"
-AZURE_SEARCH_KEY = "igJqXTXsYEC6gpIzFvjOvjm0WtSgd0Xrw8TNMDkwK9AzSeC5ft3H"
+AZURE_SEARCH_ENDPOINT = "https://lexautomate-rag.search.windows.net"
+AZURE_SEARCH_KEY = "cjnnxusQPkdT02Lu75uIeD7XEKrAzxgjalqWpS58SgAzSeCpCL38"
 DEFAULT_AZURE_SEARCH_INDEX_NAME = "docs-index"
 AZURE_SEARCH_SEMANTIC_CONFIG_NAME_DEFAULT = "default"
 
