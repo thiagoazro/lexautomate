@@ -21,4 +21,9 @@ Pillow
 # Biblioteca para chamadas HTTP (opcional, mas útil)
 requests
 
+#Biblioteca para salvar os modelos de trienamento de classificação
+jolib
+
+nltk
+
 # NOTA: É uma boa prática fixar as versões exatas...
