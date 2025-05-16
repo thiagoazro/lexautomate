@@ -1,25 +1,16 @@
-# Interface e IA
 streamlit
 openai>=1.0.0
 
-# Azure SDKs
 azure-search-documents>=11.4.0
 azure-ai-formrecognizer>=3.2.0
 azure-core
 
-# Documentos e imagens
 PyMuPDF
 python-docx
 Pillow
 
-# HTTP requests
 requests
 
-# NLP e ML
-nltk
 joblib
 scikit-learn
-matplotlib
-
-# Reranker (se estiver usando CrossEncoder)
 sentence-transformers
