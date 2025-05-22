@@ -15,6 +15,7 @@ from app import resumo_interface
 from app2 import peticao_interface
 from app3 import validacao_interface
 from app4 import consultor_juridico_interface
+from app5 import parametrizador_interface
 from rag_utils import AZURE_OPENAI_DEPLOYMENT_LLM
 
 # --- INÍCIO: Sidebar ---
@@ -63,16 +64,25 @@ with st.sidebar:
             3. O LexConsult fornecerá uma resposta fundamentada.
         """)
 
+    with st.expander("Guia - Modelos Jurídicos Parametrizáveis", expanded=False):
+        st.markdown("""
+        - **Objetivo:** Criar peças jurídicas personalizadas com base em parâmetros fornecidos.
+        - **Como Usar:**
+            1. Vá para a aba "Modelo Parametrizado".
+            2. Preencha os campos como tipo de peça, partes, foro e pedidos.
+            3. Clique em "Gerar Petição Parametrizada".
+        """)
+
     st.markdown("---")
     st.markdown("### 🧠 Dicas Avançadas (Prompts)")
     st.markdown("""
     - **Seja Específico:** Quanto mais detalhes, melhor o resultado.
     - **Peças:** Indique tipo, partes, foro, valor da causa.
     - **Cláusulas:** Especifique número, assunto e tipo de análise.
-    - Veja o [guia completo de prompts](https://medium.com/@thiagoazro/engenharia-de-prompt-e-modelos-de-linguagem-um-aliado-para-os-profissionais-do-direito-af86658e470b).
+    Veja o [guia completo de prompts](https://medium.com/@thiagoazro/engenharia-de-prompt-e-modelos-de-linguagem-um-aliado-para-os-profissionais-do-direito-af86658e470b).
     """)
     st.markdown("---")
-    st.caption(f"LexAutomate v1.2.2 (Chat Integrado) - LLM: {AZURE_OPENAI_DEPLOYMENT_LLM}")
+    st.caption(f"LexAutomate v1.3.0 - LLM: {AZURE_OPENAI_DEPLOYMENT_LLM}")
     st.markdown("---")
     st.markdown("© 2025 LexAutomate. Todos os direitos reservados.")
 # --- FIM Sidebar ---
@@ -90,23 +100,22 @@ aba_selecionada = st.radio(
     "Escolha a funcionalidade:",
     [
         "📄 Resumo de Documento",
-        "✍️ Geração de Peça Jurídica",
         "📑 Validação de Cláusula",
-        "🤖 Consultor Jurídico"
+        "🤖 Consultor Jurídico",
+        "✍️ Geração de Peça Jurídica Livre",
+        "🧩 Modelo Parametrizado"
     ],
     horizontal=True,
     key="menu_aba_principal"
 )
 
-# Mapeamento correto com ícones
 if aba_selecionada == "📄 Resumo de Documento":
     resumo_interface()
-elif aba_selecionada == "✍️ Geração de Peça Jurídica":
-    peticao_interface()
 elif aba_selecionada == "📑 Validação de Cláusula":
     validacao_interface()
 elif aba_selecionada == "🤖 Consultor Jurídico":
     consultor_juridico_interface()
-
-
-
+elif aba_selecionada == "✍️ Geração de Peça Jurídica Livre":
+    peticao_interface()
+elif aba_selecionada == "🧩 Modelo Parametrizado":
+    parametrizador_interface()

@@ -1,0 +1,376 @@
+{
+  "Civil": {
+    "Petições Iniciais": {
+      "Ação de Indenização por Danos Morais e Materiais": {
+        "descricao": "Buscar reparação por danos morais e/ou materiais sofridos.",
+        "reivindicacoes_comuns": ["Indenização por danos morais", "Indenização por danos materiais (danos emergentes)", "Lucros cessantes", "Tutela de urgência (se aplicável)"],
+        "prompt_template": "Elabore uma Petição Inicial Cível de Ação de Indenização por Danos Morais e Materiais para {autor} em face de {reu}, em decorrência de [NARRAR OS FATOS QUE ORIGINARAM OS DANOS DE FORMA CLARA E DETALHADA, INDICANDO DATA E LOCAL]. Os danos materiais totalizam R$ [VALOR DOS DANOS MATERIAIS COMPROVADOS] e os danos morais são estimados em R$ [VALOR PRETENDIDO PARA DANOS MORAIS]. Fundamentar nos artigos 186, 927 do Código Civil e legislação pertinente. Foro: {foro}. Valor da causa: R$ {valor}. Pedidos: {reivindicacoes_formatadas}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Cobrança": {
+        "descricao": "Para cobrar valores devidos com base em obrigação ou título não executivo.",
+        "reivindicacoes_comuns": ["Pagamento do valor principal devido", "Correção monetária", "Juros de mora", "Multa contratual (se houver)", "Honorários advocatícios"],
+        "prompt_template": "Redija uma Petição Inicial Cível de Ação de Cobrança para {autor} contra {reu}, referente à dívida de R$ [VALOR ORIGINAL DA DÍVIDA], originada de [DESCREVER A ORIGEM DA OBRIGAÇÃO/DÍVIDA, EX: CONTRATO DE PRESTAÇÃO DE SERVIÇOS, NOTA PROMISSÓRIA SEM FORÇA EXECUTIVA], vencida em [DATA DE VENCIMENTO]. Requerer o pagamento do valor atualizado. Foro: {foro}. Valor da causa: R$ {valor}. Pedidos: {reivindicacoes_formatadas}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Execução de Título Extrajudicial": {
+        "descricao": "Para executar um título que a lei confere força executiva (ex: cheque, nota promissória, contrato assinado por duas testemunhas).",
+        "reivindicacoes_comuns": ["Citação do executado para pagamento em 3 dias", "Penhora de bens em caso de não pagamento", "Inclusão do nome do executado em cadastros de inadimplentes", "Honorários advocatícios"],
+        "prompt_template": "Elabore uma Petição Inicial de Ação de Execução de Título Extrajudicial para {autor} em face de {reu}, com base no título [ESPECIFICAR O TÍTULO EXECUTIVO, EX: CHEQUE Nº XXX, NOTA PROMISSÓRIA Nº YYY, CONTRATO DE CONFISSÃO DE DÍVIDA], no valor de R$ [VALOR DO TÍTULO]. Requerer a citação para pagamento em 3 (três) dias, sob pena de penhora. Foro: {foro}. Valor da causa: R$ {valor}. Pedidos: {reivindicacoes_formatadas}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Obrigação de Fazer / Não Fazer": {
+        "descricao": "Para compelir alguém a cumprir uma obrigação ou se abster de um ato.",
+        "reivindicacoes_comuns": ["Cumprimento da obrigação de fazer [ESPECIFICAR A OBRIGAÇÃO]", "Abstenção da prática do ato [ESPECIFICAR O ATO]", "Fixação de multa diária (astreintes) por descumprimento", "Indenização por perdas e danos (se houver)"],
+        "prompt_template": "Redija uma Petição Inicial Cível de Ação de Obrigação de Fazer (ou Não Fazer) para {autor} contra {reu}, para que este seja compelido a [DESCREVER A OBRIGAÇÃO DE FAZER OU O ATO DO QUAL DEVE SE ABSTER]. Fundamentar a urgência e a necessidade da medida. Requerer a fixação de multa diária em caso de descumprimento. Foro: {foro}. Valor da causa: R$ {valor}. Pedidos: {reivindicacoes_formatadas}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Despejo (diversas causas)": {
+        "descricao": "Para reaver imóvel alugado (falta de pagamento, denúncia vazia, etc.).",
+        "reivindicacoes_comuns": ["Rescisão do contrato de locação", "Decreto de despejo com prazo para desocupação voluntária", "Pagamento dos aluguéis e encargos em atraso (se despejo por falta de pagamento)", "Multa contratual"],
+        "prompt_template": "Elabore uma Petição Inicial Cível de Ação de Despejo para {autor} (locador) contra {reu} (locatário), referente ao imóvel [ENDEREÇO DO IMÓVEL], com base em [MOTIVO DO DESPEJO, EX: FALTA DE PAGAMENTO DESDE MM/AAAA, DENÚNCIA VAZIA APÓS PRAZO DETERMINADO, USO PRÓPRIO]. {reivindicacoes_formatadas}. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação Revisional de Contrato": {
+        "descricao": "Para revisar cláusulas contratuais consideradas abusivas ou excessivamente onerosas.",
+        "reivindicacoes_comuns": ["Revisão da cláusula contratual nº [NÚMERO DA CLÁUSULA]", "Declaração de nulidade de cláusula abusiva", "Restituição de valores pagos a maior", "Tutela de urgência para suspender pagamentos ou efeitos da cláusula"],
+        "prompt_template": "Redija uma Petição Inicial Cível de Ação Revisional de Contrato para {autor} contra {reu}, referente ao contrato de [TIPO DE CONTRATO, EX: FINANCIAMENTO BANCÁRIO, PLANO DE SAÚDE], firmado em [DATA DA ASSINATURA]. Argumentar a abusividade/onerosidade excessiva da(s) cláusula(s) [ESPECIFICAR CLÁUSULAS E MOTIVOS]. Foro: {foro}. Valor da causa: R$ {valor}. Pedidos: {reivindicacoes_formatadas}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Contestações": {
+      "Contestação Genérica Cível": {
+        "descricao": "Modelo base para contestar uma ação cível.",
+        "reivindicacoes_comuns": ["Preliminares (inépcia, ilegitimidade, etc.)", "Prescrição/Decadência", "Impugnação específica dos fatos narrados na inicial", "Apresentação de teses de mérito contrárias", "Impugnação de documentos", "Pedido de improcedência da ação"],
+        "prompt_template": "Elabore uma Contestação Cível para {reu} na ação movida por {autor} (Processo nº [NÚMERO DO PROCESSO]), que tramita em {foro}. Apresentar as defesas processuais (preliminares) e de mérito, impugnando os fatos e pedidos da inicial. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Réplicas": {
+        "Réplica à Contestação Cível": {
+            "descricao": "Manifestação do autor sobre os fatos e documentos apresentados na contestação.",
+            "reivindicacoes_comuns": ["Reiteração dos termos da inicial", "Impugnação das preliminares arguidas pelo réu", "Impugnação dos fatos e documentos novos trazidos na contestação", "Pedido de prosseguimento do feito com o julgamento de procedência"],
+            "prompt_template": "Redija uma Réplica à Contestação para {autor} nos autos do processo nº [NÚMERO DO PROCESSO] em que contende com {reu}, perante o foro de {foro}. Refutar os argumentos e documentos apresentados na contestação e reiterar os pedidos da petição inicial. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+        }
+    },
+    "Recursos Cíveis": {
+      "Recurso de Apelação Cível": {
+        "descricao": "Recurso contra sentença terminativa ou definitiva de mérito.",
+        "reivindicacoes_comuns": ["Reforma da sentença", "Anulação da sentença", "Preparo", "Contrarrazões pela parte contrária"],
+        "prompt_template": "Prepare um Recurso de Apelação Cível para {autor_recorrente} (ou {reu_recorrente}) contra a r. sentença proferida às fls. [NÚMERO DAS FLS. DA SENTENÇA] nos autos do Processo nº [NÚMERO DO PROCESSO], que tramitou perante o Juízo da [VARA E COMARCA DA SENTENÇA], que julgou [PROCEDENTE/IMPROCEDENTE] o pedido [RESUMO DO PEDIDO JULGADO]. Apresentar as razões de fato e de direito para a reforma ou anulação da decisão. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Agravo de Instrumento Cível": {
+        "descricao": "Recurso contra decisões interlocutórias específicas (art. 1.015, CPC).",
+        "reivindicacoes_comuns": ["Reforma da decisão agravada", "Efeito suspensivo ou tutela antecipada recursal", "Juntada de peças obrigatórias e facultativas"],
+        "prompt_template": "Elabore um Agravo de Instrumento Cível para {autor_agravante} (ou {reu_agravante}) contra a decisão interlocutória de fls. [NÚMERO DAS FLS. DA DECISÃO AGRAVADA] proferida nos autos do Processo nº [NÚMERO DO PROCESSO], pelo Juízo da [VARA E COMARCA DA DECISÃO], que [RESUMO DA DECISÃO INTERLOCUTÓRIA, EX: INDEFERIU A TUTELA DE URGÊNCIA, REJEITOU PRELIMINAR]. Apresentar as razões para reforma e o pedido de efeito. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Embargos de Declaração Cível": {
+        "descricao": "Para sanar obscuridade, contradição, omissão ou erro material em decisão judicial.",
+        "reivindicacoes_comuns": ["Aclaramento da obscuridade", "Supressão da contradição", "Suprimento da omissão", "Correção do erro material", "Efeito modificativo (infringente) se cabível"],
+        "prompt_template": "Redija Embargos de Declaração Cíveis opostos por {autor_embargante} (ou {reu_embargante}) em face da decisão/sentença/acórdão de fls. [NÚMERO DAS FLS. DA DECISÃO EMBARGADA] nos autos do Processo nº [NÚMERO DO PROCESSO], devido a [ESPECIFICAR O VÍCIO: OBSCURIDADE, CONTRADIÇÃO, OMISSÃO OU ERRO MATERIAL]. Apontar o trecho viciado e requerer o saneamento. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    }
+  },
+  "Direito de Família e Sucessões": {
+    "Petições Iniciais (Família)": {
+      "Ação de Divórcio Consensual": {
+        "descricao": "Petição para divórcio quando há acordo entre as partes.",
+        "reivindicacoes_comuns": ["Decretação do divórcio", "Partilha de bens (se houver e acordada)", "Guarda dos filhos (se houver e acordada)", "Pensão alimentícia para filhos/cônjuge (se houver e acordada)", "Retomada do nome de solteiro(a)"],
+        "prompt_template": "Elabore uma Petição Inicial de Divórcio Consensual para {autor} (requerente 1) e {reu} (requerente 2), casados sob o regime de [REGIME DE BENS] desde [DATA DO CASAMENTO]. Acordam sobre: Partilha de bens: [DESCREVER ACORDO DE PARTILHA]; Guarda dos filhos [NOME DOS FILHOS]: [DESCREVER ACORDO DE GUARDA E VISITAS]; Pensão alimentícia para os filhos: [VALOR/FORMA DA PENSÃO]; Uso do nome: [ESPECIFICAR SE HÁ RETOMADA DO NOME DE SOLTEIRO]. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Divórcio Litigioso": {
+        "descricao": "Petição para divórcio quando não há acordo.",
+        "reivindicacoes_comuns": ["Decretação do divórcio", "Partilha de bens", "Definição de guarda e visitas", "Fixação de alimentos provisórios e definitivos"],
+        "prompt_template": "Redija uma Petição Inicial de Divórcio Litigioso para {autor} contra {reu}. Casados em [DATA DO CASAMENTO] sob o regime de [REGIME DE BENS]. Motivos do litígio: [BREVE DESCRIÇÃO, SEM NECESSIDADE DE CULPA]. Bens a partilhar: [LISTAR BENS]. Filhos: [NOME E IDADE DOS FILHOS]. Requerer a decretação do divórcio, partilha, definição de guarda e alimentos. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Alimentos (Fixação)": {
+        "descricao": "Para requerer a fixação de pensão alimentícia para filhos ou ex-cônjuge.",
+        "reivindicacoes_comuns": ["Fixação de alimentos provisórios", "Fixação de alimentos definitivos em [PERCENTUAL DOS RENDIMENTOS DO ALIMENTANTE OU VALOR FIXO]", "Comprovação das necessidades do alimentando e possibilidades do alimentante"],
+        "prompt_template": "Elabore uma Petição Inicial de Ação de Alimentos para o(s) menor(es) [NOME DO(S) FILHO(S)], representado(a) por {autor} (genitor(a)), em face de {reu} (genitor(a) alimentante). Demonstrar as necessidades do(s) alimentando(s) e a capacidade financeira do(a) alimentante. Requerer alimentos provisórios e definitivos. Foro: {foro}. Valor da causa: R$ {valor} (geralmente 12 vezes o valor da pensão mensal pretendida). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Investigação de Paternidade c/c Alimentos": {
+          "descricao": "Para investigar a paternidade e, caso confirmada, pedir alimentos.",
+          "reivindicacoes_comuns": ["Realização de exame de DNA", "Declaração da paternidade", "Retificação do registro civil", "Fixação de alimentos provisórios e definitivos"],
+          "prompt_template": "Redija uma Petição Inicial de Ação de Investigação de Paternidade cumulada com Alimentos para [NOME DO MENOR], representado(a) por {autor} (mãe), em face de {reu} (suposto pai). Narrar os fatos que indicam a paternidade. Requerer exame de DNA e, confirmada a paternidade, a fixação de alimentos. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Petições Iniciais (Sucessões)": {
+      "Abertura de Inventário Judicial": {
+        "descricao": "Para dar início ao processo de apuração e partilha dos bens de pessoa falecida.",
+        "reivindicacoes_comuns": ["Abertura do inventário dos bens deixados por [NOME DO FALECIDO]", "Nomeação do(a) requerente como inventariante", "Apresentação das primeiras declarações", "Citação dos herdeiros e interessados"],
+        "prompt_template": "Elabore uma Petição Inicial de Abertura de Inventário Judicial dos bens deixados por [NOME DO DE CUJUS], falecido(a) em [DATA DO ÓBITO], CPF [CPF DO DE CUJUS], cujo último domicílio foi em [ÚLTIMO DOMICÍLIO]. Requerente: {autor} (qualificar como herdeiro/cônjuge supérstite). Herdeiros: [LISTAR HERDEIROS E QUALIFICAÇÃO]. Bens a inventariar: [BREVE LISTA INICIAL DOS BENS, SE CONHECIDOS]. Requerer nomeação como inventariante. Foro: {foro} (foro do último domicílio do falecido). Valor da causa: R$ {valor} (valor do monte mor). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Alvará Judicial para Levantamento de Valores": {
+        "descricao": "Para solicitar autorização judicial para levantar valores deixados pelo falecido (ex: FGTS, PIS/PASEP, saldos bancários pequenos).",
+        "reivindicacoes_comuns": ["Expedição de alvará para levantamento de [ESPECIFICAR VALORES E INSTITUIÇÃO]", "Comprovação da qualidade de herdeiro/beneficiário", "Declaração de inexistência de outros bens a inventariar (se for o caso)"],
+        "prompt_template": "Redija uma Petição de Alvará Judicial para {autor} (qualificar como herdeiro/beneficiário de [NOME DO FALECIDO]), para levantamento de valores referentes a [FGTS/PIS-PASEP/SALDO BANCÁRIO EM CONTA XXX NO BANCO YYY] deixados pelo falecido. Juntar certidão de óbito e documentos comprobatórios. Declarar se há outros herdeiros e se existem bens a inventariar. Foro: {foro}. Valor da causa: R$ {valor} (valor a ser levantado). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    }
+  },
+  "Direito do Trabalho": {
+    "Petições Iniciais": {
+      "Reclamação Trabalhista (Modelo Completo)": {
+        "descricao": "Petição inicial trabalhista abrangendo múltiplos pedidos comuns.",
+        "reivindicacoes_comuns": ["Reconhecimento de vínculo (se houver)", "Horas extras", "Adicional noturno", "Intervalos não concedidos", "Verbas rescisórias (aviso prévio, saldo salário, 13º, férias + 1/3, FGTS+40%)", "Danos morais", "Adicional de insalubridade/periculosidade", "Equiparação salarial", "Multas CLT (467, 477)"],
+        "prompt_template": "Elabore uma Reclamação Trabalhista completa para {autor} (Reclamante) em face de {reu} (Reclamada). Período do contrato: [DATA DE INÍCIO] a [DATA DE TÉRMINO]. Função: [FUNÇÃO DO RECLAMANTE]. Salário: R$ [ÚLTIMO SALÁRIO]. Motivo da rescisão: [EX: DISPENSA SEM JUSTA CAUSA, PEDIDO DE DEMISSÃO, RESCISÃO INDIRETA]. Detalhar os fatos para cada pedido em {reivindicacoes_formatadas}. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Consignação em Pagamento Trabalhista": {
+          "descricao": "Para o empregador depositar em juízo verbas rescisórias quando há recusa ou impossibilidade de pagamento direto ao empregado.",
+          "reivindicacoes_comuns": ["Autorização para depósito judicial das verbas rescisórias", "Declaração de quitação das obrigações correspondentes ao valor depositado", "Citação do consignatário (ex-empregado)"],
+          "prompt_template": "Redija uma Ação de Consignação em Pagamento Trabalhista proposta por {autor} (Empregador) em face de {reu} (Ex-empregado), referente às verbas rescisórias do contrato de trabalho encerrado em [DATA DA RESCISÃO], no valor total de R$ [VALOR DAS VERBAS A CONSIGNAR]. Motivo da consignação: [EX: RECUSA DO EMPREGADO EM RECEBER, EMPREGADO EM LOCAL INCERTO]. Foro: {foro}. Valor da causa: R$ {valor} (valor a ser consignado). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Contestações": {
+      "Contestação Trabalhista (Modelo Completo)": {
+        "descricao": "Defesa da empresa em reclamação trabalhista, abordando preliminares e mérito.",
+        "reivindicacoes_comuns": ["Inépcia da inicial", "Ilegitimidade de parte", "Prescrição bienal/quinquenal", "Impugnação ao vínculo empregatício", "Impugnação de horas extras (juntada de cartões de ponto)", "Quitação de verbas", "Compensação/Dedução de valores", "Improcedência total dos pedidos"],
+        "prompt_template": "Elabore uma Contestação Trabalhista para {reu} (Reclamada) na Reclamação Trabalhista nº [NÚMERO DO PROCESSO] movida por {autor} (Reclamante), perante a {foro}. Apresentar defesa processual (preliminares) e impugnar cada um dos pedidos da inicial, como [PEDIDO 1 DA INICIAL], [PEDIDO 2 DA INICIAL], apresentando as teses de mérito e juntando documentos comprobatórios. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Recursos Trabalhistas": {
+      "Recurso Ordinário Trabalhista": {
+        "descricao": "Recurso contra sentença proferida pela Vara do Trabalho.",
+        "reivindicacoes_comuns": ["Reforma da sentença nos pontos [PONTO 1], [PONTO 2]", "Depósito recursal e custas processuais (para reclamada)", "Contrarrazões pela parte contrária"],
+        "prompt_template": "Redija um Recurso Ordinário para {autor_recorrente} (ou {reu_recorrente}) contra a sentença proferida no processo nº [NÚMERO DO PROCESSO] pela {foro}, que julgou [PROCEDENTE/IMPROCEDENTE/PARCIALMENTE PROCEDENTE] os pedidos [RESUMO DA SENTENÇA]. Apresentar as razões de fato e de direito para a reforma da decisão. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Embargos de Declaração Trabalhista": {
+        "descricao": "Para sanar omissão, contradição ou obscuridade em decisão trabalhista.",
+        "reivindicacoes_comuns": ["Supressão da omissão sobre [PONTO OMISSO]", "Aclaramento da obscuridade em [TRECHO OBSCURO]", "Eliminação da contradição entre [PONTOS CONTRADITÓRIOS]"],
+        "prompt_template": "Elabore Embargos de Declaração Trabalhista opostos por {autor_embargante} (ou {reu_embargante}) em face da decisão/sentença/acórdão de fls. [NÚMERO DAS FLS. DA DECISÃO] nos autos do Processo nº [NÚMERO DO PROCESSO], devido a [OMISSÃO/CONTRADIÇÃO/OBSCURIDADE] no seguinte ponto: [DESCREVER O VÍCIO]. Requerer o saneamento. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    }
+  },
+  "Direito Penal": {
+    "Representações e Requerimentos": {
+        "Representação Criminal (Lesão Corporal Leve)": {
+            "descricao": "Manifestação da vítima de lesão corporal leve ou culposa declarando o interesse em processar o autor do fato (condição de procedibilidade).",
+            "reivindicacoes_comuns": ["Manifestação do desejo de representar criminalmente contra o autor do fato", "Descrição sucinta dos fatos e identificação do autor"],
+            "prompt_template": "Redija uma Representação Criminal a ser apresentada por {autor} (Vítima) perante a Autoridade Policial da [NOME DA DELEGACIA] ou ao Ministério Público, em face de {reu} (Autor do Fato), pela prática do crime de lesão corporal ocorrido em [DATA DOS FATOS], conforme Boletim de Ocorrência nº [NÚMERO DO BO, SE HOUVER]. Manifestar expressamente o desejo de ver o autor do fato processado criminalmente. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+        }
+    },
+    "Peças da Acusação": {
+      "Queixa-Crime (Crimes contra a Honra)": {
+        "descricao": "Para crimes de ação penal privada (calúnia, difamação, injúria).",
+        "reivindicacoes_comuns": ["Recebimento da queixa-crime", "Citação do querelado", "Condenação do querelado nas penas dos arts. [138, 139 OU 140] do Código Penal", "Fixação de valor mínimo para reparação de danos"],
+        "prompt_template": "Elabore uma Queixa-Crime oferecida por {autor} (Querelante) contra {reu} (Querelado), pela prática do crime de [CALÚNIA/DIFAMAÇÃO/INJÚRIA], ocorrido em [DATA], da seguinte forma: [NARRAR DETALHADAMENTE OS FATOS, INDICANDO PROVAS E TESTEMUNHAS]. Requerer a condenação e reparação de danos. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Denúncia (Ação Penal Pública)": {
+        "descricao": "Peça inaugural da ação penal pública, oferecida pelo Ministério Público.",
+        "reivindicacoes_comuns": ["Recebimento da denúncia", "Citação do denunciado", "Produção de provas", "Condenação do denunciado nas penas do(s) crime(s) imputado(s)"],
+        "prompt_template": "Redija uma Denúncia criminal a ser oferecida pelo Ministério Público em face de {reu} (Denunciado), qualificado nos autos do Inquérito Policial nº [NÚMERO DO INQUÉRITO], pela prática do(s) crime(s) de [ARTIGO(S) DO CÓDIGO PENAL OU LEI ESPECIAL], ocorrido(s) em [DATA DOS FATOS], da seguinte forma: [NARRAR OS FATOS CRIMINOSOS COM TODAS AS SUAS CIRCUNSTÂNCIAS]. Arrolar testemunhas: [LISTAR TESTEMUNHAS DA ACUSAÇÃO]. Requerer a citação e condenação. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Peças da Defesa": {
+      "Resposta à Acusação Penal": {
+        "descricao": "Primeira manifestação da defesa após o recebimento da denúncia/queixa.",
+        "reivindicacoes_comuns": ["Arrolamento de testemunhas (até 8)", "Arguição de preliminares (nulidades, exceções)", "Apresentação de teses de mérito para absolvição sumária (art. 397 CPP)", "Requerimento de diligências probatórias"],
+        "prompt_template": "Elabore uma Resposta à Acusação para {reu} (Acusado) nos autos da Ação Penal nº [NÚMERO DO PROCESSO], movida pelo Ministério Público (ou Querelante {autor}), que tramita perante o foro de {foro}. Apresentar defesa escrita, arrolar testemunhas ([LISTAR ATÉ 8 TESTEMUNHAS DE DEFESA]), e especificar as provas pretendidas. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Alegações Finais por Memoriais (Penal)": {
+        "descricao": "Última manifestação escrita da defesa antes da sentença.",
+        "reivindicacoes_comuns": ["Pedido de absolvição (com base em quais incisos do art. 386 CPP)", "Desclassificação do crime para outro menos grave", "Reconhecimento de atenuantes", "Afastamento de qualificadoras/causas de aumento", "Fixação da pena no mínimo legal", "Regime inicial de cumprimento de pena mais brando", "Substituição da pena privativa de liberdade por restritiva de direitos"],
+        "prompt_template": "Redija Alegações Finais por Memoriais para {reu} (Acusado) no Processo Criminal nº [NÚMERO DO PROCESSO] (Foro: {foro}). Analisar as provas produzidas na instrução e sustentar a tese de [ABSOLVIÇÃO/DESCLASSIFICAÇÃO/ETC.], com base em [FUNDAMENTOS FÁTICOS E JURÍDICOS]. Requerer [PEDIDOS PRINCIPAIS E SUBSIDIÁRIOS]. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Pedidos de Liberdade e Habeas Corpus": {
+      "Pedido de Liberdade Provisória": {
+        "descricao": "Para requerer que o réu responda ao processo em liberdade.",
+        "reivindicacoes_comuns": ["Concessão da liberdade provisória com ou sem fiança", "Demonstração da ausência dos requisitos da prisão preventiva (art. 312 CPP)", "Aplicação de medidas cautelares diversas da prisão (art. 319 CPP)"],
+        "prompt_template": "Elabore um Pedido de Liberdade Provisória para {reu} (Requerente), preso em flagrante (ou preventivamente) em [DATA DA PRISÃO] pela suposta prática do crime de [CRIME IMPUTADO], nos autos do processo/inquérito nº [NÚMERO]. Demonstrar a ausência dos pressupostos da prisão preventiva e que o requerente possui [CONDIÇÕES PESSOAIS FAVORÁVEIS, EX: RESIDÊNCIA FIXA, OCUPAÇÃO LÍCITA]. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Habeas Corpus (Preventivo ou Liberatório)": {
+        "descricao": "Ação constitucional para proteger o direito de ir e vir contra ilegalidade ou abuso de poder.",
+        "reivindicacoes_comuns": ["Concessão da ordem de Habeas Corpus para [TRANCAR A AÇÃO PENAL / RELAXAR A PRISÃO ILEGAL / REVOGAR A PRISÃO PREVENTIVA / ETC.]", "Pedido de liminar"],
+        "prompt_template": "Impetre uma Ordem de Habeas Corpus (com pedido de liminar) em favor de {autor} (Paciente), contra ato coator praticado por {reu} (Autoridade Coatora, EX: JUIZ DE DIREITO DA VARA X, DELEGADO DE POLÍCIA Y), consistente em [DESCREVER O ATO COATOR ILEGAL OU ABUSIVO]. Demonstrar o constrangimento ilegal. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Recursos Penais": {
+        "Apelação Criminal": {
+            "descricao": "Recurso contra sentença penal condenatória ou absolutória.",
+            "reivindicacoes_comuns": ["Reforma da sentença para absolvição", "Redução da pena", "Mudança de regime prisional", "Anulação da sentença por nulidade processual"],
+            "prompt_template": "Redija um Recurso de Apelação Criminal para {autor_recorrente} (ou {reu_recorrente}) contra a sentença proferida no processo nº [NÚMERO DO PROCESSO] pelo juízo da {foro}, que [CONDENOU/ABSOLVEU] o apelante pela prática do crime de [CRIME]. Apresentar as razões de fato e de direito para a reforma ou anulação da decisão. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+        },
+        "Revisão Criminal": {
+            "descricao": "Ação para desconstituir sentença penal condenatória transitada em julgado, em hipóteses específicas.",
+            "reivindicacoes_comuns": ["Desconstituição da sentença condenatória", "Absolvição do revisionando", "Anulação do processo", "Modificação da pena"],
+            "prompt_template": "Elabore uma Ação de Revisão Criminal em favor de {autor} (Revisionando), já condenado com trânsito em julgado no processo nº [NÚMERO DO PROCESSO ORIGINAL] que tramitou na {foro_original}, com base em [FUNDAMENTO DA REVISÃO, EX: PROVA NOVA DE INOCÊNCIA, SENTENÇA CONTRÁRIA À EVIDÊNCIA DOS AUTOS - ART. 621 CPP]. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+        }
+    }
+  },
+  "Direito Administrativo": {
+    "Ações Constitucionais Administrativas": {
+      "Mandado de Segurança Individual (Administrativo)": {
+        "descricao": "Para proteger direito líquido e certo não amparado por habeas corpus/data, lesado ou ameaçado por ato de autoridade pública.",
+        "reivindicacoes_comuns": ["Concessão da segurança para [OBJETIVO DO MS, EX: ANULAR ATO ADMINISTRATIVO ILEGAL, GARANTIR POSSE EM CONCURSO]", "Notificação da autoridade coatora", "Pedido de liminar para suspender o ato"],
+        "prompt_template": "Impetre um Mandado de Segurança Individual, com pedido de liminar, em favor de {autor} (Impetrante) contra ato ilegal/abusivo praticado por {reu} (Autoridade Coatora, EX: SECRETÁRIO MUNICIPAL DE EDUCAÇÃO, REITOR DE UNIVERSIDADE FEDERAL), consistente em [DESCREVER O ATO COATOR E A VIOLAÇÃO AO DIREITO LÍQUIDO E CERTO]. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação Popular": {
+        "descricao": "Ação movida por qualquer cidadão para anular ato lesivo ao patrimônio público, moralidade administrativa, meio ambiente ou patrimônio histórico/cultural.",
+        "reivindicacoes_comuns": ["Anulação do ato administrativo lesivo [ESPECIFICAR O ATO]", "Condenação dos responsáveis ao ressarcimento dos danos", "Citação dos beneficiários do ato e do ente público lesado"],
+        "prompt_template": "Elabore uma Ação Popular proposta por {autor} (Cidadão, com título de eleitor nº [NÚMERO DO TÍTULO]) em face de {reu} (Responsáveis pelo ato, ex: PREFEITO MUNICIPAL, EMPRESA CONTRATADA) e do Município/Estado/União de [NOME DO ENTE PÚBLICO], visando anular o ato administrativo [DESCREVER O ATO LESIVO E A LESÃO CAUSADA]. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Ações Ordinárias Administrativas": {
+      "Ação Anulatória de Ato Administrativo": {
+        "descricao": "Para anular um ato administrativo por ilegalidade (multa, demissão de servidor, etc.).",
+        "reivindicacoes_comuns": ["Anulação do ato administrativo [ESPECIFICAR O ATO, EX: MULTA Nº XXX, PORTARIA DE DEMISSÃO YYY]", "Restabelecimento da situação anterior", "Indenização por perdas e danos (se houver)", "Tutela de urgência para suspender os efeitos do ato"],
+        "prompt_template": "Redija uma Ação Anulatória de Ato Administrativo para {autor} contra {reu} (Ente Público que praticou o ato), objetivando a anulação do ato [DESCREVER O ATO E SEUS VÍCIOS DE LEGALIDADE]. Demonstrar os prejuízos causados. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Responsabilidade Civil do Estado": {
+        "descricao": "Para buscar indenização por danos causados por agentes públicos nessa qualidade.",
+        "reivindicacoes_comuns": ["Indenização por danos materiais", "Indenização por danos morais", "Pensão vitalícia (em caso de morte ou incapacidade permanente)"],
+        "prompt_template": "Elabore uma Ação de Indenização por Responsabilidade Civil do Estado para {autor} contra {reu} (Ente Público, EX: ESTADO DE MINAS GERAIS), em razão de danos sofridos decorrentes de [DESCREVER A AÇÃO OU OMISSÃO DO AGENTE PÚBLICO E O DANO CAUSADO]. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Defesas Administrativas": {
+        "Defesa em Processo Administrativo Disciplinar (PAD)": {
+            "descricao": "Apresentação de defesa por servidor público em PAD.",
+            "reivindicacoes_comuns": ["Afastamento das acusações", "Produção de provas (testemunhal, documental)", "Arguição de nulidades no PAD", "Aplicação de penalidade mais branda (subsidiariamente)"],
+            "prompt_template": "Redija uma Defesa Escrita para {autor} (Servidor Acusado) no Processo Administrativo Disciplinar (PAD) nº [NÚMERO DO PAD], instaurado pela Portaria nº [NÚMERO DA PORTARIA], perante {reu} (Órgão Processante). Contestar as imputações de [DESCREVER ACUSAÇÕES]. Apresentar rol de testemunhas e requerer diligências. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+        }
+    }
+  },
+  "Direito Tributário": {
+    "Ações do Contribuinte": {
+      "Ação Anulatória de Débito Fiscal": {
+        "descricao": "Para anular lançamento fiscal ou auto de infração por ilegalidade ou inconstitucionalidade.",
+        "reivindicacoes_comuns": ["Anulação total ou parcial do lançamento fiscal/auto de infração nº [NÚMERO]", "Suspensão da exigibilidade do crédito tributário (com depósito do montante integral ou tutela de urgência)", "Declaração de inexistência da relação jurídico-tributária", "Restituição do indébito (se já pago)"],
+        "prompt_template": "Elabore uma Ação Anulatória de Débito Fiscal, com pedido de tutela de urgência, para {autor} (Contribuinte) contra {reu} (Fazenda Pública Federal/Estadual/Municipal), visando anular o débito fiscal referente ao tributo [NOME DO TRIBUTO], constituído pelo Lançamento/Auto de Infração nº [NÚMERO], no valor de R$ [VALOR DO DÉBITO]. Fundamentar em [PRINCIPAL MOTIVO DA ANULAÇÃO, EX: DECADÊNCIA, ILEGALIDADE DA COBRANÇA, ERRO NA BASE DE CÁLCULO]. Foro: {foro}. Valor da causa: R$ {valor} (valor do débito questionado). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Mandado de Segurança Tributário (Preventivo ou Repressivo)": {
+        "descricao": "Para proteger direito líquido e certo contra ilegalidade ou abuso de poder em matéria tributária.",
+        "reivindicacoes_comuns": ["Concessão da segurança para [OBJETIVO, EX: OBTER CERTIDÃO NEGATIVA, NÃO SER COMPELIDO AO PAGAMENTO DO TRIBUTO ILEGAL, ASSEGURAR DIREITO À COMPENSAÇÃO]", "Pedido de liminar", "Notificação da autoridade coatora"],
+        "prompt_template": "Impetre um Mandado de Segurança Tributário (Preventivo/Repressivo), com pedido de liminar, em favor de {autor} (Impetrante) contra ato do {reu} (Autoridade Coatora, EX: DELEGADO DA RECEITA FEDERAL, SECRETÁRIO DE FAZENDA), que [DESCREVER O ATO COATOR OU A AMEAÇA AO DIREITO LÍQUIDO E CERTO EM MATÉRIA TRIBUTÁRIA]. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Repetição de Indébito Tributário": {
+        "descricao": "Para reaver tributos pagos indevidamente ou a maior.",
+        "reivindicacoes_comuns": ["Restituição do valor de R$ [VALOR PAGO INDEVIDAMENTE], devidamente corrigido e com juros", "Comprovação do pagamento indevido", "Demonstração da ilegalidade/inconstitucionalidade da cobrança"],
+        "prompt_template": "Redija uma Ação de Repetição de Indébito Tributário para {autor} contra {reu} (Fazenda Pública), buscando a restituição do tributo [NOME DO TRIBUTO] pago indevidamente no valor de R$ [VALOR], referente ao período [PERÍODO]. Foro: {foro}. Valor da causa: R$ {valor} (valor a ser restituído). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Embargos à Execução Fiscal": {
+        "descricao": "Defesa do contribuinte em processo de execução fiscal.",
+        "reivindicacoes_comuns": ["Nulidade da Certidão de Dívida Ativa (CDA)", "Prescrição ou decadência do crédito tributário", "Pagamento do débito", "Ilegitimidade passiva", "Excesso de execução", "Bem de família (impenhorabilidade)"],
+        "prompt_template": "Elabore Embargos à Execução Fiscal opostos por {autor} (Executado/Embargante) em face da {reu} (Fazenda Pública Exequente/Embargada), nos autos da Execução Fiscal nº [NÚMERO DA EXECUÇÃO], que tramita perante a {foro}. Argumentar [PRINCIPAIS TESES DE DEFESA DOS EMBARGOS]. Garantia do juízo: [ESPECIFICAR SE HOUVE PENHORA, DEPÓSITO OU SEGURO GARANTIA]. Valor da causa (dos embargos): R$ {valor} (valor do débito em execução). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Defesas Administrativas Tributárias": {
+        "Impugnação a Auto de Infração": {
+            "descricao": "Defesa administrativa contra um auto de infração fiscal.",
+            "reivindicacoes_comuns": ["Cancelamento total ou parcial do auto de infração", "Redução da multa", "Apresentação de provas e documentos", "Arguição de ilegalidades no lançamento"],
+            "prompt_template": "Redija uma Impugnação Administrativa ao Auto de Infração nº [NÚMERO DO AUTO DE INFRAÇÃO], lavrado por [ÓRGÃO FISCALIZADOR] contra {autor} (Autuado), referente ao tributo [NOME DO TRIBUTO] e período de [PERÍODO DE APURAÇÃO]. Apresentar os fundamentos de fato e de direito para a impugnação. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+        }
+    }
+  },
+  "Direito Empresarial": {
+    "Societário": {
+      "Ação de Dissolução Parcial de Sociedade": {
+        "descricao": "Para retirada, exclusão de sócio ou apuração de haveres em sociedade.",
+        "reivindicacoes_comuns": ["Dissolução parcial da sociedade [NOME DA EMPRESA]", "Apuração de haveres do sócio retirante/excluído/falecido", "Nomeação de perito para avaliação da sociedade"],
+        "prompt_template": "Elabore uma Petição Inicial de Ação de Dissolução Parcial de Sociedade para {autor} (sócio que busca a dissolução) em face de {reu} (a sociedade e/ou os demais sócios), referente à sociedade [NOME DA EMPRESA], CNPJ [CNPJ]. Motivo: [EX: DIREITO DE RETIRADA, EXCLUSÃO DE SÓCIO POR JUSTA CAUSA, FALECIMENTO DE SÓCIO]. Requerer apuração de haveres. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Contrato Social de Sociedade Limitada": {
+        "descricao": "Elaboração de contrato social para constituição de uma sociedade limitada (LTDA).",
+        "reivindicacoes_comuns": ["Denominação social, sede e prazo", "Objeto social detalhado", "Capital social, valor e forma de integralização das quotas de cada sócio", "Administração da sociedade e poderes dos administradores", "Deliberações dos sócios", "Regras para cessão de quotas e apuração de haveres", "Casos de dissolução"],
+        "prompt_template": "Redija um Contrato Social para a constituição da sociedade empresária limitada denominada [NOME DA EMPRESA LTDA.], com sede em {foro} (endereço completo), tendo como sócios {autor} (nome completo, nacionalidade, estado civil, profissão, CPF, RG, endereço) com [NÚMERO] quotas no valor de R$ [VALOR] cada, e {reu} (nome completo, etc.) com [NÚMERO] quotas no valor de R$ [VALOR] cada. Capital social de R$ {valor}. Objeto social: [DESCREVER ATIVIDADES]. Administração: [QUEM ADMINISTRA E COMO]. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Recuperação Judicial e Falência": {
+      "Pedido de Recuperação Judicial": {
+        "descricao": "Para empresas em crise econômico-financeira buscarem um plano de recuperação.",
+        "reivindicacoes_comuns": ["Deferimento do processamento da recuperação judicial", "Nomeação de administrador judicial", "Suspensão das ações e execuções contra a devedora (stay period)", "Apresentação do plano de recuperação judicial"],
+        "prompt_template": "Elabore uma Petição Inicial de Recuperação Judicial para a empresa {autor} (Devedora/Requerente), CNPJ [CNPJ DA EMPRESA], com sede em [ENDEREÇO COMPLETO], expondo as causas da crise econômico-financeira, e instruída com todos os documentos exigidos pelo art. 51 da Lei 11.101/2005. Foro: {foro} (principal estabelecimento do devedor). Valor da causa: R$ {valor} (valor do passivo ou simbólico). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Pedido de Autofalência": {
+        "descricao": "Quando a própria empresa devedora requer sua falência por insolvência insuperável.",
+        "reivindicacoes_comuns": ["Decretação da falência da requerente", "Nomeação de administrador judicial", "Arrecadação dos bens"],
+        "prompt_template": "Redija uma Petição Inicial de Autofalência para a empresa {autor} (Requerente), CNPJ [CNPJ DA EMPRESA], com base no art. 105 da Lei 11.101/2005, declarando sua insolvência e a impossibilidade de continuar suas atividades. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Impugnação de Crédito (em RJ ou Falência)": {
+        "descricao": "Para credor questionar valor, classificação ou legitimidade de crédito arrolado pelo administrador judicial.",
+        "reivindicacoes_comuns": ["Retificação do valor do crédito para R$ [VALOR CORRETO]", "Reclassificação do crédito para [CLASSIFICAÇÃO CORRETA, EX: TRABALHISTA, COM GARANTIA REAL, QUIROGRAFÁRIO]", "Inclusão de crédito não listado"],
+        "prompt_template": "Elabore uma Impugnação de Crédito nos autos da Recuperação Judicial (ou Falência) de [NOME DA EMPRESA EM RJ/FALÊNCIA] (Processo nº [NÚMERO DO PROCESSO]), proposta por {autor} (Credor Impugnante), em face da relação de credores apresentada pelo Administrador Judicial, referente ao crédito [ESPECIFICAR O CRÉDITO IMPUGNADO]. Fundamentar a impugnação. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Títulos de Crédito e Contratos Mercantis": {
+        "Ação Monitória (baseada em Cheque Prescrito)": {
+            "descricao": "Para cobrar dívida representada por cheque que perdeu a força executiva devido à prescrição.",
+            "reivindicacoes_comuns": ["Expedição de mandado de pagamento/entrega da coisa", "Conversão do mandado monitório em título executivo judicial caso não haja embargos"],
+            "prompt_template": "Redija uma Petição Inicial de Ação Monitória para {autor} contra {reu}, com base no(s) cheque(s) nº(s) [NÚMEROS DOS CHEQUES], emitido(s) em [DATA DE EMISSÃO], no valor total de R$ [VALOR TOTAL DOS CHEQUES], que se encontra(m) prescrito(s) para execução. Requerer a expedição de mandado de pagamento. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+        }
+    }
+  },
+  "Direito Imobiliário": {
+    "Petições Iniciais (Imobiliário)": {
+      "Ação de Despejo (Uso Geral)": {
+        "descricao": "Para reaver imóvel objeto de locação (falta de pagamento, denúncia vazia, infração contratual, etc.).",
+        "reivindicacoes_comuns": ["Rescisão do contrato de locação", "Decretação do despejo", "Cobrança de aluguéis e encargos atrasados (se aplicável)", "Pedido de liminar para desocupação (art. 59, §1º, Lei 8.245/91, se cabível)"],
+        "prompt_template": "Elabore uma Petição Inicial de Ação de Despejo para {autor} (Locador) contra {reu} (Locatário), referente ao imóvel localizado em [ENDEREÇO COMPLETO DO IMÓVEL], com base em [MOTIVO DO DESPEJO, EX: FALTA DE PAGAMENTO DESDE MM/AAAA, VENCIMENTO DO CONTRATO COM DENÚNCIA VAZIA, INFRAÇÃO CONTRATUAL DE [DESCREVER INFRAÇÃO]]. Requerer o despejo e, se for o caso, a cobrança dos valores devidos. Foro: {foro}. Valor da causa: R$ {valor} (conforme art. 58, III da Lei 8.245/91). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação Revisional de Aluguel": {
+        "descricao": "Para ajustar o valor do aluguel ao preço de mercado, quando defasado.",
+        "reivindicacoes_comuns": ["Fixação de novo valor de aluguel em R$ [NOVO VALOR PRETENDIDO]", "Realização de perícia para apurar o valor de mercado", "Pagamento das diferenças retroativas (se aplicável)"],
+        "prompt_template": "Redija uma Petição Inicial de Ação Revisional de Aluguel para {autor} (Locador ou Locatário) em face de {reu} (Locatário ou Locador), referente ao contrato de locação do imóvel [ENDEREÇO DO IMÓVEL], cujo aluguel atual é de R$ [VALOR ATUAL DO ALUGUEL]. Argumentar que o valor está defasado em relação ao mercado e requerer a fixação de novo aluguel. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Usucapião (Urbana/Rural)": {
+        "descricao": "Para obter a declaração de propriedade de imóvel por posse mansa, pacífica e ininterrupta por determinado lapso temporal.",
+        "reivindicacoes_comuns": ["Declaração do domínio do imóvel por usucapião", "Citação dos confinantes e do proprietário registral", "Intimação das Fazendas Públicas da União, Estado e Município", "Registro da sentença no Cartório de Registro de Imóveis"],
+        "prompt_template": "Elabore uma Petição Inicial de Ação de Usucapião [MODALIDADE: EXTRAORDINÁRIA, ORDINÁRIA, ESPECIAL URBANA, ESPECIAL RURAL] para {autor} referente ao imóvel situado em [ENDEREÇO COMPLETO DO IMÓVEL], com área de [ÁREA DO IMÓVEL] m² e matrícula nº [MATRÍCULA, SE HOUVER], possuído mansa, pacífica e ininterruptamente, com animus domini, por mais de [TEMPO DE POSSE] anos. Descrever a origem e características da posse. Confrontantes: [LISTAR CONFRONTANTES E ENDEREÇOS]. Foro: {foro} (local do imóvel). Valor da causa: R$ {valor} (valor venal do imóvel). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Adjudicação Compulsória": {
+        "descricao": "Para obter a outorga da escritura definitiva de imóvel quando o promitente vendedor se recusa, após quitação do preço.",
+        "reivindicacoes_comuns": ["Adjudicação compulsória do imóvel, suprindo a declaração de vontade do vendedor", "Expedição de carta de adjudicação para registro no CRI"],
+        "prompt_template": "Redija uma Petição Inicial de Ação de Adjudicação Compulsória para {autor} (Promitente Comprador) contra {reu} (Promitente Vendedor), referente ao imóvel [DESCRIÇÃO COMPLETA DO IMÓVEL CONFORME CONTRATO], objeto de Contrato de Promessa de Compra e Venda firmado em [DATA], com preço total de R$ [PREÇO DO IMÓVEL] integralmente quitado em [DATA DA QUITAÇÃO]. Houve recusa do vendedor em outorgar a escritura definitiva. Foro: {foro}. Valor da causa: R$ {valor} (valor do contrato ou do imóvel). {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação Possessória (Manutenção/Reintegração de Posse)": {
+        "descricao": "Para proteger a posse contra turbação ou esbulho.",
+        "reivindicacoes_comuns": ["Manutenção da posse (em caso de turbação) OU Reintegração da posse (em caso de esbulho)", "Pedido de liminar possessória (art. 562, CPC)", "Cominação de pena pecuniária em caso de novo ato atentatório", "Indenização por perdas e danos"],
+        "prompt_template": "Elabore uma Petição Inicial de Ação de [Manutenção OU Reintegração] de Posse, com pedido de liminar, para {autor} (Possuidor) contra {reu} (Autor do ato de turbação/esbulho), referente ao imóvel [DESCRIÇÃO DO IMÓVEL]. Narrar a posse do autor e o ato de [TURBAÇÃO/ESBULHO] praticado pelo réu em [DATA DA OCORRÊNCIA]. Foro: {foro} (local do imóvel). Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    }
+  },
+  "Direito do Consumidor": {
+    "Petições Iniciais": {
+      "Ação de Indenização por Defeito de Produto ou Serviço": {
+        "descricao": "Para buscar reparação por danos causados por produto ou serviço defeituoso.",
+        "reivindicacoes_comuns": ["Substituição do produto OU Restituição da quantia paga OU Abatimento do preço (para vício do produto/serviço)", "Indenização por danos materiais (prejuízos adicionais)", "Indenização por danos morais", "Inversão do ônus da prova (art. 6º, VIII, CDC)"],
+        "prompt_template": "Redija uma Petição Inicial (Juizado Especial Cível ou Vara Cível) para {autor} (Consumidor) contra {reu} (Fornecedor/Fabricante), devido a [DEFEITO/VÍCIO] no produto [NOME DO PRODUTO] (adquirido em [DATA DA COMPRA] por R$ [VALOR DO PRODUTO]) OU no serviço [DESCRIÇÃO DO SERVIÇO] (contratado em [DATA] por R$ [VALOR]). O dano/problema manifestou-se como [DESCRIÇÃO DO PROBLEMA E SUAS CONSEQUÊNCIAS]. Pleitear [PEDIDOS ESPECÍFICOS, EX: RESTITUIÇÃO, INDENIZAÇÃO POR DANOS MORAIS DE R$ XXX]. Requerer a inversão do ônus da prova. Foro: {foro} (domicílio do consumidor). Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação de Repetição de Indébito (Consumidor)": {
+        "descricao": "Para reaver valores pagos indevidamente ao fornecedor, com devolução em dobro.",
+        "reivindicacoes_comuns": ["Declaração de inexigibilidade da cobrança", "Restituição em dobro do valor pago indevidamente (art. 42, parágrafo único, CDC)", "Indenização por danos morais (se houver negativação, constrangimento, etc.)"],
+        "prompt_template": "Elabore uma Petição Inicial (Consumidor) para {autor} contra {reu}, referente a cobrança(s) indevida(s) no valor de R$ [VALOR DA COBRANÇA INDEVIDA] (total pago indevidamente R$ [VALOR PAGO]), referente a [ORIGEM DA COBRANÇA/SERVIÇO/CONTRATO]. Requerer a declaração de inexigibilidade, a devolução em dobro do valor pago (R$ [VALOR PAGO x 2]) e, se aplicável, indenização por danos morais. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Ação Declaratória de Inexistência de Dívida c/c Danos Morais": {
+        "descricao": "Para declarar que uma dívida não existe e buscar indenização por cobranças ou negativação indevida.",
+        "reivindicacoes_comuns": ["Declaração de inexistência do débito referente a [CONTRATO/SERVIÇO]", "Cancelamento de protesto/negativação indevida", "Indenização por danos morais", "Tutela de urgência para suspender cobranças/retirar nome de cadastros"],
+        "prompt_template": "Redija uma Petição Inicial de Ação Declaratória de Inexistência de Débito c/c Indenização por Danos Morais para {autor} contra {reu}, em razão da cobrança e/ou negativação indevida referente a um suposto débito no valor de R$ [VALOR DO SUPOSTO DÉBITO] originado de [ORIGEM DA SUPOSTA DÍVIDA]. Requerer a declaração de que o débito não existe, o cancelamento de qualquer registro negativo e indenização por danos morais. Foro: {foro}. Valor da causa: R$ {valor}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Contestações (Consumidor)": {
+        "Contestação Genérica em Ação de Consumo": {
+            "descricao": "Defesa do fornecedor em ações movidas por consumidores.",
+            "reivindicacoes_comuns": ["Inexistência de defeito no produto/serviço", "Culpa exclusiva do consumidor ou de terceiro", "Exercício regular de direito (na cobrança)", "Prescrição", "Impugnação dos danos alegados", "Ausência de nexo causal"],
+            "prompt_template": "Elabore uma Contestação para {reu} (Fornecedor) na Ação de Consumo nº [NÚMERO DO PROCESSO] movida por {autor} (Consumidor), perante o foro de {foro}. Impugnar os fatos e pedidos da inicial, apresentando as teses defensivas pertinentes ao caso, como [PRINCIPAL TESE DE DEFESA]. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+        }
+    }
+  },
+  "Direito Constitucional": {
+    "Remédios Constitucionais": {
+      "Mandado de Segurança Individual (Constitucional)": {
+        "descricao": "Para proteger direito líquido e certo contra ato ilegal ou com abuso de poder de autoridade pública, quando o direito não é amparado por Habeas Corpus ou Habeas Data.",
+        "reivindicacoes_comuns": ["Concessão da segurança para anular/suspender o ato coator", "Garantia do exercício do direito líquido e certo violado", "Pedido de liminar", "Notificação da autoridade coatora"],
+        "prompt_template": "Impetre um Mandado de Segurança Individual, com pedido de medida liminar, em favor de {autor} (Impetrante) contra ato praticado por {reu} (Autoridade Coatora - especificar cargo e órgão), que violou direito líquido e certo do impetrante ao [DESCREVER O ATO COATOR E O DIREITO VIOLADO]. Fundamentar na Constituição Federal e legislação aplicável. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Habeas Corpus (Constitucional)": {
+        "descricao": "Para proteger a liberdade de locomoção contra ilegalidade ou abuso de poder.",
+        "reivindicacoes_comuns": ["Concessão da ordem para cessar o constrangimento ilegal à liberdade (relaxamento de prisão, trancamento de ação penal, etc.)", "Pedido de liminar"],
+        "prompt_template": "Impetre uma Ordem de Habeas Corpus (Liberatório ou Preventivo), com pedido de medida liminar, em favor de {autor} (Paciente), apontando como autoridade coatora {reu} (Juiz, Delegado, etc.), em razão de [DESCREVER A AMEAÇA OU EFETIVA RESTRIÇÃO ILEGAL À LIBERDADE DE LOCOMOÇÃO]. Fundamentar. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      },
+      "Habeas Data": {
+        "descricao": "Para assegurar o conhecimento de informações relativas à pessoa do impetrante, constantes de registros públicos ou banco de dados de entidades governamentais, ou para retificação de dados.",
+        "reivindicacoes_comuns": ["Acesso às informações pessoais [ESPECIFICAR QUAIS E ONDE ESTÃO]", "Retificação dos dados [ESPECIFICAR DADOS E CORREÇÃO]", "Notificação da autoridade coatora"],
+        "prompt_template": "Impetre Habeas Data em favor de {autor} (Impetrante) contra ato de {reu} (Autoridade/Entidade detentora dos registros), para assegurar o direito de [ACESSO A/RETIFICAÇÃO DE] informações pessoais constantes em [NOME DO BANCO DE DADOS/REGISTRO PÚBLICO]. Houve recusa administrativa ou decurso de prazo para resposta. Foro: {foro}. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    },
+    "Controle de Constitucionalidade (Exemplos para estudo, Petições complexas)": {
+      "Arguição de Descumprimento de Preceito Fundamental (ADPF)": {
+        "descricao": "Para evitar ou reparar lesão a preceito fundamental, resultante de ato do Poder Público, ou quando for relevante o fundamento da controvérsia constitucional sobre lei ou ato normativo federal, estadual ou municipal, incluídos os anteriores à Constituição (recepção). (Peça de alta complexidade, geralmente por legitimados específicos)",
+        "reivindicacoes_comuns": ["Concessão de medida cautelar", "Declaração de não recepção ou de inconstitucionalidade do ato questionado"],
+        "prompt_template": "Estruture os tópicos essenciais de uma Arguição de Descumprimento de Preceito Fundamental (ADPF) a ser proposta por {autor} (Legitimado) perante o STF, questionando o ato [ATO DO PODER PÚBLICO QUESTIONADO OU LEI/ATO NORMATIVO] por violação ao(s) preceito(s) fundamental(is) [ARTIGOS DA CF VIOLADOS]. Apresentar o cabimento da ADPF (subsidiariedade) e os fundamentos da inconstitucionalidade. {instrucao_adicional}\n\n{documento_exemplo_para_referencia}"
+      }
+    }
+  }
+  }
