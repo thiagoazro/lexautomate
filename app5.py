@@ -280,8 +280,9 @@ def parametrizador_interface():
                     client_openai=client_openai,
                     azure_openai_deployment_llm=AZURE_OPENAI_DEPLOYMENT_LLM,
                     azure_openai_deployment_expansion=AZURE_OPENAI_DEPLOYMENT_LLM,
-                    top_k_initial_search_azure=0, use_semantic_search_azure=False, # Desabilitar buscas RAG
-                    enable_google_search_trigger=False, temperature=0.3, max_tokens=4000
+                    top_k_initial_search_azure=7, 
+                    use_semantic_search_azure=True, # Desabilitar buscas RAG
+                    enable_google_search_trigger=True, temperature=0.3, max_tokens=4000
                 )
                 resposta_formatada = str(resposta_llm).strip()
                 st.session_state.peticao_parametrizada_gerada = resposta_formatada
