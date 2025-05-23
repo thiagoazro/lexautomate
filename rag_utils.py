@@ -38,9 +38,9 @@ except Exception as e_graph_import:
 # (Mantido conforme o original)
 AZURE_OPENAI_ENDPOINT = 'https://lexautomate.openai.azure.com/'
 AZURE_OPENAI_API_KEY = '6ZJIKi1REnxeAALGOQQ2mFi7KL78gCyVYMq3yzv0xKae620iLHzdJQQJ99BDACYeBjFXJ3w3AAABACOGHcjA'
-AZURE_OPENAI_DEPLOYMENT_LLM = 'lexautomate_agent'
+AZURE_OPENAI_DEPLOYMENT_LLM = 'lexautomate'
 AZURE_OPENAI_DEPLOYMENT_EMBEDDING = 'text-embedding-3-large'
-AZURE_API_VERSION = '2024-02-15-preview'
+AZURE_API_VERSION = '2025-01-01-preview'
 
 AZURE_SEARCH_ENDPOINT = "https://lexautomate-rag.search.windows.net"
 AZURE_SEARCH_KEY = "cjnnxusQPkdT02Lu75uIeD7XEKrAzxgjalqWpS58SgAzSeCpCL38"
