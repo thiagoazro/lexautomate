@@ -61,11 +61,13 @@ except Exception:
 
 CLASSIFIER_AREA_DIREITO_PATH = os.path.join(PROJECT_ROOT_DIR, "models", "classificador_area_direito.joblib")
 CLASSIFIER_TIPO_TAREFA_PATH = os.path.join(PROJECT_ROOT_DIR, "models", "classificador_tipo_tarefa.joblib")
+CLASSIFICADOR_TIPO_DOCUMENTO_PATH = os.path.join(PROJECT_ROOT_DIR, "models", "classificador_tipo_documento.joblib")
 RERANKER_MODEL_NAME = 'cross-encoder/ms-marco-MiniLM-L-6-v2'
 
 print(f"INFO RAG_UTILS: PROJECT_ROOT_DIR definido como: {PROJECT_ROOT_DIR}")
 print(f"INFO RAG_UTILS: Caminho esperado para classificador de área: {CLASSIFIER_AREA_DIREITO_PATH}")
 print(f"INFO RAG_UTILS: Caminho esperado para classificador de tarefa: {CLASSIFIER_TIPO_TAREFA_PATH}")
+print(f"INFO RAG_UTILS: Caminho esperado para classificador de tipo de documento: {CLASSIFICADOR_TIPO_DOCUMENTO_PATH}")
 
 
 # --- Inicialização de Clientes ---
