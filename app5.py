@@ -69,8 +69,8 @@ def parametrizador_interface():
     info_modelo = modelos_data.get(area, {}).get(tipo, {}).get(modelo, {})
 
     st.markdown("### Informações Básicas")
-    autor = st.text_input("Parte autora:", "João da Silva")
-    reu = st.text_input("Parte ré:", "Empresa XYZ Ltda.")
+    autor_recorrente = st.text_input("Parte autora:", "João da Silva")
+    reu_recorrente = st.text_input("Parte ré:", "Empresa XYZ Ltda.")
     foro = st.text_input("Foro competente:", "Comarca de Exemplo")
     valor = st.text_input("Valor da causa (R$):", "10.000,00")
 
@@ -104,15 +104,53 @@ def parametrizador_interface():
 
         prompt = info_modelo.get("prompt_template", "")
         if prompt:
-            prompt_final = prompt.format(
-                autor=autor, reu=reu, foro=foro, valor=valor,
-                reivindicacoes_formatadas=pedidos_formatados,
-                instrucao_adicional=instrucao_adicional or "[Nenhuma instrução adicional]",
-                documento_exemplo_para_referencia=doc_texto or "[Nenhum documento de exemplo fornecido]"
-            )
+            # Argumentos para formatar o prompt.
+            # Mapeamos os valores dos inputs da UI (armazenados nas variáveis autor_recorrente e reu_recorrente)
+            # para uma variedade de placeholders que podem existir nos templates.
+            format_args = {
+                "foro": foro,
+                "valor": valor,
+                "reivindicacoes_formatadas": pedidos_formatados,
+                "instrucao_adicional": instrucao_adicional or "[Nenhuma instrução adicional]",
+                "documento_exemplo_para_referencia": doc_texto or "[Nenhum documento de exemplo fornecido]",
+
+                # Placeholders de partes comuns e específicos
+                "autor": autor_recorrente,  # Valor do input "Parte autora:"
+                "reu": reu_recorrente,      # Valor do input "Parte ré:"
+                "autor_recorrente": autor_recorrente,
+                "reu_recorrente": reu_recorrente,
+                "autor_agravante": autor_recorrente,
+                "reu_agravante": reu_recorrente,
+                "autor_embargante": autor_recorrente,
+                "reu_embargante": reu_recorrente,
+                "requerente": autor_recorrente,
+                "requerido": reu_recorrente,
+                "impetrante": autor_recorrente,
+                "paciente": autor_recorrente, # Para Habeas Corpus, "Parte autora" seria o paciente
+                "querelante": autor_recorrente,
+                "querelado": reu_recorrente,
+                "denunciado": reu_recorrente, # Em Denúncias, "Parte ré" é o denunciado
+                "revisionando": autor_recorrente, # Para Revisão Criminal
+                "exequente": autor_recorrente,
+                "executado": reu_recorrente,
+                "reclamante": autor_recorrente, # Para Direito do Trabalho
+                "reclamada": reu_recorrente,   # Para Direito do Trabalho
+                "locador": autor_recorrente,
+                "locatario": reu_recorrente,
+                "consumidor": autor_recorrente,
+                "fornecedor": reu_recorrente, # Pode cobrir "fabricante" também
+                "contribuinte": autor_recorrente,
+                "fazenda_publica": reu_recorrente,
+                "autoridade_coatora": reu_recorrente, # Em Mandados de Segurança, "Parte ré" pode ser a autoridade
+                "devedora": autor_recorrente, # Para Recuperação Judicial, Autofalência
+                "vitima": autor_recorrente, # Para Representações Criminais
+                "autor_do_fato": reu_recorrente, # Para Representações Criminais
+                # Adicione outros placeholders específicos conforme necessário, baseando-se no seu JSON.
+            }
+            prompt_final = prompt.format(**format_args)
         else:
             prompt_final = (
-                f"Gere uma peça jurídica do tipo {tipo}, na área {area}, entre {autor} e {reu}, "
+                f"Gere uma peça jurídica do tipo {tipo}, na área {area}, entre {autor_recorrente} e {reu_recorrente}, "
                 f"foro: {foro}, valor da causa: {valor}, pedidos: {pedidos_formatados}. {instrucao_adicional}"
             )
 
