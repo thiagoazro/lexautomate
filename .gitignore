@@ -1,0 +1,116 @@
+# === PYTHON ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
+*.sqlite3
+*.db
+
+# === STREAMLIT ===
+.streamlit/config.toml
+.streamlit/secrets.toml
+
+# === VIRTUAL ENVIRONMENTS ===
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+env_backup/
+pip-wheel-metadata/
+
+# === INTELIGÊNCIA ARTIFICIAL / ML / RAG ===
+graph_visualizations/
+*.html
+*.bin
+*.ckpt
+*.pt
+*.pth
+*.joblib
+models/
+*.npz
+*.npy
+
+# === DOCUMENTOS GERADOS ===
+*.docx
+*.pdf
+*.xlsx
+*.xls
+*.csv
+*.txt
+*.md.bak
+
+# === ARQUIVOS TEMPORÁRIOS ===
+*.tmp
+*.temp
+*.bak
+*.swp
+*.~*
+
+# === IDEs ===
+.vscode/
+.idea/
+*.code-workspace
+
+# === CONFIGS, SECRETS E TOKENS ===
+.env
+.env.*
+*.key
+*.pem
+*.crt
+*.token
+*.config
+secrets.json
+config.json
+
+# === CACHE DE PACOTES ===
+.mypy_cache/
+.pytest_cache/
+.cache/
+__pypackages__/
+.tox/
+coverage/
+htmlcov/
+.nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# === JUPYTER NOTEBOOKS (BACKUPS) ===
+.ipynb_checkpoints
+
+# === DATASCIENCE ===
+outputs/
+logs/
+artifacts/
+runs/
+
+# === DATABRICKS ===
+dbfs/
+.dbx/
+*.dbc
+
+# === MAC / LINUX / WINDOWS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === GIT ===
+*.orig
+*.rej
+*.merge_backup
+
+# === EXPORTS E MODELOS ===
+exported_model/
+*.tflite
+*.onnx
+*.pb
+*.h5
+*.sav

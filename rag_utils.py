@@ -4,6 +4,7 @@ from openai import AzureOpenAI
 from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery, QueryType
 from azure.core.credentials import AzureKeyCredential
+import sys
 import os
 import traceback
 import re
@@ -455,7 +456,7 @@ def generate_response_with_conditional_google_search(
             print(f"INFO RAG_UTILS: Contexto do GraphRAG gerado: {graph_context_for_llm[:200]}...") # Log preview
 
             # Opcional: Gerar e armazenar caminho da visualização
-            if 'streamlit' in __import__('sys').modules and st._is_running_with_streamlit:
+            if 'streamlit' in sys.modules:
                  # Gerar um ID único para esta execução específica para evitar sobrescrever arquivos de visualização
                  unique_viz_id = graph_module.run_id # Usa o run_id do GraphRAG
                  output_viz_path = graph_module.visualize_graph(filename_prefix=f"lexautomate_graph_gen_{unique_viz_id[:8]}")
@@ -567,7 +568,7 @@ def generate_consultor_response_with_rag(
             print(f"INFO RAG_UTILS (Consultor): Contexto do GraphRAG gerado: {graph_context_for_llm_consultor[:200]}...")
 
             # Opcional: Gerar e armazenar caminho da visualização para o consultor
-            if 'streamlit' in __import__('sys').modules and st._is_running_with_streamlit:
+            if 'streamlit' in sys.modules and st._is_running_with_streamlit:
                  unique_viz_id_consultor = graph_module_consultor.run_id
                  output_viz_path_consultor = graph_module_consultor.visualize_graph(filename_prefix=f"lexautomate_graph_consultor_{unique_viz_id_consultor[:8]}")
                  if output_viz_path_consultor:
