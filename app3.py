@@ -125,7 +125,8 @@ def validacao_interface():
 
                 with st.spinner("Analisando..."):
                     try:
-                        resposta = generate_response_with_conditional_google_search(
+                        resposta = generate_response_with_conditional_google_search(  # GraphRAG silently included
+
                             system_message_base=SYSTEM_PROMPT_APP3_VALIDACAO,
                             user_instruction=prompt_validacao_usuario,
                             context_document_text=st.session_state.validacao_multi_texto_extraido,
@@ -229,4 +230,3 @@ def validacao_interface():
                     key=f"chunk_preview_validacao_expander_key_app3_{chunk_id}"
                 )
                 st.markdown("---")
-

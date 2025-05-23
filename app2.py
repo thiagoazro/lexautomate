@@ -137,7 +137,8 @@ def peticao_interface():
                 
                 with st.spinner("LexAutomate está redigindo a peça... Por favor, aguarde."):
                     try:
-                        resposta = generate_response_with_conditional_google_search(
+                        resposta = generate_response_with_conditional_google_search(  # GraphRAG silently included
+
                             system_message_base=SYSTEM_PROMPT_APP2_PETICAO,
                             user_instruction=instrucao_final_usuario_para_rag,
                             context_document_text=st.session_state.peticao_multi_texto_extraido,
@@ -248,4 +249,3 @@ def peticao_interface():
                     key=f"chunk_preview_peticao_expander_key_app2_{chunk_id}"
                 )
                 st.markdown("---")
-

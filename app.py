@@ -137,7 +137,8 @@ def resumo_interface():
                 
                 with st.spinner("LexAutomate está resumindo... Por favor, aguarde."):
                     try:
-                        resposta = generate_response_with_conditional_google_search(
+                        resposta = generate_response_with_conditional_google_search(  # GraphRAG silently included
+
                             system_message_base=SYSTEM_PROMPT_APP_RESUMO,
                             user_instruction=user_instruction_final,
                             context_document_text=st.session_state.resumo_multi_texto_extraido,
@@ -255,4 +256,3 @@ def resumo_interface():
                     key=f"chunk_preview_resumo_expander_key_app_{chunk_id}"
                 )
                 st.markdown("---")
-
