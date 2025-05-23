@@ -69,10 +69,10 @@ def parametrizador_interface():
     info_modelo = modelos_data.get(area, {}).get(tipo, {}).get(modelo, {})
 
     st.markdown("### Informações Básicas")
-    autor_recorrente = st.text_input("Parte autora:", "João da Silva")
-    reu_recorrente = st.text_input("Parte ré:", "Empresa XYZ Ltda.")
-    foro = st.text_input("Foro competente:", "Comarca de Exemplo")
-    valor = st.text_input("Valor da causa (R$):", "10.000,00")
+    autor_recorrente = st.text_input("Parte autora:", placeholder="João da Silva")
+    reu_recorrente = st.text_input("Parte ré:", placeholder="Empresa XYZ Ltda.")
+    foro = st.text_input("Foro competente:", placeholder="Comarca de Exemplo")
+    valor = st.text_input("Valor da causa (R$):", placeholder="10.000,00")
 
     reivindicacoes_default = info_modelo.get("reivindicacoes_comuns", [])
     pedidos = st.multiselect("Pedidos principais:", reivindicacoes_default)
@@ -81,16 +81,17 @@ def parametrizador_interface():
 
     doc_texto = ""
     if DOC_INTELLIGENCE_AVAILABLE:
-        st.markdown("### Documento de Exemplo (Opcional)")
-        doc = st.file_uploader("Anexar documento (PDF ou DOCX):", type=["pdf", "docx"])
-        if doc:
-            ext = os.path.splitext(doc.name)[1].lower()
-            temp_path = f"temp_{uuid.uuid4().hex}{ext}"
-            with open(temp_path, "wb") as f:
-                f.write(doc.getvalue())
-            with st.spinner("Extraindo texto..."):
-                doc_texto = extrair_texto_documento(temp_path, ext)
-            os.remove(temp_path)
+        st.markdown("### Documento(s) de Exemplo (Opcional)")
+        docs = st.file_uploader("Anexar documento(s) (PDF ou DOCX):", type=["pdf", "docx"], accept_multiple_files=True)
+        if docs:
+            for doc in docs:
+                ext = os.path.splitext(doc.name)[1].lower()
+                temp_path = f"temp_{uuid.uuid4().hex}{ext}"
+                with open(temp_path, "wb") as f:
+                    f.write(doc.getvalue())
+                with st.spinner(f"Extraindo texto de {doc.name}..."):
+                    doc_texto += "\n\n" + extrair_texto_documento(temp_path, ext)
+                os.remove(temp_path)
 
     if st.button("Gerar Petição"):
         client = get_openai_client()
@@ -104,19 +105,14 @@ def parametrizador_interface():
 
         prompt = info_modelo.get("prompt_template", "")
         if prompt:
-            # Argumentos para formatar o prompt.
-            # Mapeamos os valores dos inputs da UI (armazenados nas variáveis autor_recorrente e reu_recorrente)
-            # para uma variedade de placeholders que podem existir nos templates.
             format_args = {
                 "foro": foro,
                 "valor": valor,
                 "reivindicacoes_formatadas": pedidos_formatados,
                 "instrucao_adicional": instrucao_adicional or "[Nenhuma instrução adicional]",
                 "documento_exemplo_para_referencia": doc_texto or "[Nenhum documento de exemplo fornecido]",
-
-                # Placeholders de partes comuns e específicos
-                "autor": autor_recorrente,  # Valor do input "Parte autora:"
-                "reu": reu_recorrente,      # Valor do input "Parte ré:"
+                "autor": autor_recorrente,
+                "reu": reu_recorrente,
                 "autor_recorrente": autor_recorrente,
                 "reu_recorrente": reu_recorrente,
                 "autor_agravante": autor_recorrente,
@@ -126,26 +122,25 @@ def parametrizador_interface():
                 "requerente": autor_recorrente,
                 "requerido": reu_recorrente,
                 "impetrante": autor_recorrente,
-                "paciente": autor_recorrente, # Para Habeas Corpus, "Parte autora" seria o paciente
+                "paciente": autor_recorrente,
                 "querelante": autor_recorrente,
                 "querelado": reu_recorrente,
-                "denunciado": reu_recorrente, # Em Denúncias, "Parte ré" é o denunciado
-                "revisionando": autor_recorrente, # Para Revisão Criminal
+                "denunciado": reu_recorrente,
+                "revisionando": autor_recorrente,
                 "exequente": autor_recorrente,
                 "executado": reu_recorrente,
-                "reclamante": autor_recorrente, # Para Direito do Trabalho
-                "reclamada": reu_recorrente,   # Para Direito do Trabalho
+                "reclamante": autor_recorrente,
+                "reclamada": reu_recorrente,
                 "locador": autor_recorrente,
                 "locatario": reu_recorrente,
                 "consumidor": autor_recorrente,
-                "fornecedor": reu_recorrente, # Pode cobrir "fabricante" também
+                "fornecedor": reu_recorrente,
                 "contribuinte": autor_recorrente,
                 "fazenda_publica": reu_recorrente,
-                "autoridade_coatora": reu_recorrente, # Em Mandados de Segurança, "Parte ré" pode ser a autoridade
-                "devedora": autor_recorrente, # Para Recuperação Judicial, Autofalência
-                "vitima": autor_recorrente, # Para Representações Criminais
-                "autor_do_fato": reu_recorrente, # Para Representações Criminais
-                # Adicione outros placeholders específicos conforme necessário, baseando-se no seu JSON.
+                "autoridade_coatora": reu_recorrente,
+                "devedora": autor_recorrente,
+                "vitima": autor_recorrente,
+                "autor_do_fato": reu_recorrente,
             }
             prompt_final = prompt.format(**format_args)
         else:
@@ -196,3 +191,7 @@ def parametrizador_interface():
             )
         except Exception as e:
             st.error(f"Erro ao gerar o DOCX: {e}")
+
+# Executa a interface
+if __name__ == "__main__":
+    parametrizador_interface()
