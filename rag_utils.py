@@ -425,7 +425,10 @@ def generate_response_with_conditional_google_search(
     use_reranker: bool = True # Habilita/desabilita o reranker CrossEncoder
     ):
 
-    area_predita, tarefa_predita, _, _ = classificar_texto(user_instruction, modelo_area_direito, modelo_tipo_tarefa)
+    area_predita, tarefa_predita, peca_predita, prob_area, prob_tarefa, prob_peca = classificar_texto(
+    user_instruction, modelo_area_direito, modelo_tipo_tarefa, modelo_tipo_peca
+)
+
     system_message_final = selecionar_prompt_dinamico(area_predita, tarefa_predita, system_message_base)
     search_filter_for_azure = None # Pode ser usado para filtrar por tipo de documento, data, etc.
 
@@ -538,7 +541,10 @@ def generate_consultor_response_with_rag(
 
     if client_openai is None or search_client is None: return "Erro: Serviços de IA não configurados."
 
-    area_predita, tarefa_predita, _, _ = classificar_texto(user_instruction, modelo_area_direito, modelo_tipo_tarefa)
+    area_predita, tarefa_predita, peca_predita, prob_area, prob_tarefa, prob_peca = classificar_texto(
+    user_instruction, modelo_area_direito, modelo_tipo_tarefa, modelo_tipo_peca
+)
+
     system_message_final = selecionar_prompt_dinamico(area_predita, tarefa_predita, system_message_base)
     search_filter_for_azure = None # Filtro para busca no Azure, se necessário
 
