@@ -62,13 +62,14 @@ except Exception:
 CLASSIFIER_AREA_DIREITO_PATH = os.path.join(PROJECT_ROOT_DIR, "models", "classificador_area_direito.joblib")
 CLASSIFIER_TIPO_TAREFA_PATH = os.path.join(PROJECT_ROOT_DIR, "models", "classificador_tipo_tarefa.joblib")
 CLASSIFICADOR_TIPO_DOCUMENTO_PATH = os.path.join(PROJECT_ROOT_DIR, "models", "classificador_tipo_documento.joblib")
+CLASSIFICADOR_TIPO_PECA_PATH = os.path.join(PROJECT_ROOT_DIR, "models", "classificador_tipo_peca.joblib")
 RERANKER_MODEL_NAME = 'cross-encoder/ms-marco-MiniLM-L-6-v2'
 
 print(f"INFO RAG_UTILS: PROJECT_ROOT_DIR definido como: {PROJECT_ROOT_DIR}")
 print(f"INFO RAG_UTILS: Caminho esperado para classificador de área: {CLASSIFIER_AREA_DIREITO_PATH}")
 print(f"INFO RAG_UTILS: Caminho esperado para classificador de tarefa: {CLASSIFIER_TIPO_TAREFA_PATH}")
 print(f"INFO RAG_UTILS: Caminho esperado para classificador de tipo de documento: {CLASSIFICADOR_TIPO_DOCUMENTO_PATH}")
-
+print(f"INFO RAG_UTILS: Caminho esperado para classificador de tipo de documento: {CLASSIFICADOR_TIPO_PECA_PATH}")
 
 # --- Inicialização de Clientes ---
 @st.cache_resource
@@ -169,21 +170,30 @@ def carregar_classificador(model_path: str):
 
 modelo_area_direito = carregar_classificador(CLASSIFIER_AREA_DIREITO_PATH)
 modelo_tipo_tarefa = carregar_classificador(CLASSIFIER_TIPO_TAREFA_PATH)
+modelo_tipo_documento = carregar_classificador(CLASSIFICADOR_TIPO_DOCUMENTO_PATH)
+modelo_tipo_peca = carregar_classificador(CLASSIFICADOR_TIPO_PECA_PATH)
 
-def classificar_texto(texto: str, modelo_area, modelo_tarefa) -> tuple[str, str, dict, dict]:
-    area_predita, tarefa_predita, prob_area, prob_tarefa = "desconhecida", "desconhecida", {}, {}
-    if not texto.strip(): return area_predita, tarefa_predita, prob_area, prob_tarefa
+def classificar_texto(texto: str, modelo_area, modelo_tarefa, modelo_peca=None) -> tuple[str, str, str, dict, dict, dict]:
+    area_predita, tarefa_predita, peca_predita = "desconhecida", "desconhecida", "desconhecida"
+    prob_area, prob_tarefa, prob_peca = {}, {}, {}
+    if not texto.strip(): return area_predita, tarefa_predita, peca_predita, prob_area, prob_tarefa, prob_peca
     try:
         if modelo_area:
             area_predita = modelo_area.predict([texto])[0]
             probs = modelo_area.predict_proba([texto])[0]
             prob_area = {cls: prob for cls, prob in zip(modelo_area.classes_, probs)}
-        if modelo_tipo_tarefa:
-            tarefa_predita = modelo_tipo_tarefa.predict([texto])[0]
-            probs = modelo_tipo_tarefa.predict_proba([texto])[0]
-            prob_tarefa = {cls: prob for cls, prob in zip(modelo_tipo_tarefa.classes_, probs)}
-    except Exception as e: print(f"AVISO RAG_UTILS (Classify): {e}")
-    return area_predita, tarefa_predita, prob_area, prob_tarefa
+        if modelo_tarefa:
+            tarefa_predita = modelo_tarefa.predict([texto])[0]
+            probs = modelo_tarefa.predict_proba([texto])[0]
+            prob_tarefa = {cls: prob for cls, prob in zip(modelo_tarefa.classes_, probs)}
+        if modelo_peca:
+            peca_predita = modelo_peca.predict([texto])[0]
+            probs = modelo_peca.predict_proba([texto])[0]
+            prob_peca = {cls: prob for cls, prob in zip(modelo_peca.classes_, probs)}
+    except Exception as e:
+        print(f"AVISO RAG_UTILS (Classify): {e}")
+    return area_predita, tarefa_predita, peca_predita, prob_area, prob_tarefa, prob_peca
+
 
 def selecionar_prompt_dinamico(area: str, tarefa: str, base_system_prompt: str) -> str:
     prompt_modificado = base_system_prompt
