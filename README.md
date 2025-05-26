@@ -12,7 +12,7 @@ O sistema é hospedado na **Azure** e utiliza **Streamlit** como framework web, 
 
 ---
 
-## Tecnologias Utilizadas ##
+## Tecnologias Utilizadas #
 
 - **Python 3.12**
 - **Streamlit** (Frontend Web)
