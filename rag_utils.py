@@ -586,7 +586,7 @@ def generate_consultor_response_with_rag(
             print(f"INFO RAG_UTILS (Consultor): Contexto do GraphRAG gerado: {graph_context_for_llm_consultor[:200]}...")
 
             # Opcional: Gerar e armazenar caminho da visualização para o consultor
-            if 'streamlit' in sys.modules and st._is_running_with_streamlit:
+            if st.runtime.exists():
                  unique_viz_id_consultor = graph_module_consultor.run_id
                  output_viz_path_consultor = graph_module_consultor.visualize_graph(filename_prefix=f"lexautomate_graph_consultor_{unique_viz_id_consultor[:8]}")
                  if output_viz_path_consultor:
@@ -675,3 +675,26 @@ def gerar_docx(texto_markdown):
         raise # Re-levanta a exceção para ser tratada externamente se necessário
 
 print("INFO RAG_UTILS: Módulo `rag_utils.py` carregado (v13 - Revisão de nomes de função e GraphRAG integrado).")
+
+# --- Feedback do Usuário (RLHF Leve) ---
+def salvar_feedback_rag(pergunta, resposta, feedback, comentario=None, arquivo='feedbacks_rag.json'):
+    import datetime, json, os
+    feedback_data = {
+        'timestamp': datetime.datetime.now().isoformat(),
+        'pergunta': pergunta,
+        'resposta': resposta,
+        'feedback': feedback,
+        'comentario': comentario or ''
+    }
+    try:
+        if os.path.exists(arquivo):
+            with open(arquivo, 'r', encoding='utf-8') as f:
+                historico = json.load(f)
+        else:
+            historico = []
+        historico.append(feedback_data)
+        with open(arquivo, 'w', encoding='utf-8') as f:
+            json.dump(historico, f, ensure_ascii=False, indent=2)
+        print('INFO: Feedback salvo com sucesso.')
+    except Exception as e:
+        print(f'ERRO ao salvar feedback: {e}')
