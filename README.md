@@ -1,5 +1,5 @@
 
-# LexAutomate - Plataforma de Análise Jurídica com IA #
+# LexAutomate - Plataforma de Análise Jurídica com IA ##
 
 Este projeto implementa uma plataforma jurídica baseada em Inteligência Artificial, composta por três módulos:
 
