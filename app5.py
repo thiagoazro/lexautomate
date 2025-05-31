@@ -1,5 +1,4 @@
-
-# app_5.py
+# app5.py (Geração de Peças Jurídicas Parametrizadas lendo URLs da Sidebar Global)
 import streamlit as st
 import json
 import os
@@ -10,8 +9,11 @@ from rag_utils import (
     get_azure_search_client,
     generate_response_with_conditional_google_search,
     AZURE_OPENAI_DEPLOYMENT_LLM,
-    gerar_docx
+    gerar_docx,
+    salvar_feedback_rag
 )
+# Importar utilitários Chroma
+from chroma_utils import obter_contexto_relevante_de_url
 
 try:
     from rag_docintelligence import extrair_texto_documento
@@ -26,172 +28,285 @@ PROMPT_PARAMETRIZADOR_FILE = "prompts/system_prompt_app5_parametrizador.md"
 
 def carregar_prompt_parametrizador(prompt_path: str = PROMPT_PARAMETRIZADOR_FILE) -> str:
     try:
-        with open(prompt_path, "r", encoding="utf-8") as f:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        full_prompt_path = os.path.join(current_dir, "..", prompt_path)
+        if not os.path.exists(full_prompt_path):
+             full_prompt_path = os.path.join(current_dir, prompt_path)
+        
+        with open(full_prompt_path, "r", encoding="utf-8") as f:
+            print(f"INFO APP5 (Parametrizador): Prompt carregado de: {full_prompt_path}")
             return f.read()
     except Exception as e:
-        st.warning(f"Erro ao carregar o prompt do parametrizador: {e}")
-        return "Você é um assistente jurídico especializado em peças processuais."
+        st.warning(f"Erro ao carregar o prompt do parametrizador de '{prompt_path}': {e}. Usando prompt padrão.")
+        return "Você é um assistente jurídico especializado em criar peças processuais detalhadas e bem fundamentadas."
 
 @st.cache_data
 def carregar_modelos_pecas(file_path: str) -> dict:
     try:
-        if not os.path.exists(file_path):
-            st.error(f"Arquivo de modelos '{file_path}' não encontrado.")
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        full_file_path = os.path.join(current_dir, "..", file_path)
+        if not os.path.exists(full_file_path):
+            full_file_path = os.path.join(current_dir, file_path)
+
+        if not os.path.exists(full_file_path):
+            st.error(f"Arquivo de modelos '{full_file_path}' não encontrado.")
             return {}
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(full_file_path, "r", encoding="utf-8") as f:
+            print(f"INFO APP5 (Parametrizador): Modelos de peças carregados de: {full_file_path}")
             return json.load(f)
     except Exception as e:
-        st.error(f"Erro ao carregar o JSON: {e}")
+        st.error(f"Erro ao carregar o JSON de modelos de peças '{file_path}': {e}")
         return {}
 
 def parametrizador_interface():
-    st.subheader("📁 Geração de Peças Jurídicas Parametrizadas")
+    # st.subheader("🧩 Geração de Peças Jurídicas Parametrizadas") # Título já vem da tab
+    st.markdown("Preencha os campos, anexe documentos de exemplo e, opcionalmente, utilize as URLs da barra lateral para enriquecer a geração da peça.")
+    st.markdown("---")
+
+    # Sufixo para chaves de session_state desta aba
+    sfx = "_app5_sidebar"
+    if f'peticao_gerada{sfx}' not in st.session_state:
+        st.session_state[f'peticao_gerada{sfx}'] = ""
+    if f'last_user_urls_context{sfx}' not in st.session_state:
+        st.session_state[f'last_user_urls_context{sfx}'] = ""
+    if f'last_prompt{sfx}' not in st.session_state:
+        st.session_state[f'last_prompt{sfx}'] = ""
+    if f'last_response_text{sfx}' not in st.session_state:
+        st.session_state[f'last_response_text{sfx}'] = ""
+    if f'geracao_em_andamento{sfx}' not in st.session_state:
+        st.session_state[f'geracao_em_andamento{sfx}'] = False
 
     modelos_data = carregar_modelos_pecas(MODELOS_PECAS_FILE)
     if not modelos_data:
-        st.warning("Modelos de peças não carregados.")
+        st.warning("Modelos de peças não carregados. Algumas opções podem estar limitadas.")
         areas_disponiveis = ["Trabalhista", "Cível", "Outra"]
-        tipos_peca_disponiveis_fallback = ["Petição Inicial", "Outro"]
-        modelos_peca_disponiveis_fallback = ["Modelo Genérico"]
+        tipos_peca_disponiveis_fallback = {"Trabalhista": ["Petição Inicial", "Outro"], "Cível": ["Petição Inicial", "Outro"], "Outra": ["Genérico"]}
+        modelos_peca_disponiveis_fallback = {"Petição Inicial": ["Modelo Genérico"], "Outro": ["Modelo Genérico"], "Genérico": ["Modelo Genérico"]}
     else:
         areas_disponiveis = list(modelos_data.keys())
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        area = st.selectbox("Área do Direito:", areas_disponiveis, key="area")
+        area_selecionada = st.selectbox("Área do Direito:", areas_disponiveis, key=f"area{sfx}")
     with col2:
-        tipos = list(modelos_data.get(area, {}).keys()) if area in modelos_data else ["Outro"]
-        tipo = st.selectbox("Tipo da Peça:", tipos, key="tipo")
+        tipos_na_area = list(modelos_data.get(area_selecionada, {}).keys()) if area_selecionada in modelos_data else tipos_peca_disponiveis_fallback.get(area_selecionada, ["Outro"])
+        tipo_peca_selecionado = st.selectbox("Tipo da Peça:", tipos_na_area, key=f"tipo{sfx}")
     with col3:
-        modelos = list(modelos_data.get(area, {}).get(tipo, {}).keys()) if area in modelos_data and tipo in modelos_data[area] else ["Modelo Genérico"]
-        modelo = st.selectbox("Modelo Específico:", modelos, key="modelo")
+        modelos_no_tipo = list(modelos_data.get(area_selecionada, {}).get(tipo_peca_selecionado, {}).keys()) if area_selecionada in modelos_data and tipo_peca_selecionado in modelos_data[area_selecionada] else modelos_peca_disponiveis_fallback.get(tipo_peca_selecionado, ["Modelo Genérico"])
+        modelo_especifico_selecionado = st.selectbox("Modelo Específico:", modelos_no_tipo, key=f"modelo{sfx}")
 
-    info_modelo = modelos_data.get(area, {}).get(tipo, {}).get(modelo, {})
+    info_modelo_selecionado = modelos_data.get(area_selecionada, {}).get(tipo_peca_selecionado, {}).get(modelo_especifico_selecionado, {})
 
-    st.markdown("### Informações Básicas")
-    autor_recorrente = st.text_input("Parte autora:", placeholder="João da Silva")
-    reu_recorrente = st.text_input("Parte ré:", placeholder="Empresa XYZ Ltda.")
-    foro = st.text_input("Foro competente:", placeholder="Comarca de Exemplo")
-    valor = st.text_input("Valor da causa (R$):", placeholder="10.000,00")
+    st.markdown("### Informações Básicas da Peça")
+    autor_recorrente = st.text_input("Parte Autora/Reclamante/Recorrente:", placeholder="Ex: João da Silva", key=f"autor{sfx}")
+    reu_recorrente = st.text_input("Parte Ré/Reclamada/Recorrida:", placeholder="Ex: Empresa XYZ Ltda.", key=f"reu{sfx}")
+    foro_competente = st.text_input("Foro Competente:", placeholder="Ex: Comarca de Exemplo / Vara do Trabalho de Exemplo", key=f"foro{sfx}")
+    valor_causa = st.text_input("Valor da Causa (R$):", placeholder="Ex: 10.000,00", key=f"valor{sfx}")
 
-    reivindicacoes_default = info_modelo.get("reivindicacoes_comuns", [])
-    pedidos = st.multiselect("Pedidos principais:", reivindicacoes_default)
-    outros_pedidos = st.text_area("Outros pedidos (um por linha):")
-    instrucao_adicional = st.text_area("Instruções adicionais:")
+    reivindicacoes_comuns_modelo = info_modelo_selecionado.get("reivindicacoes_comuns", [])
+    pedidos_selecionados = st.multiselect("Pedidos Principais (selecione do modelo ou adicione abaixo):", reivindicacoes_comuns_modelo, key=f"pedidos_multiselect{sfx}")
+    outros_pedidos_texto = st.text_area("Outros Pedidos (um por linha):", placeholder="Ex: Indenização por danos morais\nEx: Reintegração ao emprego", key=f"outros_pedidos{sfx}")
+    
+    instrucao_adicional_usuario = st.text_area("Instruções Adicionais para a IA (detalhes específicos, teses, etc.):", key=f"instrucao_adicional{sfx}")
 
-    doc_texto = ""
+    texto_documento_exemplo = ""
     if DOC_INTELLIGENCE_AVAILABLE:
         st.markdown("### Documento(s) de Exemplo (Opcional)")
-        docs = st.file_uploader("Anexar documento(s) (PDF ou DOCX):", type=["pdf", "docx"], accept_multiple_files=True)
-        if docs:
-            for doc in docs:
+        docs_exemplo = st.file_uploader("Anexar documento(s) de referência (PDF ou DOCX):", type=["pdf", "docx"], accept_multiple_files=True, key=f"docs_exemplo{sfx}")
+        if docs_exemplo:
+            textos_docs_exemplo = []
+            for doc in docs_exemplo:
                 ext = os.path.splitext(doc.name)[1].lower()
-                temp_path = f"temp_{uuid.uuid4().hex}{ext}"
+                temp_path = f"temp{sfx}_{uuid.uuid4().hex}{ext}"
                 with open(temp_path, "wb") as f:
                     f.write(doc.getvalue())
                 with st.spinner(f"Extraindo texto de {doc.name}..."):
-                    doc_texto += "\n\n" + extrair_texto_documento(temp_path, ext)
+                    texto_extraido_doc = extrair_texto_documento(temp_path, ext)
+                if texto_extraido_doc:
+                    textos_docs_exemplo.append(f"---\n**Documento de Exemplo: {doc.name}**\n\n{texto_extraido_doc}")
                 os.remove(temp_path)
+            if textos_docs_exemplo:
+                texto_documento_exemplo = "\n\n".join(textos_docs_exemplo)
+                with st.expander("Ver Texto dos Documentos de Exemplo Anexados", expanded=False):
+                    st.text_area("Texto Extraído dos Documentos de Exemplo:", texto_documento_exemplo, height=150, disabled=True, key=f"texto_docs_exemplo_display{sfx}")
 
-    if st.button("Gerar Petição"):
+    # CAMPOS DE URL AGORA ESTÃO NA SIDEBAR (main.py) E SERÃO LIDOS DO SESSION_STATE
+    # Remover os st.text_input para URLs que existiam aqui.
+
+    # Lê as URLs da sidebar
+    url1_sidebar = st.session_state.get('sidebar_url1', "")
+    url2_sidebar = st.session_state.get('sidebar_url2', "")
+    url3_sidebar = st.session_state.get('sidebar_url3', "")
+    user_urls_from_sidebar = [url for url in [url1_sidebar, url2_sidebar, url3_sidebar] if url.strip()]
+
+    if user_urls_from_sidebar:
+        st.info(f"Utilizando {len(user_urls_from_sidebar)} URL(s) de contexto da barra lateral para esta peça.")
+    
+    enable_google_search_app5 = st.checkbox("Habilitar busca complementar na Web (Google) para esta peça?", value=True, key=f"param_enable_google_search{sfx}_checkbox")
+
+    if st.button("Gerar Petição Parametrizada", key=f"gerar_peticao_param{sfx}_button"):
         client = get_openai_client()
-        search = get_azure_search_client()
-        if not client or not search:
-            st.error("Erro ao inicializar clientes.")
+        search_client = get_azure_search_client()
+        if not client or not search_client:
+            st.error("Erro ao inicializar clientes de IA. Verifique as configurações.")
             return
 
-        todos_pedidos = pedidos + [p.strip() for p in outros_pedidos.split("\n") if p.strip()]
-        pedidos_formatados = ", ".join(todos_pedidos) if todos_pedidos else "(não especificado)"
+        st.session_state[f'geracao_em_andamento{sfx}'] = True
+        st.session_state[f'last_user_urls_context{sfx}'] = ""
 
-        prompt = info_modelo.get("prompt_template", "")
-        if prompt:
-            format_args = {
-                "foro": foro,
-                "valor": valor,
-                "reivindicacoes_formatadas": pedidos_formatados,
-                "instrucao_adicional": instrucao_adicional or "[Nenhuma instrução adicional]",
-                "documento_exemplo_para_referencia": doc_texto or "[Nenhum documento de exemplo fornecido]",
-                "autor": autor_recorrente,
-                "reu": reu_recorrente,
-                "autor_recorrente": autor_recorrente,
-                "reu_recorrente": reu_recorrente,
-                "autor_agravante": autor_recorrente,
-                "reu_agravante": reu_recorrente,
-                "autor_embargante": autor_recorrente,
-                "reu_embargante": reu_recorrente,
-                "requerente": autor_recorrente,
-                "requerido": reu_recorrente,
-                "impetrante": autor_recorrente,
-                "paciente": autor_recorrente,
-                "querelante": autor_recorrente,
-                "querelado": reu_recorrente,
-                "denunciado": reu_recorrente,
-                "revisionando": autor_recorrente,
-                "exequente": autor_recorrente,
-                "executado": reu_recorrente,
-                "reclamante": autor_recorrente,
-                "reclamada": reu_recorrente,
-                "locador": autor_recorrente,
-                "locatario": reu_recorrente,
-                "consumidor": autor_recorrente,
-                "fornecedor": reu_recorrente,
-                "contribuinte": autor_recorrente,
-                "fazenda_publica": reu_recorrente,
-                "autoridade_coatora": reu_recorrente,
-                "devedora": autor_recorrente,
-                "vitima": autor_recorrente,
-                "autor_do_fato": reu_recorrente,
+        todos_pedidos_finais = pedidos_selecionados + [p.strip() for p in outros_pedidos_texto.split("\n") if p.strip()]
+        pedidos_formatados_str = ", ".join(todos_pedidos_finais) if todos_pedidos_finais else "(não especificado)"
+
+        prompt_base_para_contexto_urls = (
+            f"Pesquisar jurisprudência e informações relevantes para uma peça do tipo '{tipo_peca_selecionado}' na área '{area_selecionada}', "
+            f"envolvendo as partes '{autor_recorrente}' e '{reu_recorrente}', com os pedidos: '{pedidos_formatados_str}'. "
+            f"Considerar também as seguintes instruções adicionais: '{instrucao_adicional_usuario}'."
+        )
+
+        contexto_urls_agregado_para_prompt = ""
+        contexto_urls_agregado_para_exibir = ""
+
+        if user_urls_from_sidebar:
+            num_urls_para_consultar = len(user_urls_from_sidebar)
+            spinner_message_urls = f"Consultando {num_urls_para_consultar} URL(s) da barra lateral..."
+            with st.spinner(spinner_message_urls):
+                for i, url_item in enumerate(user_urls_from_sidebar, 1):
+                    print(f"INFO APP5 (Parametrizador): Obtendo contexto Chroma da URL {i} (sidebar): {url_item} para a consulta: '{prompt_base_para_contexto_urls}'")
+                    contexto_url_individual = obter_contexto_relevante_de_url(
+                        url_item,
+                        prompt_base_para_contexto_urls,
+                        top_k_chunks=2 
+                    )
+                    if contexto_url_individual and "Nenhum conteúdo relevante" not in contexto_url_individual and "Falha ao carregar" not in contexto_url_individual:
+                        contexto_urls_agregado_para_prompt += f"\n--- Contexto da URL {i} ({url_item}) ---\n{contexto_url_individual}\n--- Fim do Contexto da URL {i} ---\n\n"
+                        contexto_urls_agregado_para_exibir += f"<b>Contexto da URL {i} ({url_item}):</b><br>{contexto_url_individual}<hr>"
+                        print(f"INFO APP5 (Parametrizador): Contexto da URL {i} (sidebar) adicionado.")
+                    else:
+                        aviso_url = f"<i>Nenhum contexto útil obtido da URL {i} ({url_item}) da barra lateral.</i><br>"
+                        contexto_urls_agregado_para_exibir += aviso_url
+                        print(f"AVISO APP5 (Parametrizador): {aviso_url}")
+        
+        st.session_state[f'last_user_urls_context{sfx}'] = contexto_urls_agregado_para_exibir if contexto_urls_agregado_para_exibir else "Nenhuma URL fornecida na barra lateral ou nenhum contexto relevante extraído."
+
+        prompt_template_modelo = info_modelo_selecionado.get("prompt_template", 
+            "Gere uma peça jurídica do tipo {tipo_peca_selecionado} na área {area_selecionada} para {autor_recorrente} contra {reu_recorrente}. "
+            "Foro: {foro_competente}. Valor da causa: {valor_causa}. Pedidos: {pedidos_formatados_str}. "
+            "Instruções adicionais: {instrucao_adicional_usuario}. Documento de exemplo: {texto_documento_exemplo}"
+        )
+        
+        format_args_peca = {
+            "area_selecionada": area_selecionada,
+            "tipo_peca_selecionado": tipo_peca_selecionado,
+            "modelo_especifico_selecionado": modelo_especifico_selecionado,
+            "autor_recorrente": autor_recorrente or "[NOME AUTOR/RECORRENTE]",
+            "reu_recorrente": reu_recorrente or "[NOME RÉU/RECORRIDO]",
+            "foro": foro_competente or "[FORO COMPETENTE]",
+            "valor": valor_causa or "[VALOR DA CAUSA]",
+            "pedidos_formatados_str": pedidos_formatados_str,
+            "instrucao_adicional_usuario": instrucao_adicional_usuario or "[Nenhuma instrução adicional específica]",
+            "texto_documento_exemplo": texto_documento_exemplo or "[Nenhum documento de exemplo fornecido]",
+            "autor": autor_recorrente or "[NOME AUTOR]", "reu": reu_recorrente or "[NOME RÉU]",
+            "reclamante": autor_recorrente or "[NOME RECLAMANTE]", "reclamada": reu_recorrente or "[NOME RECLAMADA]",
+            "reivindicacoes_formatadas": pedidos_formatados_str,
+            "instrucao_adicional": instrucao_adicional_usuario or "[Nenhuma instrução adicional]",
+            "documento_exemplo_para_referencia": texto_documento_exemplo or "[Nenhum documento de exemplo fornecido]"
             }
-            prompt_final = prompt.format(**format_args)
-        else:
-            prompt_final = (
-                f"Gere uma peça jurídica do tipo {tipo}, na área {area}, entre {autor_recorrente} e {reu_recorrente}, "
-                f"foro: {foro}, valor da causa: {valor}, pedidos: {pedidos_formatados}. {instrucao_adicional}"
+        
+        prompt_final_para_llm = prompt_template_modelo.format(**{k: v if v is not None else f"[{k.upper()}]" for k, v in format_args_peca.items()})
+
+        if contexto_urls_agregado_para_prompt:
+            prompt_final_para_llm = (
+                f"{contexto_urls_agregado_para_prompt}"
+                f"Considerando os contextos acima extraídos das URLs fornecidas pelo usuário na barra lateral, "
+                f"e o(s) documento(s) de exemplo também fornecido(s) (se houver), gere a peça conforme as seguintes especificações:\n\n"
+                f"Especificações da Peça: \"{prompt_final_para_llm}\""
             )
 
-        with st.spinner("Gerando petição..."):
+        with st.spinner("Gerando petição parametrizada com todas as fontes..."):
             try:
-                system_prompt_param = carregar_prompt_parametrizador()
+                system_prompt_base_app5 = carregar_prompt_parametrizador()
                 resposta = generate_response_with_conditional_google_search(
-                    system_message_base=system_prompt_param,
-                    user_instruction=prompt_final,
-                    context_document_text=doc_texto,
-                    search_client=search,
+                    system_message_base=system_prompt_base_app5,
+                    user_instruction=prompt_final_para_llm,
+                    context_document_text=texto_documento_exemplo,
+                    search_client=search_client,
                     client_openai=client,
                     azure_openai_deployment_llm=AZURE_OPENAI_DEPLOYMENT_LLM,
                     azure_openai_deployment_expansion=AZURE_OPENAI_DEPLOYMENT_LLM,
-                    top_k_initial_search_azure=7,
+                    top_k_initial_search_azure=5,
+                    top_k_rerank_azure=2,
                     use_semantic_search_azure=True,
-                    enable_google_search_trigger=True,
+                    enable_google_search_trigger=enable_google_search_app5,
                     temperature=0.3,
                     max_tokens=4000
                 )
-                st.session_state["peticao_gerada"] = str(resposta).strip()
-            except Exception as e:
-                st.error(f"Erro ao gerar petição: {e}")
-                st.session_state["peticao_gerada"] = ""
+                st.session_state[f'peticao_gerada{sfx}'] = str(resposta).strip()
+                
+                st.session_state[f'last_prompt{sfx}'] = prompt_final_para_llm
+                st.session_state[f'last_response_text{sfx}'] = st.session_state[f'peticao_gerada{sfx}']
 
-    if "peticao_gerada" in st.session_state and st.session_state["peticao_gerada"]:
+            except Exception as e:
+                st.error(f"Erro ao gerar petição parametrizada: {e}")
+                st.session_state[f'peticao_gerada{sfx}'] = ""
+                traceback.print_exc()
+            finally:
+                st.session_state[f'geracao_em_andamento{sfx}'] = False
+                st.rerun()
+
+    if st.session_state.get(f'peticao_gerada{sfx}', ""):
         st.markdown("---")
         st.markdown("## 📝 Petição Gerada")
 
-        with st.expander("📄 Pré-visualização da Petição (Somente Leitura)", expanded=True):
-            st.markdown(st.session_state["peticao_gerada"], unsafe_allow_html=True)
+        if st.session_state.get(f'last_user_urls_context{sfx}') and ("Contexto da URL" in st.session_state.get(f'last_user_urls_context{sfx}')):
+            with st.expander("Contexto das URLs da Barra Lateral Utilizado", expanded=False):
+                st.markdown(st.session_state[f'last_user_urls_context{sfx}'], unsafe_allow_html=True)
 
-        texto_editado = st.text_area("Edição opcional:", value=st.session_state["peticao_gerada"], height=300)
-        st.session_state["peticao_gerada"] = texto_editado
+        with st.expander("📄 Pré-visualização da Petição (Somente Leitura)", expanded=True):
+            st.markdown(st.session_state[f'peticao_gerada{sfx}'], unsafe_allow_html=True)
+
+        texto_editado_app5 = st.text_area("Edição opcional:", value=st.session_state[f'peticao_gerada{sfx}'], height=400, key=f"editor_peticao{sfx}")
+        
+        if texto_editado_app5 != st.session_state[f'peticao_gerada{sfx}']:
+            st.session_state[f'peticao_gerada{sfx}'] = texto_editado_app5
 
         try:
-            docx_file = gerar_docx(st.session_state["peticao_gerada"])
+            docx_file = gerar_docx(st.session_state[f'peticao_gerada{sfx}'])
             st.download_button(
-                label="📅 Baixar em DOCX",
+                label="📅 Baixar Petição em DOCX",
                 data=docx_file,
-                file_name="peticao_gerada.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                file_name=f"LexAutomate_Peticao_{tipo_peca_selecionado.replace(' ', '_')}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key=f"download_docx{sfx}_button"
             )
         except Exception as e:
-            st.error(f"Erro ao gerar o DOCX: {e}")
+            st.error(f"Erro ao gerar o DOCX para a petição: {e}")
+            traceback.print_exc()
 
-# Executa a interface
-if __name__ == "__main__":
-    parametrizador_interface()
+    if f'last_response_text{sfx}' in st.session_state and st.session_state[f'last_response_text{sfx}']:
+        with st.expander("💬 Sua opinião nos ajuda a melhorar esta funcionalidade"):
+            feedback_opcao_app5 = st.radio(
+                "Esta petição gerada foi útil?",
+                ["👍 Sim", "👎 Não"],
+                key=f"feedback_radio_param{sfx}_{st.session_state.get(f'last_prompt{sfx}', uuid.uuid4().hex)}"
+            )
+            comentario_app5 = st.text_area(
+                "Comentário sobre a petição (opcional):",
+                placeholder="Diga o que achou da petição ou o que faltou.",
+                key=f"feedback_comment_param{sfx}_{st.session_state.get(f'last_prompt{sfx}', uuid.uuid4().hex)}"
+            )
+            if st.button("Enviar Feedback da Petição Parametrizada", key=f"feedback_submit_param{sfx}_{st.session_state.get(f'last_prompt{sfx}', uuid.uuid4().hex)}"):
+                salvar_feedback_rag(
+                    pergunta=st.session_state.get(f'last_prompt{sfx}', "Instrução não registrada"),
+                    resposta=st.session_state.get(f'last_response_text{sfx}', ""),
+                    feedback=feedback_opcao_app5,
+                    comentario=comentario_app5,
+                )
+                st.success("Feedback sobre a petição enviado com sucesso. Obrigado!")
+                if f'last_response_text{sfx}' in st.session_state: del st.session_state[f'last_response_text{sfx}']
+                if f'last_prompt{sfx}' in st.session_state: del st.session_state[f'last_prompt{sfx}']
+                st.rerun()
+
+# if __name__ == "__main__":
+#     if 'main_script_path' not in st.session_state:
+#         st.session_state.main_script_path = os.path.abspath(__file__)
+#     parametrizador_interface()
