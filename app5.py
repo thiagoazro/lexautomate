@@ -1,6 +1,6 @@
-# app5.py (Geração de Peças Jurídicas Parametrizadas lendo URLs da Sidebar Global)
+# app5.py (Geração de Peças Jurídicas Parametrizadas lendo do MongoDB e URLs da Sidebar Global)
 import streamlit as st
-import json
+import json # Mantido caso precise para outras operações futuras, mas não para carregar modelos
 import os
 import uuid
 import traceback
@@ -14,6 +14,8 @@ from rag_utils import (
 )
 # Importar utilitários Chroma
 from chroma_utils import obter_contexto_relevante_de_url
+# Importar utilitários de banco de dados
+from db_utils import carregar_modelos_pecas_from_mongodb # Importa a função para carregar modelos do MongoDB
 
 try:
     from rag_docintelligence import extrair_texto_documento
@@ -23,10 +25,13 @@ except ImportError:
     st.warning("Módulo rag_docintelligence.py não encontrado. A funcionalidade de anexar documento de exemplo estará desabilitada.")
 
 # --- CONFIGURAÇÕES ---
-MODELOS_PECAS_FILE = "modelos_pecas.json"
+# MODELOS_PECAS_FILE = "modelos_pecas.json" # REMOVIDO: Modelos vêm do MongoDB
 PROMPT_PARAMETRIZADOR_FILE = "prompts/system_prompt_app5_parametrizador.md"
 
 def carregar_prompt_parametrizador(prompt_path: str = PROMPT_PARAMETRIZADOR_FILE) -> str:
+    """
+    Carrega o system prompt específico para a funcionalidade de parametrizador.
+    """
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         full_prompt_path = os.path.join(current_dir, "..", prompt_path)
@@ -40,26 +45,8 @@ def carregar_prompt_parametrizador(prompt_path: str = PROMPT_PARAMETRIZADOR_FILE
         st.warning(f"Erro ao carregar o prompt do parametrizador de '{prompt_path}': {e}. Usando prompt padrão.")
         return "Você é um assistente jurídico especializado em criar peças processuais detalhadas e bem fundamentadas."
 
-@st.cache_data
-def carregar_modelos_pecas(file_path: str) -> dict:
-    try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        full_file_path = os.path.join(current_dir, "..", file_path)
-        if not os.path.exists(full_file_path):
-            full_file_path = os.path.join(current_dir, file_path)
-
-        if not os.path.exists(full_file_path):
-            st.error(f"Arquivo de modelos '{full_file_path}' não encontrado.")
-            return {}
-        with open(full_file_path, "r", encoding="utf-8") as f:
-            print(f"INFO APP5 (Parametrizador): Modelos de peças carregados de: {full_file_path}")
-            return json.load(f)
-    except Exception as e:
-        st.error(f"Erro ao carregar o JSON de modelos de peças '{file_path}': {e}")
-        return {}
 
 def parametrizador_interface():
-    # st.subheader("🧩 Geração de Peças Jurídicas Parametrizadas") # Título já vem da tab
     st.markdown("Preencha os campos, anexe documentos de exemplo e, opcionalmente, utilize as URLs da barra lateral para enriquecer a geração da peça.")
     st.markdown("---")
 
@@ -76,26 +63,45 @@ def parametrizador_interface():
     if f'geracao_em_andamento{sfx}' not in st.session_state:
         st.session_state[f'geracao_em_andamento{sfx}'] = False
 
-    modelos_data = carregar_modelos_pecas(MODELOS_PECAS_FILE)
+    # >>> ALTERAÇÃO AQUI: Carrega os modelos do MongoDB
+    # Esta função está decorada com @st.cache_data e @st.cache_resource, então ela será eficiente.
+    modelos_data = carregar_modelos_pecas_from_mongodb()
+    
+    # Define fallbacks se nenhum modelo for carregado (ex: problema de conexão com o DB)
     if not modelos_data:
-        st.warning("Modelos de peças não carregados. Algumas opções podem estar limitadas.")
-        areas_disponiveis = ["Trabalhista", "Cível", "Outra"]
-        tipos_peca_disponiveis_fallback = {"Trabalhista": ["Petição Inicial", "Outro"], "Cível": ["Petição Inicial", "Outro"], "Outra": ["Genérico"]}
-        modelos_peca_disponiveis_fallback = {"Petição Inicial": ["Modelo Genérico"], "Outro": ["Modelo Genérico"], "Genérico": ["Modelo Genérico"]}
+        st.warning("Modelos de peças não carregados do MongoDB. Algumas opções podem estar limitadas ou ausentes. Verifique a conexão e se o DB está populado.")
+        areas_disponiveis = ["Nenhum Modelo Disponível"]
+        tipos_peca_disponiveis_fallback = {"Nenhum Modelo Disponível": ["Nenhum"]}
+        modelos_peca_disponiveis_fallback = {"Nenhum": ["Nenhum"]}
     else:
         areas_disponiveis = list(modelos_data.keys())
 
     col1, col2, col3 = st.columns(3)
     with col1:
+        # Garante que a área selecionada é válida ou a primeira disponível
         area_selecionada = st.selectbox("Área do Direito:", areas_disponiveis, key=f"area{sfx}")
+    
+    # Garante que os tipos de peça e modelos específicos são válidos para a seleção atual
+    tipos_na_area = list(modelos_data.get(area_selecionada, {}).keys()) if area_selecionada in modelos_data else tipos_peca_disponiveis_fallback.get(area_selecionada, ["Outro"])
     with col2:
-        tipos_na_area = list(modelos_data.get(area_selecionada, {}).keys()) if area_selecionada in modelos_data else tipos_peca_disponiveis_fallback.get(area_selecionada, ["Outro"])
         tipo_peca_selecionado = st.selectbox("Tipo da Peça:", tipos_na_area, key=f"tipo{sfx}")
+    
+    modelos_no_tipo = list(modelos_data.get(area_selecionada, {}).get(tipo_peca_selecionado, {}).keys()) if area_selecionada in modelos_data and tipo_peca_selecionado in modelos_data[area_selecionada] else modelos_peca_disponiveis_fallback.get(tipo_peca_selecionado, ["Modelo Genérico"])
     with col3:
-        modelos_no_tipo = list(modelos_data.get(area_selecionada, {}).get(tipo_peca_selecionado, {}).keys()) if area_selecionada in modelos_data and tipo_peca_selecionado in modelos_data[area_selecionada] else modelos_peca_disponiveis_fallback.get(tipo_peca_selecionado, ["Modelo Genérico"])
         modelo_especifico_selecionado = st.selectbox("Modelo Específico:", modelos_no_tipo, key=f"modelo{sfx}")
 
+    # Garante que info_modelo_selecionado seja um dicionário vazio se não houver seleção válida
     info_modelo_selecionado = modelos_data.get(area_selecionada, {}).get(tipo_peca_selecionado, {}).get(modelo_especifico_selecionado, {})
+
+    # Define um fallback para o prompt_template e reivindicacoes_comuns se o modelo não for encontrado/válido
+    prompt_template_modelo_fallback = "Gere uma peça jurídica padrão com as informações fornecidas, pois o modelo selecionado não está disponível ou está incompleto. Use as seguintes informações: Autor: {autor}, Réu: {reu}, Foro: {foro}, Valor da causa: {valor}, Pedidos: {pedidos_formatados_str}, Instruções: {instrucao_adicional_usuario}. Se houver, utilize o documento de exemplo: {documento_exemplo_para_referencia}"
+    reivindicacoes_comuns_modelo = info_modelo_selecionado.get("reivindicacoes_comuns", [])
+
+    # Se a seleção inicial resultou em um modelo vazio (ex: "Nenhum Modelo Disponível"),
+    # ou o modelo selecionado não tem os dados esperados.
+    if not info_modelo_selecionado and area_selecionada != "Nenhum Modelo Disponível":
+        st.warning("Detalhes do modelo selecionado não encontrados no banco de dados. Um prompt genérico será usado.")
+
 
     st.markdown("### Informações Básicas da Peça")
     autor_recorrente = st.text_input("Parte Autora/Reclamante/Recorrente:", placeholder="Ex: João da Silva", key=f"autor{sfx}")
@@ -103,7 +109,6 @@ def parametrizador_interface():
     foro_competente = st.text_input("Foro Competente:", placeholder="Ex: Comarca de Exemplo / Vara do Trabalho de Exemplo", key=f"foro{sfx}")
     valor_causa = st.text_input("Valor da Causa (R$):", placeholder="Ex: 10.000,00", key=f"valor{sfx}")
 
-    reivindicacoes_comuns_modelo = info_modelo_selecionado.get("reivindicacoes_comuns", [])
     pedidos_selecionados = st.multiselect("Pedidos Principais (selecione do modelo ou adicione abaixo):", reivindicacoes_comuns_modelo, key=f"pedidos_multiselect{sfx}")
     outros_pedidos_texto = st.text_area("Outros Pedidos (um por linha):", placeholder="Ex: Indenização por danos morais\nEx: Reintegração ao emprego", key=f"outros_pedidos{sfx}")
     
@@ -118,22 +123,29 @@ def parametrizador_interface():
             for doc in docs_exemplo:
                 ext = os.path.splitext(doc.name)[1].lower()
                 temp_path = f"temp{sfx}_{uuid.uuid4().hex}{ext}"
-                with open(temp_path, "wb") as f:
-                    f.write(doc.getvalue())
-                with st.spinner(f"Extraindo texto de {doc.name}..."):
-                    texto_extraido_doc = extrair_texto_documento(temp_path, ext)
-                if texto_extraido_doc:
-                    textos_docs_exemplo.append(f"---\n**Documento de Exemplo: {doc.name}**\n\n{texto_extraido_doc}")
-                os.remove(temp_path)
+                try:
+                    with open(temp_path, "wb") as f:
+                        f.write(doc.getvalue())
+                    with st.spinner(f"Extraindo texto de {doc.name}..."):
+                        texto_extraido_doc = extrair_texto_documento(temp_path, ext)
+                    if texto_extraido_doc:
+                        textos_docs_exemplo.append(f"---\n**Documento de Exemplo: {doc.name}**\n\n{texto_extraido_doc}")
+                    else:
+                        st.warning(f"Não foi possível extrair texto de {doc.name}.")
+                except Exception as e:
+                    st.error(f"Erro ao processar {doc.name}: {e}")
+                    traceback.print_exc()
+                finally:
+                    if os.path.exists(temp_path):
+                        try: os.remove(temp_path)
+                        except Exception as e_rm: print(f"Aviso: Falha ao remover arquivo temporário {temp_path}: {e_rm}")
+            
             if textos_docs_exemplo:
                 texto_documento_exemplo = "\n\n".join(textos_docs_exemplo)
                 with st.expander("Ver Texto dos Documentos de Exemplo Anexados", expanded=False):
                     st.text_area("Texto Extraído dos Documentos de Exemplo:", texto_documento_exemplo, height=150, disabled=True, key=f"texto_docs_exemplo_display{sfx}")
 
-    # CAMPOS DE URL AGORA ESTÃO NA SIDEBAR (main.py) E SERÃO LIDOS DO SESSION_STATE
-    # Remover os st.text_input para URLs que existiam aqui.
-
-    # Lê as URLs da sidebar
+    # Lê as URLs da sidebar (definidas em main.py)
     url1_sidebar = st.session_state.get('sidebar_url1', "")
     url2_sidebar = st.session_state.get('sidebar_url2', "")
     url3_sidebar = st.session_state.get('sidebar_url3', "")
@@ -145,10 +157,14 @@ def parametrizador_interface():
     enable_google_search_app5 = st.checkbox("Habilitar busca complementar na Web (Google) para esta peça?", value=True, key=f"param_enable_google_search{sfx}_checkbox")
 
     if st.button("Gerar Petição Parametrizada", key=f"gerar_peticao_param{sfx}_button"):
+        if area_selecionada == "Nenhum Modelo Disponível" or not info_modelo_selecionado:
+            st.warning("Selecione um modelo de peça válido para gerar. Não há modelos disponíveis ou o selecionado está incompleto.")
+            return
+
         client = get_openai_client()
         search_client = get_azure_search_client()
         if not client or not search_client:
-            st.error("Erro ao inicializar clientes de IA. Verifique as configurações.")
+            st.error("Erro ao inicializar clientes de IA. Verifique as configurações e logs.")
             return
 
         st.session_state[f'geracao_em_andamento{sfx}'] = True
@@ -188,11 +204,8 @@ def parametrizador_interface():
         
         st.session_state[f'last_user_urls_context{sfx}'] = contexto_urls_agregado_para_exibir if contexto_urls_agregado_para_exibir else "Nenhuma URL fornecida na barra lateral ou nenhum contexto relevante extraído."
 
-        prompt_template_modelo = info_modelo_selecionado.get("prompt_template", 
-            "Gere uma peça jurídica do tipo {tipo_peca_selecionado} na área {area_selecionada} para {autor_recorrente} contra {reu_recorrente}. "
-            "Foro: {foro_competente}. Valor da causa: {valor_causa}. Pedidos: {pedidos_formatados_str}. "
-            "Instruções adicionais: {instrucao_adicional_usuario}. Documento de exemplo: {texto_documento_exemplo}"
-        )
+        # Usa o prompt_template do modelo selecionado ou o fallback
+        prompt_template_utilizado = info_modelo_selecionado.get("prompt_template", prompt_template_modelo_fallback)
         
         format_args_peca = {
             "area_selecionada": area_selecionada,
@@ -212,7 +225,7 @@ def parametrizador_interface():
             "documento_exemplo_para_referencia": texto_documento_exemplo or "[Nenhum documento de exemplo fornecido]"
             }
         
-        prompt_final_para_llm = prompt_template_modelo.format(**{k: v if v is not None else f"[{k.upper()}]" for k, v in format_args_peca.items()})
+        prompt_final_para_llm = prompt_template_utilizado.format(**{k: v if v is not None else f"[{k.upper()}]" for k, v in format_args_peca.items()})
 
         if contexto_urls_agregado_para_prompt:
             prompt_final_para_llm = (
@@ -305,8 +318,3 @@ def parametrizador_interface():
                 if f'last_response_text{sfx}' in st.session_state: del st.session_state[f'last_response_text{sfx}']
                 if f'last_prompt{sfx}' in st.session_state: del st.session_state[f'last_prompt{sfx}']
                 st.rerun()
-
-# if __name__ == "__main__":
-#     if 'main_script_path' not in st.session_state:
-#         st.session_state.main_script_path = os.path.abspath(__file__)
-#     parametrizador_interface()

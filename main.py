@@ -1,6 +1,11 @@
-# main.py (corrigido)
+# main.py (corrigido e atualizado para carregar .env)
 import streamlit as st
 import os
+from dotenv import load_dotenv # Importa load_dotenv
+
+# Carrega variáveis de ambiente do arquivo .env (para desenvolvimento local)
+# No Streamlit Cloud, as variáveis de ambiente/Secrets são carregadas automaticamente.
+load_dotenv()
 
 # Define o caminho do script principal no session_state se não existir
 if 'main_script_path' not in st.session_state:
@@ -14,6 +19,8 @@ st.set_page_config(
 )
 
 # Importação das interfaces dos apps
+# Assegure-se de que todos esses arquivos (app.py, app2.py, etc.)
+# estão no mesmo diretório ou em um subdiretório corretamente configurado no PYTHONPATH.
 from app import resumo_interface
 from app2 import peticao_interface
 from app3 import validacao_interface
@@ -32,7 +39,7 @@ def guia_de_uso_interface():
     - **📄 Resumo de Documento:** Gere resumos concisos de documentos jurídicos.
     - **📑 Validação de Cláusula:** Analise cláusulas contratuais quanto à validade, riscos e conformidade.
     - **🤖 Consultor Jurídico:** Obtenha respostas para perguntas jurídicas gerais em um formato de chat.
-    - **✍️ Peça Jurídica Livre:** Crie rascunhos de peças processuais com base em fatos, documentos e instruções. (Anteriormente "Geração de Peça Jurídica Livre")
+    - **✍️ Peça Jurídica Livre:** Crie rascunhos de peças processuais com base em fatos, documentos e instruções.
     - **🧩 Modelo Parametrizado:** Gere peças jurídicas personalizadas a partir de modelos e parâmetros específicos.
     """)
     st.markdown("---")
@@ -52,7 +59,7 @@ def guia_de_uso_interface():
             7.  **Exportar:** Se satisfeito, salve a versão editada e utilize o botão "Baixar Resumo em DOCX".
         """)
 
-    with st.expander("✍️ Guia - Peça Jurídica Livre", expanded=False): # Nome atualizado
+    with st.expander("✍️ Guia - Peça Jurídica Livre", expanded=False):
         st.markdown("""
         - **Objetivo:** Criar rascunhos de peças processuais com base em fatos, documentos e instruções fornecidas.
         - **Passos:**
@@ -94,7 +101,7 @@ def guia_de_uso_interface():
         - **Objetivo:** Gerar peças jurídicas a partir de modelos pré-definidos, preenchendo campos específicos.
         - **Passos:**
             1.  Navegue até a aba "Modelo Parametrizado".
-            2.  **Selecione o Modelo:** Escolha a Área do Direito, Tipo da Peça e Modelo Específico desejado.
+            2.  **Selecione o Modelo:** Escolha a Área do Direito, Tipo da Peça e Modelo Específico desejado. Os modelos são carregados de um banco de dados dinamicamente.
             3.  **Preencha os Campos:** Informe os dados solicitados (Partes, Foro, Valor da Causa, Pedidos, etc.).
             4.  **(Opcional) Documentos de Exemplo:** Anexe documentos que possam servir de referência ou complementar informações.
             5.  **(Opcional) URLs de Contexto:** Na barra lateral, insira até 3 URLs para enriquecer a geração da peça com jurisprudência ou doutrina.
@@ -113,7 +120,7 @@ def guia_de_uso_interface():
     - **Indique o Formato Desejado:** Se você espera uma lista, uma tabela, ou um texto com seções específicas, mencione isso.
     - **Use as URLs de Contexto:** Para tarefas que envolvem pesquisa ou fundamentação, colar URLs de jurisprudência ou artigos relevantes na barra lateral pode melhorar significativamente a qualidade da resposta.
     - **Itere:** Se a primeira resposta não for perfeita, refine sua pergunta ou instrução e tente novamente. Você pode editar o texto gerado e pedir para a IA continuar ou modificar a partir dali.
-    - **Consulte o [guia completo de prompts](https://medium.com/@thiagoazro/engenharia-de-prompt-e-modelos-de-linguagem-um-aliado-para-os-profissionais-do-direito-af86658e470b) para mais técnicas.**
+    - **Consulte o [guia completo de prompts](https://medium.com/@thiagoazro/-engenharia-de-prompt-e-modelos-de-linguagem-um-aliado-para-os-profissionais-do-direito-af86658e470b) para mais técnicas.**
     """)
     st.markdown("---")
     st.info("Lembre-se: O LexAutomate é uma ferramenta de auxílio e não substitui o julgamento profissional de um advogado. Sempre revise cuidadosamente os materiais gerados.")
@@ -127,6 +134,8 @@ with st.sidebar:
 
     url_placeholder_sidebar = "URL de site jurídico relevante"
 
+    # Inicializa as variáveis de estado para as URLs da sidebar
+    # Isso garante que os valores persistam entre as interações do Streamlit.
     if 'sidebar_url1' not in st.session_state:
         st.session_state.sidebar_url1 = ""
     if 'sidebar_url2' not in st.session_state:
@@ -134,12 +143,13 @@ with st.sidebar:
     if 'sidebar_url3' not in st.session_state:
         st.session_state.sidebar_url3 = ""
 
+    # Campos de entrada de URL na sidebar
     st.session_state.sidebar_url1 = st.text_input("URL 1:", value=st.session_state.sidebar_url1, placeholder=url_placeholder_sidebar, key="sidebar_url1_input")
     st.session_state.sidebar_url2 = st.text_input("URL 2:", value=st.session_state.sidebar_url2, placeholder=url_placeholder_sidebar, key="sidebar_url2_input")
     st.session_state.sidebar_url3 = st.text_input("URL 3:", value=st.session_state.sidebar_url3, placeholder=url_placeholder_sidebar, key="sidebar_url3_input")
 
     st.markdown("---")
-    st.caption(f"LexAutomate v1.4.1\nLLM: {AZURE_OPENAI_DEPLOYMENT_LLM}") # Versão atualizada
+    st.caption(f"LexAutomate v1.4.1\nLLM: {AZURE_OPENAI_DEPLOYMENT_LLM}")
     st.markdown("---")
     st.markdown("© 2024-2025 LexAutomate.\nTodos os direitos reservados.")
 # --- FIM Sidebar ---
@@ -170,14 +180,6 @@ abas_disponiveis = [
     "📘 Guia de Uso"
 ]
 
-# A variável st.session_state.aba_selecionada não é mais necessária para controlar o st.tabs.
-# O st.tabs gerencia seu próprio estado de qual aba está ativa.
-# Se você precisar saber programaticamente qual aba foi clicada,
-# o widget st.tabs não retorna diretamente o nome da aba selecionada.
-# Uma forma de contornar isso, se necessário, seria usar st.radio na sidebar
-# para navegação, que permite um controle mais explícito do estado.
-# Por agora, removeremos a lógica de st.session_state.aba_selecionada.
-
 tab_resumo, tab_validacao, tab_consultor, tab_peca, tab_param, tab_guia = st.tabs(abas_disponiveis)
 
 
@@ -190,11 +192,11 @@ with tab_validacao:
 with tab_consultor:
     consultor_juridico_interface()
 
-with tab_peca: # Corresponde a "Peça Jurídica Livre"
-    peticao_interface() # app2.py
+with tab_peca:
+    peticao_interface()
 
-with tab_param: # Corresponde a "Modelo Parametrizado" (app5)
-    parametrizador_interface() # app5.py
+with tab_param:
+    parametrizador_interface()
 
 with tab_guia:
     guia_de_uso_interface()

@@ -698,3 +698,16 @@ def salvar_feedback_rag(pergunta, resposta, feedback, comentario=None, arquivo='
         print('INFO: Feedback salvo com sucesso.')
     except Exception as e:
         print(f'ERRO ao salvar feedback: {e}')
+
+
+__all__ = [
+    "classificar_area_direito",
+    "classificar_tipo_peca",
+    "classificar_tipo_tarefa",
+    "classificar_tipo_documento",
+    "executar_consulta_graph_rag",
+    "consultar_contexto_juridico_via_rag",
+    "gerar_resposta_agente",
+    "llm",  # <- adicione isso
+]
+
