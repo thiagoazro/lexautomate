@@ -21,3 +21,4 @@ langchain-openai>=0.0.5
 # langchain-azure>=0.0.3  ← COMENTADO por não estar disponível no PyPI
 
 pymongo>=4.3.3
+dnspython>=2.3.0
