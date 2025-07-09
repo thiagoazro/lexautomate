@@ -31,7 +31,7 @@ except ImportError:
 # --- CONFIGURAÇÕES E CONSTANTES ---
 PROMPT_PARAMETRIZADOR_FILE = "prompts/system_prompt_app5_parametrizador.md"
 # Sufixo para chaves de session_state desta aba, para evitar colisões
-SESSION_STATE_SUFFIX = "_app5_parametrizador" # Renomeado para maior clareza
+SESSION_STATE_SUFFIX = "_app5_sidebar"
 
 def carregar_prompt_parametrizador(prompt_path: str = PROMPT_PARAMETRIZADOR_FILE) -> str:
     """
@@ -85,21 +85,17 @@ def obter_modelos_pecas():
         tipos_peca_disponiveis = {"Nenhum Modelo Disponível": ["Nenhum"]}
         modelos_peca_disponiveis = {"Nenhum": ["Nenhum"]}
     else:
-        areas_disponiveis = sorted(list(modelos_data.keys()))
-        tipos_peca_disponiveis = {area: sorted(list(tipos.keys())) for area, tipos in modelos_data.items()}
-        modelos_peca_disponiveis = {}
-        for area_data in modelos_data.values():
-            for tipo, modelos in area_data.items():
-                modelos_peca_disponiveis[tipo] = sorted(list(modelos.keys()))
-
+        areas_disponiveis = list(modelos_data.keys())
+        tipos_peca_disponiveis = {area: list(tipos.keys()) for area, tipos in modelos_data.items()}
+        modelos_peca_disponiveis = {
+            tipo: list(modelos.keys()) 
+            for area_data in modelos_data.values() 
+            for tipo, modelos in area_data.items()
+        }
     return modelos_data, areas_disponiveis, tipos_peca_disponiveis, modelos_peca_disponiveis
 
 def exibir_campos_entrada(modelos_data, areas_disponiveis, tipos_peca_disponiveis, modelos_peca_disponiveis):
-    """
-    Exibe os campos de entrada para seleção de modelos e informações básicas,
-    incluindo campos parametrizáveis dinâmicos do MongoDB.
-    Retorna um dicionário com todos os valores coletados.
-    """
+    """Exibe os campos de entrada para seleção de modelos e informações básicas."""
     col1, col2, col3 = st.columns(3)
     with col1:
         area_selecionada = st.selectbox("Área do Direito:", areas_disponiveis, key=f"area{SESSION_STATE_SUFFIX}")
@@ -118,55 +114,21 @@ def exibir_campos_entrada(modelos_data, areas_disponiveis, tipos_peca_disponivei
     if not info_modelo_selecionado and area_selecionada != "Nenhum Modelo Disponível":
         st.warning("Detalhes do modelo selecionado não encontrados no banco de dados. Um prompt genérico será usado.")
 
-    st.markdown("### Preenchimento dos Dados da Peça")
-    
-    valores_parametrizados = {}
+    st.markdown("### Informações Básicas da Peça")
+    autor_recorrente = st.text_input("Parte Autora/Reclamante/Recorrente:", placeholder="Ex: João da Silva", key=f"autor{SESSION_STATE_SUFFIX}")
+    reu_recorrente = st.text_input("Parte Ré/Reclamada/Recorrida:", placeholder="Ex: Empresa XYZ Ltda.", key=f"reu{SESSION_STATE_SUFFIX}")
+    foro_competente = st.text_input("Foro Competente:", placeholder="Ex: Comarca de Exemplo / Vara do Trabalho de Exemplo", key=f"foro{SESSION_STATE_SUFFIX}")
+    valor_causa = st.text_input("Valor da Causa (R$):", placeholder="Ex: 10.000,00", key=f"valor{SESSION_STATE_SUFFIX}")
 
-    # Adiciona campos dinâmicos do MongoDB
-    campos_parametrizaveis = info_modelo_selecionado.get("campos_parametrizaveis", [])
-    if campos_parametrizaveis:
-        st.markdown("#### Campos Específicos do Modelo:")
-        for campo in campos_parametrizaveis:
-            nome_campo = campo.get("nome")
-            label_campo = campo.get("label", nome_campo.replace('_', ' ').title() if nome_campo else "Campo Desconhecido")
-            if nome_campo:
-                valores_parametrizados[nome_campo] = st.text_input(label_campo, key=f"param_{nome_campo}{SESSION_STATE_SUFFIX}")
-    else:
-        st.info("Este modelo não possui campos parametrizáveis definidos no MongoDB. A geração dependerá mais das 'Instruções Adicionais'.")
-        # Fallback para campos comuns se não houver campos parametrizáveis definidos
-        st.markdown("#### Campos Comuns (Fallback):")
-        valores_parametrizados["autor_recorrente"] = st.text_input("Parte Autora/Reclamante/Recorrente:", placeholder="Ex: João da Silva", key=f"autor_fallback{SESSION_STATE_SUFFIX}")
-        valores_parametrizados["reu_recorrente"] = st.text_input("Parte Ré/Reclamada/Recorrida:", placeholder="Ex: Empresa XYZ Ltda.", key=f"reu_fallback{SESSION_STATE_SUFFIX}")
-        valores_parametrizados["foro_competente"] = st.text_input("Foro Competente:", placeholder="Ex: Comarca de Exemplo / Vara do Trabalho de Exemplo", key=f"foro_fallback{SESSION_STATE_SUFFIX}")
-        valores_parametrizados["valor_causa"] = st.text_input("Valor da Causa (R$):", placeholder="Ex: 10.000,00", key=f"valor_fallback{SESSION_STATE_SUFFIX}")
-
-
-    # Pedidos Principais (do modelo ou adicionados)
     reivindicacoes_comuns_modelo = info_modelo_selecionado.get("reivindicacoes_comuns", [])
-    pedidos_selecionados = st.multiselect(
-        "Pedidos Principais (selecione do modelo ou adicione abaixo):", 
-        reivindicacoes_comuns_modelo, 
-        key=f"pedidos_multiselect{SESSION_STATE_SUFFIX}"
-    )
-    outros_pedidos_texto = st.text_area(
-        "Outros Pedidos (um por linha):", 
-        placeholder="Ex: Indenização por danos morais\nEx: Reintegração ao emprego", 
-        key=f"outros_pedidos{SESSION_STATE_SUFFIX}"
-    )
+    pedidos_selecionados = st.multiselect("Pedidos Principais (selecione do modelo ou adicione abaixo):", reivindicacoes_comuns_modelo, key=f"pedidos_multiselect{SESSION_STATE_SUFFIX}")
+    outros_pedidos_texto = st.text_area("Outros Pedidos (um por linha):", placeholder="Ex: Indenização por danos morais\nEx: Reintegração ao emprego", key=f"outros_pedidos{SESSION_STATE_SUFFIX}")
     
-    # Instruções Adicionais para a IA
-    instrucao_adicional_usuario = st.text_area(
-        "Instruções Adicionais para a IA (detalhes específicos, teses, etc.):", 
-        key=f"instrucao_adicional{SESSION_STATE_SUFFIX}"
-    )
+    instrucao_adicional_usuario = st.text_area("Instruções Adicionais para a IA (detalhes específicos, teses, etc.):", key=f"instrucao_adicional{SESSION_STATE_SUFFIX}")
 
-    # Adiciona os campos de "Pedidos" e "Instruções Adicionais" ao dicionário de valores parametrizados
-    # para que possam ser usados no prompt_template se o modelo os referenciar.
-    valores_parametrizados["pedidos_selecionados"] = pedidos_selecionados
-    valores_parametrizados["outros_pedidos_texto"] = outros_pedidos_texto
-    valores_parametrizados["instrucao_adicional_usuario"] = instrucao_adicional_usuario
-
-    return (area_selecionada, tipo_peca_selecionado, modelo_especifico_selecionado, info_modelo_selecionado, valores_parametrizados)
+    return (area_selecionada, tipo_peca_selecionado, modelo_especifico_selecionado, info_modelo_selecionado,
+            autor_recorrente, reu_recorrente, foro_competente, valor_causa,
+            pedidos_selecionados, outros_pedidos_texto, instrucao_adicional_usuario)
 
 def processar_documentos_exemplo():
     """Processa documentos de exemplo anexados pelo usuário."""
@@ -238,7 +200,8 @@ def obter_contexto_urls_sidebar(prompt_base_para_contexto_urls):
 
 def gerar_peticao_parametrizada(
     area_selecionada, tipo_peca_selecionado, modelo_especifico_selecionado, info_modelo_selecionado,
-    valores_parametrizados, # Agora recebemos um dicionário com todos os valores
+    autor_recorrente, reu_recorrente, foro_competente, valor_causa,
+    pedidos_selecionados, outros_pedidos_texto, instrucao_adicional_usuario,
     texto_documento_exemplo, contexto_urls_agregado_para_prompt, enable_google_search_app5
 ):
     """Função principal para orquestrar a geração da petição."""
@@ -251,31 +214,37 @@ def gerar_peticao_parametrizada(
     st.session_state[f'geracao_em_andamento{SESSION_STATE_SUFFIX}'] = True
     st.session_state[f'last_user_urls_context{SESSION_STATE_SUFFIX}'] = "" # Reset antes de nova geração
 
-    # Extrai os valores dos pedidos e instruções adicionais do dicionário de valores_parametrizados
-    pedidos_selecionados = valores_parametrizados.get("pedidos_selecionados", [])
-    outros_pedidos_texto = valores_parametrizados.get("outros_pedidos_texto", "")
-    instrucao_adicional_usuario = valores_parametrizados.get("instrucao_adicional_usuario", "")
-
     todos_pedidos_finais = pedidos_selecionados + [p.strip() for p in outros_pedidos_texto.split("\n") if p.strip()]
     pedidos_formatados_str = ", ".join(todos_pedidos_finais) if todos_pedidos_finais else "(não especificado)"
 
     # Define um fallback para o prompt_template se o modelo não for encontrado/válido
     prompt_template_modelo_fallback = (
         "Gere uma peça jurídica padrão com as informações fornecidas, pois o modelo selecionado não está disponível ou está incompleto. "
-        "Use as seguintes informações: Área: {area_selecionada}, Tipo: {tipo_peca_selecionado}, Autor: {autor_recorrente}, Réu: {reu_recorrente}, Foro: {foro_competente}, Valor da causa: {valor_causa}, Pedidos: {pedidos_formatados_str}, "
-        "Instruções: {instrucao_adicional_usuario}. Se houver, utilize o documento de exemplo: {texto_documento_exemplo}"
+        "Use as seguintes informações: Autor: {autor}, Réu: {reu}, Foro: {foro}, Valor da causa: {valor}, Pedidos: {pedidos_formatados_str}, "
+        "Instruções: {instrucao_adicional_usuario}. Se houver, utilize o documento de exemplo: {documento_exemplo_para_referencia}"
     )
     prompt_template_utilizado = info_modelo_selecionado.get("prompt_template", prompt_template_modelo_fallback)
     
-    # Prepara os argumentos para formatar o prompt, combinando valores dinâmicos e estáticos
+    # Argumentos para formatar o prompt, com fallbacks para campos vazios
     format_args_peca = {
         "area_selecionada": area_selecionada,
         "tipo_peca_selecionado": tipo_peca_selecionado,
         "modelo_especifico_selecionado": modelo_especifico_selecionado,
+        "autor_recorrente": autor_recorrente or "[NOME AUTOR/RECORRENTE]",
+        "reu_recorrente": reu_recorrente or "[NOME RÉU/RECORRIDO]",
+        "foro": foro_competente or "[FORO COMPETENTE]",
+        "valor": valor_causa or "[VALOR DA CAUSA]",
         "pedidos_formatados_str": pedidos_formatados_str,
-        "instrucao_adicional_usuario": instrucao_adicional_usuario,
-        "texto_documento_exemplo": texto_documento_exemplo,
-        **valores_parametrizados # Adiciona todos os campos dinâmicos coletados
+        "instrucao_adicional_usuario": instrucao_adicional_usuario or "[Nenhuma instrução adicional específica]",
+        "texto_documento_exemplo": texto_documento_exemplo or "[Nenhum documento de exemplo fornecido]",
+        # Campos alternativos para flexibilidade do template
+        "autor": autor_recorrente or "[NOME AUTOR]",
+        "reu": reu_recorrente or "[NOME RÉU]",
+        "reclamante": autor_recorrente or "[NOME RECLAMANTE]",
+        "reclamada": reu_recorrente or "[NOME RECLAMADA]",
+        "reivindicacoes_formatadas": pedidos_formatados_str,
+        "instrucao_adicional": instrucao_adicional_usuario or "[Nenhuma instrução adicional]",
+        "documento_exemplo_para_referencia": texto_documento_exemplo or "[Nenhum documento de exemplo fornecido]"
     }
 
     # Garante que todas as variáveis usadas no template estejam no dicionário,
@@ -402,7 +371,8 @@ def parametrizador_interface():
 
     # Exibe campos de entrada e coleta os dados
     (area_selecionada, tipo_peca_selecionado, modelo_especifico_selecionado, info_modelo_selecionado,
-     valores_parametrizados) = \
+     autor_recorrente, reu_recorrente, foro_competente, valor_causa,
+     pedidos_selecionados, outros_pedidos_texto, instrucao_adicional_usuario) = \
         exibir_campos_entrada(modelos_data, areas_disponiveis, tipos_peca_disponiveis, modelos_peca_disponiveis)
 
     # Processa documentos de exemplo
@@ -416,27 +386,17 @@ def parametrizador_interface():
         if area_selecionada == "Nenhum Modelo Disponível" or not info_modelo_selecionado:
             st.warning("Selecione um modelo de peça válido para gerar. Não há modelos disponíveis ou o selecionado está incompleto.")
             return
-        
-        # Exemplo de validação para campos essenciais se não houver campos_parametrizaveis definidos
-        # Adapte esta validação conforme a necessidade do seu modelo ou remova se a IA for robusta o suficiente
-        if not info_modelo_selecionado.get("campos_parametrizaveis"):
-            if not valores_parametrizados.get("autor_recorrente") or not valores_parametrizados.get("reu_recorrente"):
-                st.warning("Por favor, preencha os campos 'Parte Autora/Reclamante/Recorrente' e 'Parte Ré/Reclamada/Recorrida' para modelos sem campos parametrizáveis específicos.")
-                return
+        if not autor_recorrente or not reu_recorrente:
+            st.warning("Por favor, preencha os campos 'Parte Autora/Reclamante/Recorrente' e 'Parte Ré/Reclamada/Recorrida'.")
+            return
 
         # Prepara o prompt base para busca de contexto em URLs
-        # Usa os valores_parametrizados para construir a query de contexto
-        todos_pedidos_finais_para_contexto = valores_parametrizados.get("pedidos_selecionados", []) + \
-                                             [p.strip() for p in valores_parametrizados.get("outros_pedidos_texto", "").split("\n") if p.strip()]
+        todos_pedidos_finais_para_contexto = pedidos_selecionados + [p.strip() for p in outros_pedidos_texto.split("\n") if p.strip()]
         pedidos_formatados_str_para_contexto = ", ".join(todos_pedidos_finais_para_contexto) if todos_pedidos_finais_para_contexto else "(não especificado)"
-        
-        autor_para_contexto = valores_parametrizados.get("autor_recorrente", valores_parametrizados.get(info_modelo_selecionado.get("campos_parametrizaveis", [{}])[0].get("nome", "autor_recorrente"), "[AUTOR]"))
-        reu_para_contexto = valores_parametrizados.get("reu_recorrente", valores_parametrizados.get(info_modelo_selecionado.get("campos_parametrizaveis", [{}])[1].get("nome", "reu_recorrente"), "[RÉU]"))
-
         prompt_base_para_contexto_urls = (
             f"Pesquisar jurisprudência e informações relevantes para uma peça do tipo '{tipo_peca_selecionado}' na área '{area_selecionada}', "
-            f"envolvendo as partes '{autor_para_contexto}' e '{reu_para_contexto}', com os pedidos: '{pedidos_formatados_str_para_contexto}'. "
-            f"Considerar também as seguintes instruções adicionais: '{valores_parametrizados.get('instrucao_adicional_usuario', '')}'."
+            f"envolvendo as partes '{autor_recorrente}' e '{reu_recorrente}', com os pedidos: '{pedidos_formatados_str_para_contexto}'. "
+            f"Considerar também as seguintes instruções adicionais: '{instrucao_adicional_usuario}'."
         )
 
         # Obtém contexto das URLs da sidebar
@@ -445,7 +405,8 @@ def parametrizador_interface():
         # Chama a função de geração principal
         gerar_peticao_parametrizada(
             area_selecionada, tipo_peca_selecionado, modelo_especifico_selecionado, info_modelo_selecionado,
-            valores_parametrizados, # Passa o dicionário completo
+            autor_recorrente, reu_recorrente, foro_competente, valor_causa,
+            pedidos_selecionados, outros_pedidos_texto, instrucao_adicional_usuario,
             texto_documento_exemplo, contexto_urls_agregado_para_prompt, enable_google_search_app5
         )
     
@@ -455,4 +416,3 @@ def parametrizador_interface():
 # Se este script for executado diretamente, chama a interface
 if __name__ == "__main__":
     parametrizador_interface()
-
