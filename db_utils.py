@@ -11,7 +11,7 @@ def get_mongodb_client():
     """
     Inicializa e retorna uma instância do cliente MongoDB, utilizando cache do Streamlit.
     """
-    mongo_uri = os.getenv("MONGODB_URI")
+    mongo_uri = "mongodb+srv://thiagoazro:FqBdZcF7vtiZXOwl@cluster0.8fmcx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     if not mongo_uri:
         print("ERRO DB_UTILS: Variável de ambiente MONGODB_URI não configurada. Verifique os segredos do Streamlit ou seu arquivo .env.")
         # Comentado para evitar erros em scripts CLI sem contexto Streamlit
@@ -37,8 +37,8 @@ def get_modelos_collection():
     if client is None:
         return None
     
-    db_name = os.getenv("MONGODB_DB_NAME", "lexautomate")
-    collection_name = os.getenv("MONGODB_COLLECTION_MODELOS", "modelos_pecas") # Default: modelos_pecas
+    db_name = "lexautomate"
+    collection_name = "modelos_pecas"
     
     return client[db_name][collection_name]
 

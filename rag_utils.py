@@ -12,6 +12,7 @@ import json
 import requests
 import joblib
 import uuid # Adicionado para IDs únicos na visualização do grafo
+from bs4 import BeautifulSoup
 
 from io import BytesIO
 from docx import Document as DocxDocument
@@ -675,6 +676,53 @@ def gerar_docx(texto_markdown):
         raise # Re-levanta a exceção para ser tratada externamente se necessário
 
 print("INFO RAG_UTILS: Módulo `rag_utils.py` carregado (v13 - Revisão de nomes de função e GraphRAG integrado).")
+
+def processar_urls_contexto(urls: list[str]) -> str:
+    """
+    Processa uma lista de URLs, extraindo seu conteúdo e formatando-o como contexto.
+    """
+    if not urls:
+        return ""
+
+    contexto_completo = []
+    print(f"INFO RAG_UTILS: Processando {len(urls)} URLs de contexto...")
+    for i, url in enumerate(urls):
+        try:
+            # Tenta fazer uma requisição GET para a URL
+            response = requests.get(url, timeout=10)
+            response.raise_for_status() # Levanta um erro para status de resposta HTTP ruins
+
+            # Analisa o HTML da página
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Extrai o texto visível da página
+            # Remove scripts, style tags e comentários
+            for script_or_style in soup(['script', 'style', 'comment']):
+                script_or_style.decompose()
+            text = soup.get_text()
+
+            # Limpa espaços em branco excessivos e linhas vazias
+            clean_text = "\n".join(line.strip() for line in text.splitlines() if line.strip())
+            
+            # Limita o tamanho do texto para evitar sobrecarga do LLM
+            max_url_content_length = 2000 # Limite de caracteres por URL
+            if len(clean_text) > max_url_content_length:
+                clean_text = clean_text[:max_url_content_length] + "..."
+
+            contexto_completo.append(f"\nhttps://www.reddit.com/r/contexto/comments/11wbu5u/contexto_1_monday_199/\n{clean_text}\n")
+            print(f"INFO RAG_UTILS: Conteúdo da URL {url} extraído com sucesso.")
+
+        except requests.exceptions.RequestException as e:
+            print(f"ERRO RAG_UTILS: Falha ao acessar ou extrair conteúdo da URL '{url}': {e}")
+            contexto_completo.append(f"\nhttps://www.reddit.com/r/contexto/comments/11wbu5u/contexto_1_monday_199/\nConteúdo não pôde ser acessado ou extraído: {e}\n")
+        except Exception as e:
+            print(f"ERRO RAG_UTILS: Erro inesperado ao processar URL '{url}': {e}")
+            contexto_completo.append(f"\nhttps://www.reddit.com/r/contexto/comments/11wbu5u/contexto_1_monday_199/\nErro inesperado ao processar: {e}\n")
+
+    if contexto_completo:
+        return "\n\n--- INÍCIO DO CONTEXTO ADICIONAL VIA URL ---\n" + "\n".join(contexto_completo) + "\n--- FIM DO CONTEXTO ADICIONAL VIA URL ---\n"
+    else:
+        return
 
 # --- Feedback do Usuário (RLHF Leve) ---
 def salvar_feedback_rag(pergunta, resposta, feedback, comentario=None, arquivo='feedbacks_rag.json'):
