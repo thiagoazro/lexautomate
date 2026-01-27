@@ -1,21 +1,22 @@
+# converter_mongoDB.py
+from pymongo import MongoClient
 import os
 import json
 from pathlib import Path
 from datetime import datetime, timezone
-from pymongo import MongoClient
 from docx import Document
-from langchain_openai import AzureChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.schema.messages import HumanMessage
-from string import Formatter # Importar Formatter para identificar campos do template
+from string import Formatter
 import traceback
 
-# CONFIGURAÇÃO DO LLM VIA AZURE
-llm = AzureChatOpenAI(
-    deployment_name="lexautomate",
-    model="gpt-4",
-    azure_endpoint="https://lexautomate.openai.azure.com/",
-    api_key="6ZJIKi1REnxeAALGOQQ2mFi7KL78gCyVYMq3yzv0xKae620iLHzdJQQJ99BDACYeBjFXJ3w3AAABACOGHcjA",
-    api_version="2024-05-01-preview",
+# CONFIGURAÇÃO DO LLM (OpenAI direto)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+OPENAI_LLM_MODEL = os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini").strip()
+
+llm = ChatOpenAI(
+    model=OPENAI_LLM_MODEL,
+    openai_api_key=OPENAI_API_KEY,
     temperature=0.3
 )
 
@@ -42,14 +43,15 @@ def limpar_resposta_json(texto):
 # FUNÇÃO PARA ANALISAR COM LLM E EXTRAIR CAMPOS PARAMETRIZÁVEIS
 def gerar_campos_com_llm(texto):
     # Primeiro, tenta extrair o prompt_template e outras informações básicas
+    # Aprimorando o prompt para instruir o LLM a formatar corretamente os placeholders
     prompt_primeira_passagem = (
         "Analise a peça jurídica abaixo e extraia os seguintes campos como um JSON:\n"
-        "- area_direito (string)\n"
-        "- tipo_peca (string)\n"
-        "- descricao (string)\n"
-        "- tags (lista de strings)\n"
-        "- reivindicacoes_comuns (lista de strings)\n"
-        "- prompt_template (o modelo da peça com placeholders no formato '{nome_do_campo}', mantendo a formatação original e todo o conteúdo da peça).\n\n"
+        "- area_direito (string): A área do direito (ex: 'Civil', 'Trabalhista').\n"
+        "- tipo_peca (string): O tipo de peça (ex: 'Petição Inicial', 'Contestação').\n"
+        "- descricao (string): Uma breve descrição do modelo da peça.\n"
+        "- tags (lista de strings): Tags relevantes (ex: 'divórcio', 'alimentos').\n"
+        "- reivindicacoes_comuns (lista de strings): Lista de pedidos ou reivindicações comuns que esta peça geralmente faz. **Se houver um template de pedidos, extraia-o para aqui.**\n"
+        "- prompt_template (string): O modelo COMPLETO da peça. **CRÍTICO: Substitua TODAS as informações variáveis (ex: nomes de partes, valores, foros, endereços, datas, números de documentos como RG/CPF/CNPJ/OAB, ou qualquer texto como '[DADO NAO INFORMADO]' ou '[COMPLETAR COM DADO FALTANTE DO USUÁRIO]') por placeholders no formato '{nome_do_campo_relevante}'. Mantenha a formatação original da peça e TODO o seu conteúdo, incluindo seções como DOS FATOS, DO DIREITO, DOS PEDIDOS, etc.** Por exemplo, 'NOME DO AUTOR' deve se tornar '{autor_recorrente}', 'VALOR DA CAUSA' deve se tornar '{valor_causa}'.\n\n"
         "Peça jurídica:\n" + texto[:4000] # Aumentar o limite para mais contexto
     )
     resposta_primeira_passagem = llm.invoke([HumanMessage(content=prompt_primeira_passagem)])
@@ -58,6 +60,10 @@ def gerar_campos_com_llm(texto):
         campos_primeira_passagem = json.loads(limpar_resposta_json(resposta_primeira_passagem.content))
     except json.JSONDecodeError:
         print("❌ Erro ao interpretar resposta do LLM (JSON inválido na primeira passagem):")
+        print(resposta_primeira_passagem.content)
+        return {}
+    except Exception as e:
+        print(f"❌ Erro inesperado ao processar resposta do LLM: {e}")
         print(resposta_primeira_passagem.content)
         return {}
 
@@ -69,8 +75,6 @@ def gerar_campos_com_llm(texto):
         # Isso garante que os campos parametrizáveis correspondam exatamente aos placeholders
         # que o LLM colocou no prompt_template.
         try:
-            # Formatter().parse retorna uma tupla de (literal_text, field_name, format_spec, conversion)
-            # Queremos apenas field_name (o nome do placeholder)
             placeholders = [field_name for _, field_name, _, _ in Formatter().parse(prompt_template_extraido) if field_name is not None]
             
             # Remove duplicatas e mantém a ordem de aparição (aproximadamente)
@@ -129,22 +133,23 @@ def processar_docx_para_mongo(docx_path):
         print(f"⚠️  Falha ao processar: {docx_path}")
         return
 
-    nome_modelo = Path(docx_path).name # Usa o nome do arquivo como nome_modelo
+    # Use o nome do arquivo DOCX como nome_modelo (garante consistência com o original)
+    nome_modelo_base = Path(docx_path).name 
     
     # Prepara o dicionário do modelo para inserção/atualização
     modelo_doc = {
         "area_direito": campos.get("area_direito", "Não identificado"),
         "tipo_peca": campos.get("tipo_peca", "Outro"),
-        "nome_modelo": nome_modelo,
-        "autor_modelo": "LexAutomate - Conversor DOCX",
-        "complexidade": "Não especificado", # Pode ser inferido pelo LLM no futuro
+        "nome_modelo": nome_modelo_base, # Usa o nome base do arquivo DOCX
+        "autor_modelo": campos.get("autor_modelo", "LexAutomate - Conversor DOCX"), # Tenta manter autor se o LLM identificou
+        "complexidade": campos.get("complexidade", "Não especificado"), 
         "data_atualizacao": datetime.now(timezone.utc), # Sempre atualiza esta data
         "descricao": campos.get("descricao", ""),
-        "jurisprudencia_exemplar": [], # Pode ser inferido pelo LLM no futuro
-        "legislacao_relevante": [], # Pode ser inferido pelo LLM no futuro
+        "jurisprudencia_exemplar": campos.get("jurisprudencia_exemplar", []), 
+        "legislacao_relevante": campos.get("legislacao_relevante", []),
         "prompt_template": campos.get("prompt_template", ""),
         "reivindicacoes_comuns": campos.get("reivindicacoes_comuns", []),
-        "requisitos_especificos": "", # Pode ser inferido pelo LLM no futuro
+        "requisitos_especificos": campos.get("requisitos_especificos", ""),
         "tags": campos.get("tags", []),
         "campos_parametrizaveis": campos.get("campos_parametrizaveis", []) # Adicionado
     }
@@ -161,9 +166,16 @@ def converter_todos_os_docx():
         print("Tentando procurar DOCX no diretório atual...")
         raiz = Path(".") # Procura no diretório atual como fallback
 
+    # Antes de iniciar o processo de conversão, você pode querer limpar o cache do Streamlit
+    # para garantir que o app5.py pegue os dados atualizados após a execução deste script.
+    # Isso é feito na função inserir_modelo_peca, mas um "clear all" global aqui poderia ser considerado
+    # se você tiver outros caches. Por enquanto, confiamos no clear() dentro de inserir_modelo_peca.
+
     for docx_file in raiz.rglob("*.docx"):
         print(f"\n📄 Processando: {docx_file}")
         processar_docx_para_mongo(str(docx_file))
+    
+    print("\nProcesso de conversão/atualização de DOCX para MongoDB concluído.")
 
 # EXECUÇÃO
 if __name__ == "__main__":
