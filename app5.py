@@ -1,14 +1,13 @@
 # app5.py
-# Parametrizador de Peças Jurídicas (Modelos no MongoDB) — COM GraphRAG + HTML salvo
-# - SEM Azure
-# - Usa rag_utils: OpenAI + OpenSearch + Serper + Rerank + GraphRAG (auto)
-# - Mantém: MongoDB para modelos parametrizados
-# - Mantém: URLs da sidebar como contexto (via processar_urls_contexto)
+# Parametrizador — MongoDB (modelos) + OpenSearch RAG + GraphRAG (HTML salvo)
+# Corrigido: normalização do retorno do Mongo (lista de dicts/strings JSON/etc.)
+
+from __future__ import annotations
 
 import os
-import datetime
-from collections import defaultdict
 import json
+import datetime
+from typing import Any, Dict, List, Optional
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -34,18 +33,14 @@ SESSION_STATE_SUFFIX = "_app5"
 def carregar_system_prompt(folder=PROMPTS_FOLDER, filename=SYSTEM_PROMPT_FILENAME) -> str:
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
+        p1 = os.path.join(current_dir, folder, filename)
+        if os.path.exists(p1):
+            return open(p1, "r", encoding="utf-8").read()
 
-        # tenta: ./prompts/filename
-        filepath1 = os.path.join(current_dir, folder, filename)
-        if os.path.exists(filepath1):
-            return open(filepath1, "r", encoding="utf-8").read()
+        p2 = os.path.join(current_dir, "..", folder, filename)
+        if os.path.exists(p2):
+            return open(p2, "r", encoding="utf-8").read()
 
-        # tenta: ../prompts/filename
-        filepath2 = os.path.join(current_dir, "..", folder, filename)
-        if os.path.exists(filepath2):
-            return open(filepath2, "r", encoding="utf-8").read()
-
-        # tenta: ./filename
         if os.path.exists(filename):
             return open(filename, "r", encoding="utf-8").read()
 
@@ -58,7 +53,7 @@ def _render_graph_html_if_exists(graph_html_path: str):
     if not graph_html_path:
         return
     if not os.path.exists(graph_html_path):
-        st.warning(f"Grafo salvo, mas o arquivo não foi encontrado: {graph_html_path}")
+        st.warning(f"Grafo salvo, mas não achei o arquivo: {graph_html_path}")
         return
 
     st.caption(f"📌 Grafo salvo em: `{graph_html_path}`")
@@ -70,11 +65,58 @@ def _render_graph_html_if_exists(graph_html_path: str):
         st.warning(f"Não foi possível renderizar o HTML do grafo: {e}")
 
 
-def _build_param_payload_from_form(form_data: dict) -> dict:
+def _safe_json_load(s: str) -> Optional[Any]:
+    try:
+        return json.loads(s)
+    except Exception:
+        return None
+
+
+def normalize_modelos(raw: Any) -> List[Dict[str, Any]]:
     """
-    Mantém compatibilidade: consolida dados do formulário.
+    Normaliza a saída do Mongo para List[Dict].
+    Aceita:
+      - List[Dict]
+      - List[str] (JSON)
+      - Dict único
+      - None
+    Ignora strings que não sejam JSON válido.
     """
-    return dict(form_data or {})
+    if raw is None:
+        return []
+
+    # caso já seja lista
+    if isinstance(raw, list):
+        out: List[Dict[str, Any]] = []
+        for item in raw:
+            if isinstance(item, dict):
+                out.append(item)
+            elif isinstance(item, str):
+                parsed = _safe_json_load(item)
+                if isinstance(parsed, dict):
+                    out.append(parsed)
+                elif isinstance(parsed, list):
+                    # caso raro: string contendo lista de dicts
+                    for x in parsed:
+                        if isinstance(x, dict):
+                            out.append(x)
+            # outros tipos são ignorados
+        return out
+
+    # caso seja dict único
+    if isinstance(raw, dict):
+        return [raw]
+
+    # caso seja string JSON (dict ou list)
+    if isinstance(raw, str):
+        parsed = _safe_json_load(raw)
+        if isinstance(parsed, dict):
+            return [parsed]
+        if isinstance(parsed, list):
+            return [x for x in parsed if isinstance(x, dict)]
+        return []
+
+    return []
 
 
 def gerar_peticao_parametrizada(
@@ -82,17 +124,9 @@ def gerar_peticao_parametrizada(
     tipo_peca: str,
     nome_modelo: str,
     user_inputs: dict,
-    urls_contexto: list[str],
+    urls_contexto: List[str],
     enable_web: bool = True,
-) -> dict:
-    """
-    Retorna dict:
-      {
-        "texto": str,
-        "graph_summary": str,
-        "graph_html_path": str
-      }
-    """
+) -> Dict[str, str]:
     openai_client = get_openai_client()
     os_client = get_opensearch_client()
     if not openai_client or not os_client:
@@ -100,13 +134,15 @@ def gerar_peticao_parametrizada(
 
     SYSTEM_PROMPT_GERACAO = carregar_system_prompt()
 
-    modelos = carregar_modelos_pecas_from_mongodb()
+    raw_modelos = carregar_modelos_pecas_from_mongodb()
+    modelos = normalize_modelos(raw_modelos)
+
     info_modelo = None
     for item in modelos:
         if (
-            (item.get("area_direito") or "") == area_direito
-            and (item.get("tipo_peca") or "") == tipo_peca
-            and (item.get("nome_modelo") or "") == nome_modelo
+            (item.get("area_direito") or "").strip() == (area_direito or "").strip()
+            and (item.get("tipo_peca") or "").strip() == (tipo_peca or "").strip()
+            and (item.get("nome_modelo") or "").strip() == (nome_modelo or "").strip()
         ):
             info_modelo = item
             break
@@ -118,8 +154,8 @@ def gerar_peticao_parametrizada(
     if not modelo_texto:
         return {"texto": "Erro: Modelo selecionado está vazio.", "graph_summary": "", "graph_html_path": ""}
 
-    # Conteúdo de docs de exemplo (se houver)
-    docs_exemplo_textos: list[str] = []
+    # Documentos de exemplo (opcional)
+    docs_exemplo_textos: List[str] = []
     arquivos_exemplo = user_inputs.get("arquivos_exemplo") or []
     for f in arquivos_exemplo:
         try:
@@ -131,11 +167,16 @@ def gerar_peticao_parametrizada(
     if docs_exemplo_textos:
         docs_exemplo_block = "\n\n".join([f"[Doc exemplo {i+1}]\n{t}" for i, t in enumerate(docs_exemplo_textos[:2])])
 
-    # Contexto URLs da sidebar
-    urls_block = processar_urls_contexto(urls_contexto or [], pergunta=user_inputs.get("instrucao_adicional_usuario", ""), top_k_chunks=2)
+    # Contexto URLs (sidebar)
+    urls_block = processar_urls_contexto(
+        urls_contexto or [],
+        pergunta=user_inputs.get("instrucao_adicional_usuario", ""),
+        top_k_chunks=2
+    )
 
-    # Monta instrução final
-    params_block = json.dumps({k: v for k, v in (user_inputs or {}).items() if k != "arquivos_exemplo"}, ensure_ascii=False, indent=2)
+    # Parâmetros (sem arquivos)
+    params = {k: v for k, v in (user_inputs or {}).items() if k != "arquivos_exemplo"}
+    params_block = json.dumps(params, ensure_ascii=False, indent=2)
 
     final_user_instruction = (
         f"MODELO PARAMETRIZADO (seguir estrutura e estilo):\n{modelo_texto}\n\n"
@@ -143,14 +184,12 @@ def gerar_peticao_parametrizada(
     )
 
     if docs_exemplo_block:
-        final_user_instruction += f"DOCUMENTOS DE EXEMPLO (apenas como referência de estilo e apoio):\n{docs_exemplo_block}\n\n"
-
+        final_user_instruction += f"DOCUMENTOS DE EXEMPLO (apenas como referência):\n{docs_exemplo_block}\n\n"
     if urls_block:
         final_user_instruction += f"{urls_block}\n\n"
 
     final_user_instruction += "Gere a peça final completa conforme o modelo, pronta para revisão e protocolo."
 
-    # Chama RAG com rerank + GraphRAG auto, salvando HTML
     resposta, _ctx, _details, _web, graph_summary, graph_html_path = generate_response_with_rag_and_web_fallback(
         user_query=final_user_instruction,
         system_message_base=SYSTEM_PROMPT_GERACAO,
@@ -180,29 +219,34 @@ def gerar_peticao_parametrizada(
 def parametrizador_interface():
     st.header("🧩 Modelo Parametrizado de Peças Jurídicas")
     st.caption(f"LLM: {OPENAI_LLM_MODEL}")
-    st.markdown("Gere petições e documentos jurídicos a partir de modelos pré-definidos (MongoDB), com apoio de RAG (OpenSearch) e GraphRAG.")
+    st.markdown("Gere peças a partir de modelos do MongoDB, com apoio de RAG (OpenSearch) e GraphRAG.")
     st.markdown("---")
 
     # URLs da sidebar global
-    url1_sidebar = st.session_state.get('sidebar_url1', "")
-    url2_sidebar = st.session_state.get('sidebar_url2', "")
-    url3_sidebar = st.session_state.get('sidebar_url3', "")
+    url1_sidebar = st.session_state.get("sidebar_url1", "")
+    url2_sidebar = st.session_state.get("sidebar_url2", "")
+    url3_sidebar = st.session_state.get("sidebar_url3", "")
     urls_contexto = [u for u in [url1_sidebar, url2_sidebar, url3_sidebar] if (u or "").strip()]
 
-    modelos = carregar_modelos_pecas_from_mongodb()
+    raw_modelos = carregar_modelos_pecas_from_mongodb()
+    modelos = normalize_modelos(raw_modelos)
+
     if not modelos:
-        st.error("Não encontrei modelos no MongoDB. Verifique a conexão/coleção.")
+        st.error("Não encontrei modelos válidos no MongoDB (esperava dicts). Verifique o formato da coleção.")
+        with st.expander("Debug: tipo/preview do retorno do Mongo"):
+            st.write(type(raw_modelos))
+            st.write(str(raw_modelos)[:2000])
         return
 
-    # Agrupa para selects
-    areas = sorted({m.get("area_direito", "").strip() for m in modelos if m.get("area_direito")})
+    # areas
+    areas = sorted({(m.get("area_direito") or "").strip() for m in modelos if (m.get("area_direito") or "").strip()})
     if not areas:
-        st.error("Modelos sem 'area_direito'. Verifique os registros no MongoDB.")
+        st.error("Modelos sem campo 'area_direito'. Verifique os registros no MongoDB.")
+        with st.expander("Debug: chaves do primeiro modelo"):
+            st.write(list(modelos[0].keys()))
         return
 
-    # Defaults do joblib (se existir no session_state)
     default_area = st.session_state.get("joblib_pred_area_direito") or None
-
     area_sel = st.selectbox(
         "Área do Direito",
         options=areas,
@@ -210,7 +254,7 @@ def parametrizador_interface():
         key=f"area_sel{SESSION_STATE_SUFFIX}",
     )
 
-    tipos = sorted({m.get("tipo_peca", "").strip() for m in modelos if m.get("area_direito") == area_sel and m.get("tipo_peca")})
+    tipos = sorted({(m.get("tipo_peca") or "").strip() for m in modelos if (m.get("area_direito") or "").strip() == area_sel and (m.get("tipo_peca") or "").strip()})
     if not tipos:
         st.warning("Nenhum tipo de peça para a área selecionada.")
         return
@@ -223,7 +267,13 @@ def parametrizador_interface():
         key=f"tipo_sel{SESSION_STATE_SUFFIX}",
     )
 
-    nomes_modelo = sorted({m.get("nome_modelo", "").strip() for m in modelos if m.get("area_direito") == area_sel and m.get("tipo_peca") == tipo_sel and m.get("nome_modelo")})
+    nomes_modelo = sorted({
+        (m.get("nome_modelo") or "").strip()
+        for m in modelos
+        if (m.get("area_direito") or "").strip() == area_sel
+        and (m.get("tipo_peca") or "").strip() == tipo_sel
+        and (m.get("nome_modelo") or "").strip()
+    })
     if not nomes_modelo:
         st.warning("Nenhum modelo disponível para os filtros selecionados.")
         return
@@ -312,7 +362,6 @@ def parametrizador_interface():
         with colB:
             st.caption("Dica: revise nomes/foros/valores e adequação ao caso concreto.")
 
-        # GraphRAG outputs
         graph_html = st.session_state.get(f"last_graph_html{SESSION_STATE_SUFFIX}", "")
         graph_summary = st.session_state.get(f"last_graph_summary{SESSION_STATE_SUFFIX}", "")
 
