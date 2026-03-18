@@ -1,26 +1,44 @@
-streamlit>=1.32.0
-Pillow
-python-docx>=0.8.11
-PyMuPDF>=1.23.1
-requests>=2.31.0
+# ── Core ──────────────────────────────────────────────────────────────────────
 python-dotenv>=1.0.0
+requests>=2.31.0
 
-azure-core>=1.29.5
-azure-search-documents>=11.4.0b9
-azure-ai-formrecognizer>=3.3.2
+# ── Document processing ───────────────────────────────────────────────────────
+python-docx>=0.8.11
+PyMuPDF>=1.23.1          # PDF extraction (fitz)
+Pillow                    # Image support (OCR optional)
 
+# ── AI / LLM ─────────────────────────────────────────────────────────────────
+anthropic>=0.40.0         # Claude — LLM principal
+
+# ── Embeddings (OpenAI — Anthropic não possui API de embeddings) ───────────────
 openai>=1.14.2
-sentence-transformers>=2.3.1
+
+# ── Reranking (cross-encoder) ─────────────────────────────────────────────────
+# cross-encoder/ms-marco-multilingual-MiniLM-L12-en para português jurídico
+sentence-transformers>=2.7.0
 transformers>=4.40.0
 tokenizers>=0.21.0,<0.22.0
+torch>=2.0.0              # CPU é suficiente para inferência do cross-encoder
 
+# ── Vector store (OpenSearch) ─────────────────────────────────────────────────
+opensearch-py>=2.3.0
+
+# ── Graph analysis (GraphRAG) ─────────────────────────────────────────────────
+networkx>=3.2
+pyvis>=0.3.2
+
+# ── API server ────────────────────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.0.0
+
+# ── MongoDB (modelos parametrizados) ─────────────────────────────────────────
+pymongo>=4.3.3
+dnspython>=2.3.0
+
+# ── Web parsing (contexto de URLs opcionais) ──────────────────────────────────
+beautifulsoup4>=4.12.2
 langchain>=0.1.0
 langchain-core>=0.1.0
 langchain-community>=0.0.21
 langchain-openai>=0.0.5
-# langchain-azure>=0.0.3  ← COMENTADO por não estar disponível no PyPI
-
-pymongo>=4.3.3
-dnspython>=2.3.0
-
-beautifulsoup4>=4.12.2
