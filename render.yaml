@@ -1,0 +1,64 @@
+# render.yaml — LexAutomate API
+# Documentação: https://render.com/docs/render-yaml-spec
+#
+# Deploy:
+#   1. Faça push deste repositório no GitHub
+#   2. No painel Render: New → Blueprint → conecte o repo
+#   3. Render vai ler este arquivo e criar o serviço automaticamente
+#   4. Configure as variáveis de ambiente no painel (seção "Environment")
+
+services:
+  - type: web
+    name: lexautomate-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon          # escolha a região mais próxima dos seus usuários
+    plan: starter           # free tier: 512 MB RAM (pode ser insuficiente para torch+cross-encoder)
+                            # recomendado: standard (2 GB RAM) para produção com reranking
+    healthCheckPath: /health
+
+    envVars:
+      # ── Anthropic ────────────────────────────────────────────────────────────
+      - key: ANTHROPIC_API_KEY
+        sync: false          # valor inserido manualmente no painel Render
+
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-4-6
+
+      - key: ANTHROPIC_MODEL_RERANK
+        value: claude-haiku-4-5-20251001
+
+      # ── OpenAI (apenas embeddings) ───────────────────────────────────────────
+      - key: OPENAI_API_KEY
+        sync: false
+
+      - key: OPENAI_EMBEDDING_MODEL
+        value: text-embedding-3-large
+
+      # ── Qdrant Cloud ─────────────────────────────────────────────────────────
+      - key: QDRANT_URL
+        sync: false          # ex: https://xxxx.qdrant.io:6333
+
+      - key: QDRANT_API_KEY
+        sync: false
+
+      - key: QDRANT_COLLECTION
+        value: docs-index
+
+      # ── MongoDB (modelos parametrizados) ─────────────────────────────────────
+      - key: MONGODB_URI
+        sync: false
+
+      - key: MONGODB_DB_NAME
+        value: lexautomate
+
+      - key: MONGODB_COLLECTION_MODELOS
+        value: modelos_pecas
+
+      # ── Serper (web fallback) ─────────────────────────────────────────────────
+      - key: SERPER_API_KEY
+        sync: false
+
+      # ── Grafos GraphRAG (ephemeral — /tmp no Render) ─────────────────────────
+      - key: GRAPH_VIZ_DIR
+        value: /tmp/graph_visualizations

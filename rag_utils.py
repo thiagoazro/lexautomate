@@ -2,14 +2,9 @@
 rag_utils.py
 Pipeline RAG principal: busca híbrida + reranking + GraphRAG + geração LLM.
 
-Sem dependências Streamlit. Usa logging padrão.
-Integra:
-  - hybrid_search.py  → BM25 + kNN + RRF
-  - reranker.py       → cross-encoder / LLM reranking
-  - graph_rag.py      → grafo de conhecimento jurídico com teoria dos grafos
-
-LLM: Anthropic Claude
+LLM:       Anthropic Claude
 Embeddings: OpenAI (Anthropic não oferece API de embeddings)
+Busca:     Qdrant Cloud (dense OpenAI + sparse BM25 + RRF nativo)
 """
 
 from __future__ import annotations
@@ -24,7 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import anthropic
 from dotenv import load_dotenv
 from openai import OpenAI
-from opensearchpy import OpenSearch, RequestsHttpConnection
+from qdrant_client import QdrantClient
 
 from hybrid_search import hybrid_search as _hybrid_search
 from reranker import rerank as _rerank
@@ -34,35 +29,32 @@ logger = logging.getLogger(__name__)
 
 # ─── Configuração ─────────────────────────────────────────────────────────────
 
-# Anthropic — LLM (Claude)
 ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
 ANTHROPIC_MODEL = (os.getenv("ANTHROPIC_MODEL") or "claude-sonnet-4-6").strip()
 
-# OpenAI — apenas embeddings (Anthropic não tem API de embeddings)
 OPENAI_API_KEY = (os.getenv("OPENAI_API_KEY") or "").strip()
 OPENAI_EMBEDDING_MODEL = (os.getenv("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-large").strip()
 
-OPENSEARCH_HOST = (os.getenv("OPENSEARCH_HOST") or "http://localhost:9200").strip()
-OPENSEARCH_INDEX = (os.getenv("OPENSEARCH_INDEX") or "docs-index").strip()
-OPENSEARCH_TEXT_FIELD = os.getenv("OPENSEARCH_TEXT_FIELD", "content").strip()
-OPENSEARCH_VECTOR_FIELD = os.getenv("OPENSEARCH_VECTOR_FIELD", "content_vector").strip()
+QDRANT_URL = (os.getenv("QDRANT_URL") or "http://localhost:6333").strip()
+QDRANT_API_KEY = (os.getenv("QDRANT_API_KEY") or "").strip()
+QDRANT_COLLECTION = (os.getenv("QDRANT_COLLECTION") or "docs-index").strip()
+CONTENT_FIELD = "content"
 
 SERPER_API_KEY = (os.getenv("SERPER_API_KEY") or "").strip()
 SERPER_ENDPOINT = (os.getenv("SERPER_ENDPOINT") or "https://google.serper.dev/search").strip()
 
 RAG_FEEDBACK_PATH = (os.getenv("RAG_FEEDBACK_PATH") or "feedback_rag.jsonl").strip()
-GRAPH_VIZ_DIR = (os.getenv("GRAPH_VIZ_DIR") or "graph_visualizations").strip()
+GRAPH_VIZ_DIR = (os.getenv("GRAPH_VIZ_DIR") or "/tmp/graph_visualizations").strip()
 os.makedirs(GRAPH_VIZ_DIR, exist_ok=True)
 
 # ─── Clientes (singletons) ────────────────────────────────────────────────────
 
 _anthropic_client: Optional[anthropic.Anthropic] = None
-_openai_client: Optional[OpenAI] = None       # usado apenas para embeddings
-_opensearch_client: Optional[OpenSearch] = None
+_openai_client: Optional[OpenAI] = None
+_qdrant_client: Optional[QdrantClient] = None
 
 
 def get_anthropic_client() -> Optional[anthropic.Anthropic]:
-    """Cliente Anthropic para geração de texto (Claude)."""
     global _anthropic_client
     if _anthropic_client is not None:
         return _anthropic_client
@@ -78,12 +70,12 @@ def get_anthropic_client() -> Optional[anthropic.Anthropic]:
 
 
 def get_openai_client() -> Optional[OpenAI]:
-    """Cliente OpenAI — usado SOMENTE para embeddings."""
+    """Apenas para embeddings — Anthropic não tem API de embeddings."""
     global _openai_client
     if _openai_client is not None:
         return _openai_client
     if not OPENAI_API_KEY:
-        logger.error("OPENAI_API_KEY não configurada no .env (necessária para embeddings)")
+        logger.error("OPENAI_API_KEY não configurada (necessária para embeddings)")
         return None
     try:
         _openai_client = OpenAI(api_key=OPENAI_API_KEY)
@@ -93,38 +85,26 @@ def get_openai_client() -> Optional[OpenAI]:
         return None
 
 
-def get_opensearch_client() -> Optional[OpenSearch]:
-    global _opensearch_client
-    if _opensearch_client is not None:
-        return _opensearch_client
+def get_qdrant_client() -> Optional[QdrantClient]:
+    global _qdrant_client
+    if _qdrant_client is not None:
+        return _qdrant_client
     try:
-        client = OpenSearch(
-            hosts=[OPENSEARCH_HOST],
-            use_ssl=OPENSEARCH_HOST.startswith("https://"),
-            verify_certs=False,
-            connection_class=RequestsHttpConnection,
-            timeout=60,
-            max_retries=3,
-            retry_on_timeout=True,
-        )
-        if not client.ping():
-            logger.error(f"OpenSearch indisponível em {OPENSEARCH_HOST}")
+        from qdrant_utils import get_qdrant_client as _get_client, ping
+        client = _get_client()
+        if not ping(client):
+            logger.error(f"Qdrant indisponível em {QDRANT_URL}")
             return None
-        _opensearch_client = client
+        _qdrant_client = client
         return client
     except Exception as exc:
-        logger.error(f"Falha ao conectar ao OpenSearch: {exc}")
+        logger.error(f"Falha ao conectar ao Qdrant: {exc}")
         return None
 
 
 # ─── Feedback ────────────────────────────────────────────────────────────────
 
-def salvar_feedback_rag(
-    pergunta: str,
-    resposta: str,
-    feedback: str,
-    comentario: str = "",
-) -> None:
+def salvar_feedback_rag(pergunta: str, resposta: str, feedback: str, comentario: str = "") -> None:
     try:
         record = {
             "ts": time.time(),
@@ -139,7 +119,7 @@ def salvar_feedback_rag(
         pass
 
 
-# ─── DOCX ─────────────────────────────────────────────────────────────────────
+# ─── DOCX ────────────────────────────────────────────────────────────────────
 
 def gerar_docx(texto: str, nome_arquivo: str = "resposta.docx") -> str:
     from docx import Document
@@ -147,7 +127,7 @@ def gerar_docx(texto: str, nome_arquivo: str = "resposta.docx") -> str:
     if not nome_arquivo.lower().endswith(".docx"):
         nome_arquivo += ".docx"
 
-    output_dir = os.getenv("DOCX_OUTPUT_DIR", ".").strip() or "."
+    output_dir = os.getenv("DOCX_OUTPUT_DIR", "/tmp").strip() or "/tmp"
     os.makedirs(output_dir, exist_ok=True)
     out_path = os.path.join(output_dir, nome_arquivo)
 
@@ -180,9 +160,8 @@ def get_embeddings_batch(
     client_openai: OpenAI,
     batch_size: int = 20,
 ) -> List[Optional[List[float]]]:
-    """Gera embeddings em lote para múltiplos textos."""
     results: List[Optional[List[float]]] = [None] * len(texts)
-    cleaned = [" ".join(t.replace("\n", " ").split()) for t in texts]
+    cleaned = [" ".join(t.replace("\n", " ").split())[:8000] for t in texts]
 
     for start in range(0, len(cleaned), batch_size):
         batch = cleaned[start: start + batch_size]
@@ -191,8 +170,8 @@ def get_embeddings_batch(
                 model=OPENAI_EMBEDDING_MODEL,
                 input=batch,
             )
-            for i, item in enumerate(res.data):
-                results[start + i] = item.embedding
+            for item in res.data:
+                results[start + item.index] = item.embedding
         except Exception as exc:
             logger.error(f"Erro em lote de embeddings [{start}:{start+batch_size}]: {exc}")
 
@@ -203,45 +182,35 @@ def get_embeddings_batch(
 
 def retrieve_context(
     query_text: str,
-    search_client: OpenSearch,
+    qdrant_client: QdrantClient,
     client_openai: OpenAI,
     top_k: int = 10,
     bm25_candidates: int = 30,
     dense_candidates: int = 30,
 ) -> Tuple[List[str], List[Dict[str, Any]]]:
     """
-    Recupera contextos relevantes via busca híbrida (BM25 + kNN + RRF).
-
-    Returns:
-        (texts, details) onde texts é lista de strings e details é lista de dicts
-        com metadados e scores (_rrf_score, _bm25_score, _dense_score).
+    Recupera contextos via Qdrant hybrid search (dense + BM25 + RRF).
+    Retorna (texts, details).
     """
     vec = get_embedding(query_text, client_openai)
     if vec is None:
-        logger.warning("Não foi possível gerar embedding. Usando apenas BM25.")
-        from hybrid_search import bm25_search
-        bm25_results = bm25_search(
-            search_client, OPENSEARCH_INDEX, query_text,
-            top_k=top_k, text_field=OPENSEARCH_TEXT_FIELD,
-        )
-        hits = [doc for doc, _ in bm25_results[:top_k]]
-    else:
-        hits = _hybrid_search(
-            search_client,
-            OPENSEARCH_INDEX,
-            query_text,
-            vec,
-            top_k=top_k,
-            text_field=OPENSEARCH_TEXT_FIELD,
-            vector_field=OPENSEARCH_VECTOR_FIELD,
-            bm25_candidates=bm25_candidates,
-            dense_candidates=dense_candidates,
-        )
+        logger.warning("Embedding falhou — sem resultados de busca semântica.")
+        return [], []
+
+    hits = _hybrid_search(
+        qdrant_client,
+        QDRANT_COLLECTION,
+        query_text,
+        vec,
+        top_k=top_k,
+        bm25_candidates=bm25_candidates,
+        dense_candidates=dense_candidates,
+    )
 
     texts: List[str] = []
     details: List[Dict[str, Any]] = []
     for h in hits:
-        content = (h.get(OPENSEARCH_TEXT_FIELD) or "").strip()
+        content = (h.get(CONTENT_FIELD) or "").strip()
         if content:
             texts.append(content)
             details.append(h)
@@ -260,31 +229,26 @@ def serper_search(query: str, num_results: int = 3) -> List[Dict[str, str]]:
         headers = {"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"}
         r = requests.post(SERPER_ENDPOINT, headers=headers, json=payload, timeout=25)
         r.raise_for_status()
-        organic = r.json().get("organic", [])
         return [
             {
                 "title": (it.get("title") or "").strip(),
                 "snippet": (it.get("snippet") or "").strip(),
                 "link": (it.get("link") or "").strip(),
             }
-            for it in organic[: payload["num"]]
+            for it in r.json().get("organic", [])[: payload["num"]]
         ]
     except Exception as exc:
-        logger.error(f"Serper search failed: {exc}")
+        logger.error(f"Serper search falhou: {exc}")
         return []
 
 
 def format_web_results(results: List[Dict[str, str]]) -> str:
     if not results:
         return ""
-    parts = []
-    for i, r in enumerate(results, 1):
-        parts.append(
-            f"[Fonte web {i}] {r.get('title', '')}\n"
-            f"{r.get('snippet', '')}\n"
-            f"{r.get('link', '')}\n"
-        )
-    return "\n".join(parts).strip()
+    return "\n".join(
+        f"[Fonte web {i}] {r.get('title', '')}\n{r.get('snippet', '')}\n{r.get('link', '')}\n"
+        for i, r in enumerate(results, 1)
+    ).strip()
 
 
 # ─── GraphRAG ────────────────────────────────────────────────────────────────
@@ -301,11 +265,7 @@ def _looks_complex_query(q: str) -> bool:
     return any(k in qn for k in keywords) or len(qn.split()) >= 14
 
 
-def should_use_graph_rag(
-    user_query: str,
-    num_contexts: int,
-    force: bool = False,
-) -> bool:
+def should_use_graph_rag(user_query: str, num_contexts: int, force: bool = False) -> bool:
     if force:
         return num_contexts >= 2
     if num_contexts < 2:
@@ -324,37 +284,30 @@ def build_graphrag_summary(
     user_query: str,
     save_html: bool = True,
 ) -> Tuple[str, str]:
-    """
-    Constrói grafo de conhecimento e retorna (summary_text, html_path).
-    Aplica PageRank, betweenness e detecção de comunidades.
-    """
+    """Constrói grafo com PageRank + betweenness + comunidades. Retorna (summary, html_path)."""
     from graph_rag import GraphRAG
 
-    docs_for_graph = []
-    for d in retrieved_details or []:
-        content = (d.get(OPENSEARCH_TEXT_FIELD) or d.get("content") or "").strip()
-        if not content:
-            continue
-        docs_for_graph.append({
-            "chunk_id": d.get("chunk_id") or d.get("id") or "",
-            "content": content,
+    docs_for_graph = [
+        {
+            "chunk_id": d.get("chunk_id") or "",
+            "content": (d.get(CONTENT_FIELD) or "").strip(),
             "arquivo_origem": d.get("arquivo_origem") or "",
             "tipo_documento": d.get("tipo_documento") or "",
-        })
+        }
+        for d in retrieved_details or []
+        if (d.get(CONTENT_FIELD) or "").strip()
+    ]
 
     if len(docs_for_graph) < 2:
         return "", ""
 
     try:
         gr = GraphRAG(retrieved_documents=docs_for_graph, user_query=user_query)
-        gr.process()  # PageRank + betweenness + comunidades
-
+        gr.process()
         summary = (gr.generate_textual_summary_for_llm() or "").strip()
-        if not summary:
-            return "", ""
 
         html_path = ""
-        if save_html:
+        if save_html and summary:
             filename = _make_graph_filename(user_query)
             html_path = os.path.join(GRAPH_VIZ_DIR, filename)
             gr.visualize_graph(output_filename=html_path)
@@ -365,26 +318,16 @@ def build_graphrag_summary(
         return "", ""
 
 
-# ─── LLM helpers (Anthropic Claude) ──────────────────────────────────────────
+# ─── LLM helpers (Claude) ────────────────────────────────────────────────────
 
 def _build_anthropic_messages(
     chat_history: Optional[List[Dict[str, str]]],
     user_instruction: str,
 ) -> List[Dict[str, str]]:
-    """
-    Monta a lista de mensagens para a API Anthropic.
-    Nota: a Anthropic não aceita role='system' na lista — o system prompt
-    é passado como parâmetro separado em _call_llm.
-    A lista deve começar sempre com role='user'.
-    """
     msgs: List[Dict[str, str]] = []
     for m in chat_history or []:
-        if not isinstance(m, dict):
-            continue
-        role = m.get("role")
-        content = m.get("content", "")
-        if role in ("user", "assistant") and content:
-            msgs.append({"role": role, "content": content})
+        if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content"):
+            msgs.append({"role": m["role"], "content": m["content"]})
     msgs.append({"role": "user", "content": user_instruction})
     return msgs
 
@@ -396,13 +339,6 @@ def _call_llm(
     temperature: float = 0.2,
     max_tokens: int = 4096,
 ) -> str:
-    """
-    Chama o Claude via Anthropic API.
-    Na API Anthropic:
-      - system prompt é parâmetro separado (não dentro de messages)
-      - max_tokens é obrigatório
-      - messages deve começar com role='user'
-    """
     try:
         kwargs: Dict[str, Any] = {
             "model": ANTHROPIC_MODEL,
@@ -426,9 +362,9 @@ def generate_response_with_rag_and_web_fallback(
     user_query: str,
     system_message_base: str = "",
     chat_history: Optional[List[Dict[str, str]]] = None,
-    search_client: Optional[OpenSearch] = None,
-    client_openai: Optional[OpenAI] = None,          # embeddings
-    client_anthropic: Optional[anthropic.Anthropic] = None,  # LLM
+    qdrant_client: Optional[QdrantClient] = None,
+    client_openai: Optional[OpenAI] = None,
+    client_anthropic: Optional[anthropic.Anthropic] = None,
     # Busca
     top_k: int = 10,
     bm25_candidates: int = 30,
@@ -437,7 +373,7 @@ def generate_response_with_rag_and_web_fallback(
     use_web_fallback: bool = True,
     min_contexts_for_web_fallback: int = 1,
     num_web_results: int = 3,
-    # LLM params
+    # LLM
     temperature: float = 0.2,
     max_tokens: int = 4096,
     # Reranking
@@ -445,81 +381,69 @@ def generate_response_with_rag_and_web_fallback(
     top_k_rerank: int = 7,
     use_cross_encoder: bool = True,
     # GraphRAG
-    use_graph_rag: str = "auto",   # "auto" | "on" | "off"
+    use_graph_rag: str = "auto",
     max_details_for_graph: int = 12,
     save_graph_html: bool = True,
 ) -> Tuple[str, List[str], List[Dict[str, Any]], List[Dict[str, str]], str, str]:
     """
-    Pipeline RAG completo com Claude (Anthropic) como LLM.
+    Pipeline RAG completo com Claude + Qdrant.
 
-    Fluxo:
-      1. Recuperação híbrida (BM25 + kNN + RRF) — embeddings via OpenAI
-      2. Reranking (cross-encoder ou Claude)
-      3. GraphRAG (PageRank + betweenness + comunidades)
-      4. Web fallback via Serper (se contextos insuficientes)
-      5. Geração de resposta com Claude
-
-    Returns:
-        (answer, contexts, details, web_results, graph_summary, graph_html_path)
+    Returns: (answer, contexts, details, web_results, graph_summary, graph_html_path)
     """
-    # Inicializa clientes se não fornecidos
     if client_openai is None:
         client_openai = get_openai_client()
     if client_anthropic is None:
         client_anthropic = get_anthropic_client()
-    if search_client is None:
-        search_client = get_opensearch_client()
+    if qdrant_client is None:
+        qdrant_client = get_qdrant_client()
 
-    if not client_openai or not search_client:
-        return "Erro: serviços de embedding/busca não inicializados.", [], [], [], "", ""
+    if not client_openai:
+        return "Erro: OpenAI (embeddings) não inicializado.", [], [], [], "", ""
     if not client_anthropic:
-        return "Erro: cliente Anthropic (Claude) não inicializado.", [], [], [], "", ""
+        return "Erro: Anthropic (Claude) não inicializado.", [], [], [], "", ""
+    if not qdrant_client:
+        return "Erro: Qdrant não inicializado.", [], [], [], "", ""
 
-    # 1. Busca híbrida (usa OpenAI só para embeddings)
+    # 1. Busca híbrida Qdrant
     contexts, details = retrieve_context(
-        user_query, search_client, client_openai,
+        user_query, qdrant_client, client_openai,
         top_k=int(top_k),
         bm25_candidates=int(bm25_candidates),
         dense_candidates=int(dense_candidates),
     )
 
-    # 2. Reranking (cross-encoder local ou Claude como fallback)
+    # 2. Reranking
     if use_rerank and details:
         try:
-            reranked = _rerank(
+            details = _rerank(
                 query=user_query,
                 chunks=details,
                 top_k=int(top_k_rerank),
                 anthropic_client=client_anthropic,
                 use_cross_encoder=bool(use_cross_encoder),
-                content_field=OPENSEARCH_TEXT_FIELD,
+                content_field=CONTENT_FIELD,
             )
-            details = reranked
             contexts = [
-                (h.get(OPENSEARCH_TEXT_FIELD) or "").strip()
+                (h.get(CONTENT_FIELD) or "").strip()
                 for h in details
-                if (h.get(OPENSEARCH_TEXT_FIELD) or "").strip()
+                if (h.get(CONTENT_FIELD) or "").strip()
             ]
         except Exception as exc:
             logger.error(f"Reranking falhou: {exc}")
 
     # 3. GraphRAG
-    graph_summary = ""
-    graph_html_path = ""
-
+    graph_summary, graph_html_path = "", ""
     use_gr = (use_graph_rag or "auto").strip().lower()
-    if use_gr == "on":
-        gr_should = len(details) >= 2
-    elif use_gr == "off":
-        gr_should = False
-    else:
-        gr_should = should_use_graph_rag(user_query, len(contexts))
+    should_gr = (
+        len(details) >= 2 if use_gr == "on"
+        else False if use_gr == "off"
+        else should_use_graph_rag(user_query, len(contexts))
+    )
 
-    if gr_should and details:
+    if should_gr:
         try:
-            details_for_graph = details[: max(2, min(int(max_details_for_graph), len(details)))]
             graph_summary, graph_html_path = build_graphrag_summary(
-                details_for_graph,
+                details[: max(2, min(int(max_details_for_graph), len(details)))],
                 user_query=user_query,
                 save_html=bool(save_graph_html),
             )
@@ -533,21 +457,14 @@ def generate_response_with_rag_and_web_fallback(
         web_results = serper_search(user_query, num_results=int(num_web_results))
         web_block = format_web_results(web_results)
 
-    # 5. Prompt final → Claude
+    # 5. Prompt → Claude
     ctx_block = "\n\n".join([f"- {c}" for c in contexts]) if contexts else ""
-    final_user = f"{user_query}\n\nContexto recuperado (use se for relevante):\n{ctx_block}"
+    final_user = f"{user_query}\n\nContexto recuperado:\n{ctx_block}"
 
     if graph_summary:
-        final_user += (
-            "\n\nMAPA ESTRUTURADO (GraphRAG — teoria dos grafos relacionais):\n"
-            f"{graph_summary}"
-        )
-
+        final_user += f"\n\nMAPA ESTRUTURADO (GraphRAG):\n{graph_summary}"
     if web_block:
-        final_user += (
-            "\n\nContexto adicional da web (Serper — use com cautela):\n"
-            f"{web_block}"
-        )
+        final_user += f"\n\nContexto da web (use com cautela):\n{web_block}"
 
     messages = _build_anthropic_messages(chat_history, final_user)
     answer = _call_llm(
@@ -570,9 +487,7 @@ def generate_consultor_response_with_rag(
     use_rerank: bool = True,
     use_cross_encoder: bool = True,
     use_graph_rag: str = "auto",
-    save_graph_html: bool = True,
 ) -> str:
-    """Wrapper simplificado — retorna apenas a resposta."""
     answer, *_ = generate_response_with_rag_and_web_fallback(
         user_query=user_instruction,
         system_message_base=system_message_base,
@@ -582,6 +497,5 @@ def generate_consultor_response_with_rag(
         use_rerank=use_rerank,
         use_cross_encoder=use_cross_encoder,
         use_graph_rag=use_graph_rag,
-        save_graph_html=save_graph_html,
     )
     return answer

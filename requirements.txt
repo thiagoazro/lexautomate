@@ -20,8 +20,8 @@ transformers>=4.40.0
 tokenizers>=0.21.0,<0.22.0
 torch>=2.0.0              # CPU é suficiente para inferência do cross-encoder
 
-# ── Vector store (OpenSearch) ─────────────────────────────────────────────────
-opensearch-py>=2.3.0
+# ── Vector store (Qdrant Cloud — híbrido dense + sparse BM25) ────────────────
+qdrant-client[fastembed]>=1.9.0
 
 # ── Graph analysis (GraphRAG) ─────────────────────────────────────────────────
 networkx>=3.2

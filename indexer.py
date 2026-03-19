@@ -1,19 +1,21 @@
 """
 indexer.py
-Pipeline de indexação de documentos jurídicos no OpenSearch.
+Pipeline de indexação de documentos jurídicos no Qdrant Cloud.
 
-Lê todos os documentos de `documentos_juridicos/`, extrai texto,
-divide em chunks, gera embeddings (OpenAI) e indexa no OpenSearch.
+Para cada documento:
+  1. Extrai texto (PDF/DOCX/TXT/MD)
+  2. Divide em chunks com sobreposição
+  3. Gera embedding denso (OpenAI text-embedding-3-large)
+  4. Gera embedding esparso BM25 (fastembed Qdrant/bm25)
+  5. Insere no Qdrant (coleção híbrida dense + sparse)
 
 Uso:
-    python indexer.py
-    python indexer.py --recreate          # apaga e recria o índice
-    python indexer.py --folder minha_pasta
-    python indexer.py --chunk-size 800 --chunk-overlap 100
-    python indexer.py --skip-existing     # pula documentos já indexados
-    python indexer.py --dry-run           # mostra o que seria indexado, sem indexar
-
-Suporte a formatos: .pdf, .docx, .txt, .md
+    python indexer.py                    # indexa documentos_juridicos/
+    python indexer.py --recreate         # apaga coleção e recria
+    python indexer.py --skip-existing    # pula docs já indexados
+    python indexer.py --dry-run          # mostra o que faria, sem indexar
+    python indexer.py --folder outra/    # pasta customizada
+    python indexer.py --chunk-size 800 --chunk-overlap 120
 """
 
 from __future__ import annotations
@@ -40,41 +42,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ─── Configuração ─────────────────────────────────────────────────────────────
+# ─── Config ───────────────────────────────────────────────────────────────────
 
 OPENAI_API_KEY = (os.getenv("OPENAI_API_KEY") or "").strip()
 OPENAI_EMBEDDING_MODEL = (os.getenv("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-large").strip()
-OPENSEARCH_HOST = (os.getenv("OPENSEARCH_HOST") or "http://localhost:9200").strip()
-OPENSEARCH_INDEX = (os.getenv("OPENSEARCH_INDEX") or "docs-index").strip()
+QDRANT_COLLECTION = (os.getenv("QDRANT_COLLECTION") or "docs-index").strip()
 EMBEDDING_DIM = 3072
 
 DEFAULT_FOLDER = "documentos_juridicos"
 DEFAULT_CHUNK_SIZE = 800
 DEFAULT_CHUNK_OVERLAP = 120
-DEFAULT_BATCH_SIZE = 20   # chunks por chamada de embedding API
-DEFAULT_INDEX_BATCH = 100  # docs por bulk index
+DEFAULT_EMBED_BATCH = 20     # chunks por chamada embedding API
+DEFAULT_UPSERT_BATCH = 100   # pontos por upsert Qdrant
 
 
 # ─── Chunking ────────────────────────────────────────────────────────────────
 
-def chunk_text(
-    text: str,
-    chunk_size: int = DEFAULT_CHUNK_SIZE,
-    overlap: int = DEFAULT_CHUNK_OVERLAP,
-) -> List[str]:
-    """
-    Divide o texto em chunks com sobreposição.
-
-    Estratégia hierárquica:
-      1. Tenta dividir por parágrafos duplos (\\n\\n)
-      2. Senão por parágrafo simples (\\n)
-      3. Senão por sentença (". ")
-      4. Senão por espaço
-      5. Senão por caractere
-
-    Garante que nenhum chunk excede chunk_size (exceto se uma unidade
-    indivisível já for maior).
-    """
+def chunk_text(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE, overlap: int = DEFAULT_CHUNK_OVERLAP) -> List[str]:
+    """Divide texto em chunks com sobreposição, usando estratégia hierárquica."""
     if not text or not text.strip():
         return []
 
@@ -83,18 +68,15 @@ def chunk_text(
         return [text]
 
     separators = ["\n\n", "\n", ". ", ", ", " ", ""]
-    chunks: List[str] = []
 
     def _split(t: str, sep_idx: int) -> List[str]:
         if len(t) <= chunk_size or sep_idx >= len(separators):
             return [t] if t.strip() else []
         sep = separators[sep_idx]
         if not sep:
-            # Character-level split as last resort
-            return [t[i: i + chunk_size] for i in range(0, len(t), chunk_size - overlap)]
+            return [t[i: i + chunk_size] for i in range(0, len(t), max(1, chunk_size - overlap))]
         parts = t.split(sep)
-        result = []
-        current = ""
+        result, current = [], ""
         for part in parts:
             candidate = (current + sep + part).strip() if current else part.strip()
             if len(candidate) <= chunk_size:
@@ -103,7 +85,6 @@ def chunk_text(
                 if current:
                     result.append(current)
                 if len(part) > chunk_size:
-                    # Recursively split the oversized part
                     result.extend(_split(part, sep_idx + 1))
                     current = ""
                 else:
@@ -112,57 +93,37 @@ def chunk_text(
             result.append(current)
         return result
 
-    raw_chunks = _split(text, sep_idx=0)
+    raw = _split(text, 0)
+    if len(raw) <= 1:
+        return raw
 
-    # Apply overlap: each chunk starts overlap chars before where the previous ended
-    if len(raw_chunks) <= 1:
-        return raw_chunks
-
-    result = [raw_chunks[0]]
-    for i in range(1, len(raw_chunks)):
+    # Aplicar sobreposição
+    result = [raw[0]]
+    for i in range(1, len(raw)):
         prev_tail = result[-1][-overlap:] if overlap > 0 else ""
-        merged = (prev_tail + " " + raw_chunks[i]).strip()
-        # Don't add overlap if it makes the chunk too big
-        if len(merged) <= chunk_size + overlap:
-            result.append(merged)
-        else:
-            result.append(raw_chunks[i])
+        merged = (prev_tail + " " + raw[i]).strip()
+        result.append(merged if len(merged) <= chunk_size + overlap else raw[i])
 
     return [c for c in result if c.strip()]
 
 
-# ─── Classificação de tipo de documento ──────────────────────────────────────
+# ─── Classificação por pasta ───────────────────────────────────────────────────
 
-def _classify_tipo_documento(rel_path: str) -> Tuple[str, str]:
-    """
-    Classifica o documento com base no caminho relativo dentro de documentos_juridicos/.
-
-    Returns:
-        (tipo_documento, area_direito)
-    """
+def classify_document(rel_path: str) -> Tuple[str, str]:
+    """Retorna (tipo_documento, area_direito) a partir do caminho relativo."""
     parts = Path(rel_path).parts
-
-    # Remove o arquivo do final
     dirs = parts[:-1] if len(parts) > 1 else parts
 
-    if not dirs:
-        return "documento", "geral"
-
-    top = dirs[0].upper().strip().replace("-", "").strip()
-
     area_map = {
-        "LEGISLAÇÃO": "legislacao",
-        "LEGISLACAO": "legislacao",
-        "JURISPRUDENCIA": "jurisprudencia",
-        "JURISPRUDÊNCIA": "jurisprudencia",
+        "LEGISLAÇÃO": "legislacao", "LEGISLACAO": "legislacao",
+        "JURISPRUDENCIA": "jurisprudencia", "JURISPRUDÊNCIA": "jurisprudencia",
         "DOUTRINA": "doutrina",
-        "PECAS": "peca",
-        "PEÇAS": "peca",
+        "PECAS": "peca", "PEÇAS": "peca",
     }
 
-    area = area_map.get(top, top.lower())
+    top = dirs[0].upper().strip() if dirs else ""
+    area = area_map.get(top, top.lower() or "geral")
 
-    # Tipo mais específico: subdirectório
     if len(dirs) >= 2:
         sub = dirs[1].lstrip("- ").upper().strip()
         tipo = re.sub(r"[^\w\s]", "", sub).strip().replace(" ", "_").lower()
@@ -175,87 +136,78 @@ def _classify_tipo_documento(rel_path: str) -> Tuple[str, str]:
 # ─── Extração de texto ────────────────────────────────────────────────────────
 
 def extract_text(file_path: Path) -> str:
-    """Extrai texto de PDF, DOCX, TXT ou MD."""
     try:
         from rag_docintelligence import extrair_texto_documento
         return extrair_texto_documento(str(file_path), file_path.suffix)
     except Exception as exc:
-        logger.error(f"Falha ao extrair texto de {file_path}: {exc}")
+        logger.error(f"Falha ao extrair {file_path.name}: {exc}")
         return ""
 
 
-# ─── Embeddings em lote ───────────────────────────────────────────────────────
+# ─── Embeddings ───────────────────────────────────────────────────────────────
 
-def embed_batch(
-    texts: List[str],
-    client: OpenAI,
-    max_retries: int = 3,
-) -> List[Optional[List[float]]]:
-    """Gera embeddings para uma lista de textos. Retorna None onde falhou."""
+def embed_batch_dense(texts: List[str], client: OpenAI, max_retries: int = 3) -> List[Optional[List[float]]]:
+    """Gera embeddings densos em lote."""
     results: List[Optional[List[float]]] = [None] * len(texts)
     cleaned = [" ".join(t.replace("\n", " ").split())[:8000] for t in texts]
 
     for attempt in range(max_retries):
         try:
-            resp = client.embeddings.create(
-                model=OPENAI_EMBEDDING_MODEL,
-                input=cleaned,
-            )
+            resp = client.embeddings.create(model=OPENAI_EMBEDDING_MODEL, input=cleaned)
             for item in resp.data:
                 results[item.index] = item.embedding
             return results
         except Exception as exc:
             if attempt < max_retries - 1:
                 wait = 2 ** attempt
-                logger.warning(f"Embedding batch failed (attempt {attempt+1}): {exc}. Retrying in {wait}s...")
+                logger.warning(f"Embedding batch falhou (tentativa {attempt+1}): {exc}. Retry em {wait}s...")
                 time.sleep(wait)
             else:
-                logger.error(f"Embedding batch failed permanently: {exc}")
+                logger.error(f"Embedding batch falhou permanentemente: {exc}")
 
     return results
 
 
-# ─── Verificar documentos já indexados ───────────────────────────────────────
+# ─── Verificar existentes ─────────────────────────────────────────────────────
 
-def get_indexed_document_ids(client, index: str) -> set:
-    """Retorna o conjunto de document_ids já indexados."""
+def get_indexed_document_ids(qdrant_client, collection_name: str) -> set:
+    """Retorna set de document_ids já indexados (via scroll)."""
     try:
-        resp = client.search(
-            index=index,
-            body={
-                "size": 0,
-                "aggs": {"doc_ids": {"terms": {"field": "document_id", "size": 100000}}},
-            },
-        )
-        buckets = resp.get("aggregations", {}).get("doc_ids", {}).get("buckets", [])
-        return {b["key"] for b in buckets}
+        doc_ids = set()
+        offset = None
+        while True:
+            result, offset = qdrant_client.scroll(
+                collection_name=collection_name,
+                scroll_filter=None,
+                limit=1000,
+                offset=offset,
+                with_payload=["document_id"],
+                with_vectors=False,
+            )
+            for point in result:
+                did = (point.payload or {}).get("document_id")
+                if did:
+                    doc_ids.add(did)
+            if offset is None:
+                break
+        return doc_ids
     except Exception as exc:
-        logger.warning(f"Não foi possível verificar documentos existentes: {exc}")
+        logger.warning(f"Não foi possível verificar existentes: {exc}")
         return set()
 
 
-# ─── Pipeline de indexação ────────────────────────────────────────────────────
+# ─── Iterator de documentos ───────────────────────────────────────────────────
 
-def make_document_id(file_path: Path, base_folder: Path) -> str:
-    """Gera um document_id determinístico a partir do caminho relativo."""
-    rel = str(file_path.relative_to(base_folder))
+def make_document_id(file_path: Path, base: Path) -> str:
+    rel = str(file_path.relative_to(base))
     return hashlib.md5(rel.encode()).hexdigest()
 
 
-def iter_documents(
-    folder: Path,
-    skip_existing: Optional[set] = None,
-) -> Generator[Dict[str, Any], None, None]:
-    """
-    Itera recursivamente sobre os arquivos de documentos suportados.
-    Yield: dict com metadados (sem embedding ainda).
-    """
-    supported = {".pdf", ".docx", ".txt", ".md"}
-
+def iter_documents(folder: Path, skip_ids: Optional[set] = None) -> Generator[Dict[str, Any], None, None]:
     for file_path in sorted(folder.rglob("*")):
         if not file_path.is_file():
             continue
-        if file_path.suffix.lower() not in supported:
+        if file_path.suffix.lower() not in {".pdf", ".docx", ".txt", ".md"}:
             continue
         if file_path.name.startswith("."):
             continue
@@ -263,12 +215,11 @@ def iter_documents(
         rel_path = str(file_path.relative_to(folder))
         doc_id = make_document_id(file_path, folder)
 
-        if skip_existing and doc_id in skip_existing:
+        if skip_ids and doc_id in skip_ids:
             logger.debug(f"Pulando (já indexado): {rel_path}")
             continue
 
-        tipo, area = _classify_tipo_documento(rel_path)
-
+        tipo, area = classify_document(rel_path)
         yield {
             "file_path": file_path,
             "document_id": doc_id,
@@ -280,33 +231,21 @@ def iter_documents(
         }
 
 
+# ─── Pipeline principal ───────────────────────────────────────────────────────
+
 def index_folder(
     folder: str = DEFAULT_FOLDER,
     recreate: bool = False,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
-    batch_size: int = DEFAULT_BATCH_SIZE,
-    index_batch: int = DEFAULT_INDEX_BATCH,
+    embed_batch: int = DEFAULT_EMBED_BATCH,
+    upsert_batch: int = DEFAULT_UPSERT_BATCH,
     skip_existing: bool = False,
     dry_run: bool = False,
 ) -> Dict[str, int]:
-    """
-    Indexa todos os documentos da pasta no OpenSearch.
+    from qdrant_utils import get_qdrant_client, ensure_collection, upsert_points, embed_sparse
 
-    Returns:
-        dict com estatísticas: files_processed, chunks_indexed, chunks_failed, files_failed
-    """
-    from opensearch_utils import (
-        get_opensearch_client, ensure_index, bulk_index_documents
-    )
-
-    stats = {
-        "files_processed": 0,
-        "files_skipped": 0,
-        "files_failed": 0,
-        "chunks_indexed": 0,
-        "chunks_failed": 0,
-    }
+    stats = {"files_processed": 0, "files_failed": 0, "chunks_indexed": 0, "chunks_failed": 0}
 
     folder_path = Path(folder)
     if not folder_path.is_dir():
@@ -320,165 +259,115 @@ def index_folder(
     openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
     if dry_run:
-        logger.info("=== DRY RUN — nenhum dado será indexado ===")
+        logger.info("=== DRY RUN ===")
         for meta in iter_documents(folder_path):
             text = extract_text(meta["file_path"])
             if text:
                 chunks = chunk_text(text, chunk_size, chunk_overlap)
-                logger.info(
-                    f"[DRY] {meta['path_relativo']}  →  {len(chunks)} chunks  "
-                    f"(tipo={meta['tipo_documento']}, area={meta['area_direito']})"
-                )
+                logger.info(f"[DRY] {meta['path_relativo']} → {len(chunks)} chunks ({meta['tipo_documento']})")
                 stats["files_processed"] += 1
                 stats["chunks_indexed"] += len(chunks)
             else:
                 stats["files_failed"] += 1
         return stats
 
-    os_client = get_opensearch_client()
-    if not os_client.ping():
-        logger.error(f"OpenSearch indisponível em {OPENSEARCH_HOST}")
-        return stats
+    qdrant = get_qdrant_client()
+    ensure_collection(qdrant, QDRANT_COLLECTION, embedding_dim=EMBEDDING_DIM, recreate=recreate)
+    logger.info(f"Coleção '{QDRANT_COLLECTION}' pronta.")
 
-    ensure_index(os_client, OPENSEARCH_INDEX, embedding_dim=EMBEDDING_DIM, recreate=recreate)
-    logger.info(f"Índice '{OPENSEARCH_INDEX}' pronto.")
-
-    # Documentos já indexados (para --skip-existing)
-    indexed_ids: set = set()
+    skip_ids: set = set()
     if skip_existing:
-        indexed_ids = get_indexed_document_ids(os_client, OPENSEARCH_INDEX)
-        logger.info(f"Documentos já indexados: {len(indexed_ids)}")
+        skip_ids = get_indexed_document_ids(qdrant, QDRANT_COLLECTION)
+        logger.info(f"Documentos já indexados: {len(skip_ids)}")
 
-    # Buffer para indexação em lote
-    pending_docs: List[Dict[str, Any]] = []
+    pending_points: List[Dict[str, Any]] = []
 
-    def flush_pending():
-        if not pending_docs:
+    def flush():
+        if not pending_points:
             return
-        success, errors = bulk_index_documents(os_client, pending_docs, OPENSEARCH_INDEX)
-        stats["chunks_indexed"] += success
-        stats["chunks_failed"] += errors
-        pending_docs.clear()
-        if errors:
-            logger.warning(f"  {errors} chunks falharam no bulk index")
+        ok, err = upsert_points(qdrant, pending_points, QDRANT_COLLECTION, batch_size=upsert_batch)
+        stats["chunks_indexed"] += ok
+        stats["chunks_failed"] += err
+        pending_points.clear()
+        if err:
+            logger.warning(f"  {err} chunks falharam no upsert")
 
-    for meta in iter_documents(folder_path, skip_existing=indexed_ids if skip_existing else None):
+    for meta in iter_documents(folder_path, skip_ids=skip_ids if skip_existing else None):
         file_path: Path = meta.pop("file_path")
         rel_path = meta["path_relativo"]
-
         logger.info(f"Processando: {rel_path}")
 
         text = extract_text(file_path)
         if not text or len(text.strip()) < 30:
-            logger.warning(f"  Sem texto extraível. Pulando.")
+            logger.warning(f"  Sem texto. Pulando.")
             stats["files_failed"] += 1
             continue
 
         chunks = chunk_text(text, chunk_size, chunk_overlap)
         if not chunks:
-            logger.warning(f"  Sem chunks gerados. Pulando.")
             stats["files_failed"] += 1
             continue
 
         logger.info(f"  {len(chunks)} chunks")
         stats["files_processed"] += 1
 
-        # Processa em sub-lotes para os embeddings
-        for batch_start in range(0, len(chunks), batch_size):
-            batch_texts = chunks[batch_start: batch_start + batch_size]
-            embeddings = embed_batch(batch_texts, openai_client)
+        for batch_start in range(0, len(chunks), embed_batch):
+            batch_texts = chunks[batch_start: batch_start + embed_batch]
+            dense_embeddings = embed_batch_dense(batch_texts, openai_client)
 
-            for i, (chunk_text_val, emb) in enumerate(zip(batch_texts, embeddings)):
-                if emb is None:
-                    logger.warning(f"    Chunk {batch_start + i} sem embedding — pulando")
+            for i, (chunk_content, dense_emb) in enumerate(zip(batch_texts, dense_embeddings)):
+                if dense_emb is None:
                     stats["chunks_failed"] += 1
                     continue
 
                 chunk_idx = batch_start + i
                 chunk_id = f"{meta['document_id']}_{chunk_idx}"
 
-                doc = {
+                # BM25 sparse embedding
+                sparse_emb = embed_sparse(chunk_content)
+
+                point = {
                     **meta,
                     "chunk_id": chunk_id,
                     "chunk_index": chunk_idx,
                     "total_chunks": len(chunks),
-                    "content": chunk_text_val,
-                    "content_vector": emb,
+                    "content": chunk_content,
+                    "content_vector": dense_emb,
+                    "sparse_vector": sparse_emb,  # None se BM25 indisponível
                 }
-                pending_docs.append(doc)
+                pending_points.append(point)
 
-            # Flush quando buffer atingir index_batch
-            if len(pending_docs) >= index_batch:
-                flush_pending()
+            if len(pending_points) >= upsert_batch:
+                flush()
 
-        # Pequena pausa para evitar rate limit da API
-        time.sleep(0.1)
+        time.sleep(0.05)  # evitar rate limit
 
-    # Flush final
-    flush_pending()
+    flush()
 
     logger.info(
-        f"\n{'='*50}\n"
+        f"\n{'='*52}\n"
         f"Indexação concluída:\n"
-        f"  Arquivos processados: {stats['files_processed']}\n"
-        f"  Arquivos com falha:   {stats['files_failed']}\n"
-        f"  Chunks indexados:     {stats['chunks_indexed']}\n"
-        f"  Chunks com falha:     {stats['chunks_failed']}\n"
-        f"{'='*50}"
+        f"  Arquivos processados : {stats['files_processed']}\n"
+        f"  Arquivos com falha   : {stats['files_failed']}\n"
+        f"  Chunks indexados     : {stats['chunks_indexed']}\n"
+        f"  Chunks com falha     : {stats['chunks_failed']}\n"
+        f"{'='*52}"
     )
-
     return stats
 
 
 # ─── CLI ──────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Indexa documentos jurídicos no OpenSearch para busca híbrida RAG."
-    )
-    parser.add_argument(
-        "--folder",
-        default=DEFAULT_FOLDER,
-        help=f"Pasta com os documentos (padrão: {DEFAULT_FOLDER})",
-    )
-    parser.add_argument(
-        "--recreate",
-        action="store_true",
-        help="Apaga e recria o índice antes de indexar",
-    )
-    parser.add_argument(
-        "--skip-existing",
-        action="store_true",
-        help="Pula documentos cujo document_id já está no índice",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Mostra o que seria indexado sem de fato indexar",
-    )
-    parser.add_argument(
-        "--chunk-size",
-        type=int,
-        default=DEFAULT_CHUNK_SIZE,
-        help=f"Tamanho de cada chunk em caracteres (padrão: {DEFAULT_CHUNK_SIZE})",
-    )
-    parser.add_argument(
-        "--chunk-overlap",
-        type=int,
-        default=DEFAULT_CHUNK_OVERLAP,
-        help=f"Sobreposição entre chunks (padrão: {DEFAULT_CHUNK_OVERLAP})",
-    )
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=DEFAULT_BATCH_SIZE,
-        help=f"Chunks por chamada de embedding API (padrão: {DEFAULT_BATCH_SIZE})",
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Exibe logs de debug",
-    )
+    parser = argparse.ArgumentParser(description="Indexa documentos jurídicos no Qdrant.")
+    parser.add_argument("--folder", default=DEFAULT_FOLDER)
+    parser.add_argument("--recreate", action="store_true", help="Apaga e recria a coleção")
+    parser.add_argument("--skip-existing", action="store_true", help="Pula docs já indexados")
+    parser.add_argument("--dry-run", action="store_true", help="Simula sem indexar")
+    parser.add_argument("--chunk-size", type=int, default=DEFAULT_CHUNK_SIZE)
+    parser.add_argument("--chunk-overlap", type=int, default=DEFAULT_CHUNK_OVERLAP)
+    parser.add_argument("--embed-batch", type=int, default=DEFAULT_EMBED_BATCH)
+    parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
     if args.verbose:
@@ -489,7 +378,7 @@ def main():
         recreate=args.recreate,
         chunk_size=args.chunk_size,
         chunk_overlap=args.chunk_overlap,
-        batch_size=args.batch_size,
+        embed_batch=args.embed_batch,
         skip_existing=args.skip_existing,
         dry_run=args.dry_run,
     )

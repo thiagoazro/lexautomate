@@ -1,0 +1,50 @@
+# ── .dockerignore — LexAutomate ───────────────────────────────────────────────
+
+# Ambiente virtual Python
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Dados locais — NÃO enviar documentos para a imagem Docker
+# (os documentos ficam no Qdrant Cloud, não no container)
+documentos_juridicos/
+graph_visualizations/
+/tmp/
+
+# Secrets — nunca enviar para a imagem
+.env
+.env.*
+*.env
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testes e CI
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# macOS
+.DS_Store

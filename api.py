@@ -1,16 +1,20 @@
 """
 api.py
-FastAPI — ponto de entrada principal do LexAutomate.
+FastAPI — LexAutomate Backend
 
 Endpoints:
-  GET  /health                 → status dos serviços
-  POST /api/search             → busca híbrida (BM25 + kNN + RRF + reranking)
-  POST /api/generate           → geração de resposta com RAG completo
-  POST /api/index              → dispara indexação dos documentos_juridicos/
-  GET  /api/graph/{filename}   → serve HTML do grafo GraphRAG
+  GET  /health                → status dos serviços
+  POST /api/search            → busca híbrida (dense + BM25 + RRF + reranking)
+  POST /api/generate          → geração RAG completa (Claude)
+  POST /api/index             → indexa documentos_juridicos/ no Qdrant
+  GET  /api/index/status      → status da indexação
+  GET  /api/graph/{filename}  → HTML de visualização do grafo
 
-Iniciar:
-    uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+Deploy:
+    uvicorn api:app --host 0.0.0.0 --port 8000
+
+Render:
+    Veja render.yaml / Dockerfile na raiz do projeto.
 """
 
 from __future__ import annotations
@@ -22,6 +26,7 @@ from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
@@ -34,25 +39,64 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-GRAPH_VIZ_DIR = os.getenv("GRAPH_VIZ_DIR", "graph_visualizations")
+GRAPH_VIZ_DIR = os.getenv("GRAPH_VIZ_DIR", "/tmp/graph_visualizations")
 DEFAULT_DOCS_FOLDER = "documentos_juridicos"
+os.makedirs(GRAPH_VIZ_DIR, exist_ok=True)
 
 app = FastAPI(
     title="LexAutomate API",
-    description="RAG jurídico com busca híbrida, reranking e GraphRAG.",
-    version="2.0.0",
+    description=(
+        "RAG jurídico com busca híbrida (BM25 + semântica + RRF), "
+        "reranking cross-encoder, GraphRAG e Claude (Anthropic)."
+    ),
+    version="3.0.0",
+)
+
+# ─── CORS — permite que o Lovable (ou qualquer frontend) chame a API ──────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          # Em produção, troque por ["https://seu-app.lovable.app"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
-# ─── Schemas ─────────────────────────────────────────────────────────────────
+# ─── Startup: valida conexões ─────────────────────────────────────────────────
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("LexAutomate API iniciando...")
+    try:
+        from rag_utils import get_qdrant_client, get_openai_client, get_anthropic_client
+        from qdrant_utils import ensure_collection, QDRANT_COLLECTION, EMBEDDING_DIM
+
+        qdrant = get_qdrant_client()
+        if qdrant:
+            ensure_collection(qdrant, QDRANT_COLLECTION, EMBEDDING_DIM, recreate=False)
+            logger.info("Qdrant: OK")
+        else:
+            logger.warning("Qdrant: INDISPONÍVEL")
+
+        oai = get_openai_client()
+        logger.info(f"OpenAI (embeddings): {'OK' if oai else 'INDISPONÍVEL'}")
+
+        anth = get_anthropic_client()
+        logger.info(f"Anthropic (Claude): {'OK' if anth else 'INDISPONÍVEL'}")
+
+    except Exception as exc:
+        logger.error(f"Erro no startup: {exc}")
+
+
+# ─── Schemas ──────────────────────────────────────────────────────────────────
 
 class SearchRequest(BaseModel):
-    query: str = Field(..., description="Consulta de busca em linguagem natural")
-    top_k: int = Field(10, ge=1, le=50, description="Número de resultados")
+    query: str = Field(..., description="Consulta em linguagem natural")
+    top_k: int = Field(10, ge=1, le=50)
     bm25_candidates: int = Field(30, ge=5, le=100)
     dense_candidates: int = Field(30, ge=5, le=100)
-    use_rerank: bool = Field(True, description="Aplicar reranking nos resultados")
-    use_cross_encoder: bool = Field(True, description="Usar cross-encoder (se disponível)")
+    use_rerank: bool = Field(True)
+    use_cross_encoder: bool = Field(True)
     top_k_rerank: int = Field(7, ge=1, le=20)
 
 
@@ -64,8 +108,6 @@ class SearchResult(BaseModel):
     area_direito: Optional[str] = None
     content: str
     rrf_score: Optional[float] = None
-    bm25_score: Optional[float] = None
-    dense_score: Optional[float] = None
     rerank_score: Optional[float] = None
 
 
@@ -76,21 +118,18 @@ class SearchResponse(BaseModel):
 
 
 class GenerateRequest(BaseModel):
-    query: str = Field(..., description="Pergunta ou instrução jurídica")
-    system_prompt: str = Field("", description="Prompt de sistema (instruções ao LLM)")
+    query: str
+    system_prompt: str = Field("", description="Instrução de sistema para o Claude")
     chat_history: List[Dict[str, str]] = Field(
-        [], description="Histórico de conversa [{'role': 'user'|'assistant', 'content': '...'}]"
+        [], description="[{'role':'user','content':'...'}, {'role':'assistant','content':'...'}]"
     )
     top_k: int = Field(10, ge=1, le=30)
     use_rerank: bool = Field(True)
     use_cross_encoder: bool = Field(True)
-    use_graph_rag: str = Field(
-        "auto",
-        description="Modo GraphRAG: 'auto' | 'on' | 'off'",
-    )
+    use_graph_rag: str = Field("auto", description="'auto' | 'on' | 'off'")
     use_web_fallback: bool = Field(True)
     temperature: float = Field(0.2, ge=0.0, le=1.0)
-    max_tokens: Optional[int] = Field(None, ge=100, le=16000)
+    max_tokens: int = Field(4096, ge=100, le=16000)
     save_graph_html: bool = Field(True)
 
 
@@ -103,9 +142,9 @@ class GenerateResponse(BaseModel):
 
 
 class IndexRequest(BaseModel):
-    folder: str = Field(DEFAULT_DOCS_FOLDER, description="Pasta com os documentos")
-    recreate: bool = Field(False, description="Recriar índice do zero")
-    skip_existing: bool = Field(True, description="Pular documentos já indexados")
+    folder: str = Field(DEFAULT_DOCS_FOLDER)
+    recreate: bool = Field(False)
+    skip_existing: bool = Field(True)
     chunk_size: int = Field(800, ge=200, le=4000)
     chunk_overlap: int = Field(120, ge=0, le=500)
 
@@ -116,134 +155,101 @@ class IndexResponse(BaseModel):
     stats: Optional[Dict[str, int]] = None
 
 
-# ─── Health check ─────────────────────────────────────────────────────────────
+# ─── Health ───────────────────────────────────────────────────────────────────
 
 @app.get("/health", tags=["System"])
 def health_check() -> Dict[str, Any]:
-    """Verifica disponibilidade dos serviços (OpenSearch, OpenAI)."""
-    from rag_utils import get_opensearch_client, get_openai_client, get_anthropic_client
+    """Verifica status de todos os serviços."""
+    from rag_utils import get_qdrant_client, get_openai_client, get_anthropic_client
+    from qdrant_utils import ping, count_points, QDRANT_COLLECTION
 
-    os_ok = False
+    qdrant_ok = False
+    points_count = 0
     try:
-        client = get_opensearch_client()
-        os_ok = client is not None and client.ping()
+        qc = get_qdrant_client()
+        if qc:
+            qdrant_ok = ping(qc)
+            points_count = count_points(qc, QDRANT_COLLECTION)
     except Exception:
         pass
 
-    anthropic_ok = False
-    try:
-        ac = get_anthropic_client()
-        anthropic_ok = ac is not None
-    except Exception:
-        pass
+    anthropic_ok = get_anthropic_client() is not None
+    openai_ok = get_openai_client() is not None
 
-    openai_ok = False
-    try:
-        client_oai = get_openai_client()
-        openai_ok = client_oai is not None
-    except Exception:
-        pass
-
-    status = "ok" if (os_ok and anthropic_ok and openai_ok) else "degraded"
+    status = "ok" if (qdrant_ok and anthropic_ok and openai_ok) else "degraded"
     return {
         "status": status,
         "services": {
-            "opensearch": "ok" if os_ok else "unavailable",
+            "qdrant": "ok" if qdrant_ok else "unavailable",
             "anthropic_llm": "ok" if anthropic_ok else "unavailable",
             "openai_embeddings": "ok" if openai_ok else "unavailable",
+        },
+        "collection": {
+            "name": QDRANT_COLLECTION,
+            "points": points_count,
         },
     }
 
 
-# ─── Busca híbrida ────────────────────────────────────────────────────────────
+# ─── Busca ────────────────────────────────────────────────────────────────────
 
 @app.post("/api/search", response_model=SearchResponse, tags=["RAG"])
 def search(req: SearchRequest) -> SearchResponse:
-    """
-    Busca híbrida: BM25 + kNN + RRF + reranking opcional.
-
-    Retorna os chunks mais relevantes para a consulta.
-    """
-    from rag_utils import (
-        get_openai_client, get_opensearch_client, get_anthropic_client,
-        get_embedding, OPENSEARCH_INDEX,
-        OPENSEARCH_TEXT_FIELD, OPENSEARCH_VECTOR_FIELD,
-    )
+    """Busca híbrida: dense (OpenAI) + sparse BM25 + RRF nativo Qdrant + reranking."""
+    from rag_utils import get_qdrant_client, get_openai_client, get_anthropic_client, get_embedding
+    from qdrant_utils import QDRANT_COLLECTION
     from hybrid_search import hybrid_search
     from reranker import rerank
 
-    os_client = get_opensearch_client()
-    oai_client = get_openai_client()       # para embeddings
-    anth_client = get_anthropic_client()   # para reranking LLM fallback
+    qdrant = get_qdrant_client()
+    oai = get_openai_client()
+    anth = get_anthropic_client()
 
-    if not os_client or not oai_client:
+    if not qdrant or not oai:
         raise HTTPException(status_code=503, detail="Serviços não disponíveis")
 
-    # Gerar embedding da query (OpenAI)
-    vec = get_embedding(req.query, oai_client)
+    vec = get_embedding(req.query, oai)
     if vec is None:
-        raise HTTPException(status_code=500, detail="Falha ao gerar embedding da query")
+        raise HTTPException(status_code=500, detail="Falha ao gerar embedding")
 
-    # Busca híbrida
     hits = hybrid_search(
-        os_client,
-        OPENSEARCH_INDEX,
-        req.query,
-        vec,
+        qdrant, QDRANT_COLLECTION, req.query, vec,
         top_k=req.top_k,
-        text_field=OPENSEARCH_TEXT_FIELD,
-        vector_field=OPENSEARCH_VECTOR_FIELD,
         bm25_candidates=req.bm25_candidates,
         dense_candidates=req.dense_candidates,
     )
 
-    # Reranking (cross-encoder local ou Claude como fallback)
     if req.use_rerank and hits:
         hits = rerank(
-            req.query,
-            hits,
+            req.query, hits,
             top_k=req.top_k_rerank,
-            anthropic_client=anth_client,
+            anthropic_client=anth,
             use_cross_encoder=req.use_cross_encoder,
-            content_field=OPENSEARCH_TEXT_FIELD,
+            content_field="content",
         )
 
-    # Montar resposta
-    results = []
-    for h in hits:
-        content = (h.get(OPENSEARCH_TEXT_FIELD) or "").strip()
-        if not content:
-            continue
-        results.append(
-            SearchResult(
-                chunk_id=h.get("chunk_id"),
-                document_id=h.get("document_id"),
-                arquivo_origem=h.get("arquivo_origem"),
-                tipo_documento=h.get("tipo_documento"),
-                area_direito=h.get("area_direito"),
-                content=content,
-                rrf_score=h.get("_rrf_score"),
-                bm25_score=h.get("_bm25_score"),
-                dense_score=h.get("_dense_score"),
-                rerank_score=h.get("_rerank_score"),
-            )
+    results = [
+        SearchResult(
+            chunk_id=h.get("chunk_id"),
+            document_id=h.get("document_id"),
+            arquivo_origem=h.get("arquivo_origem"),
+            tipo_documento=h.get("tipo_documento"),
+            area_direito=h.get("area_direito"),
+            content=(h.get("content") or "").strip(),
+            rrf_score=h.get("_rrf_score"),
+            rerank_score=h.get("_rerank_score"),
         )
+        for h in hits if (h.get("content") or "").strip()
+    ]
 
     return SearchResponse(query=req.query, total=len(results), results=results)
 
 
-# ─── Geração com RAG ──────────────────────────────────────────────────────────
+# ─── Geração RAG ──────────────────────────────────────────────────────────────
 
 @app.post("/api/generate", response_model=GenerateResponse, tags=["RAG"])
 def generate(req: GenerateRequest) -> GenerateResponse:
-    """
-    Pipeline RAG completo:
-      1. Busca híbrida (BM25 + kNN + RRF)
-      2. Reranking (cross-encoder ou LLM)
-      3. GraphRAG (PageRank + betweenness + comunidades)
-      4. Web fallback via Serper (se necessário)
-      5. Geração de resposta com LLM (OpenAI)
-    """
+    """Pipeline RAG completo: busca híbrida → reranking → GraphRAG → Claude."""
     from rag_utils import generate_response_with_rag_and_web_fallback
 
     try:
@@ -264,7 +270,7 @@ def generate(req: GenerateRequest) -> GenerateResponse:
         )
     except Exception as exc:
         logger.error(f"Erro na geração RAG: {exc}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Erro na geração: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
 
     return GenerateResponse(
         answer=answer,
@@ -277,13 +283,12 @@ def generate(req: GenerateRequest) -> GenerateResponse:
 
 # ─── Indexação ────────────────────────────────────────────────────────────────
 
-_indexing_status: Dict[str, Any] = {"running": False, "last_stats": None}
+_indexing: Dict[str, Any] = {"running": False, "last_stats": None}
 
 
 def _run_indexing(req: IndexRequest) -> None:
-    """Executa indexação em background."""
-    global _indexing_status
-    _indexing_status["running"] = True
+    global _indexing
+    _indexing["running"] = True
     try:
         from indexer import index_folder
         stats = index_folder(
@@ -293,80 +298,52 @@ def _run_indexing(req: IndexRequest) -> None:
             chunk_size=req.chunk_size,
             chunk_overlap=req.chunk_overlap,
         )
-        _indexing_status["last_stats"] = stats
-        logger.info(f"Indexação concluída: {stats}")
+        _indexing["last_stats"] = stats
     except Exception as exc:
         logger.error(f"Erro na indexação: {exc}", exc_info=True)
-        _indexing_status["last_stats"] = {"error": str(exc)}
+        _indexing["last_stats"] = {"error": str(exc)}
     finally:
-        _indexing_status["running"] = False
+        _indexing["running"] = False
 
 
 @app.post("/api/index", response_model=IndexResponse, tags=["Admin"])
-def trigger_indexing(
-    req: IndexRequest,
-    background_tasks: BackgroundTasks,
-) -> IndexResponse:
-    """
-    Dispara indexação dos documentos em background.
-    O processo roda assincronamente — consulte /api/index/status para acompanhar.
-    """
-    if _indexing_status["running"]:
-        return IndexResponse(
-            status="running",
-            message="Indexação já em andamento. Aguarde a conclusão.",
-        )
+def trigger_indexing(req: IndexRequest, background_tasks: BackgroundTasks) -> IndexResponse:
+    """Dispara indexação dos documentos em background."""
+    if _indexing["running"]:
+        return IndexResponse(status="running", message="Indexação já em andamento.")
 
-    folder_path = Path(req.folder)
-    if not folder_path.is_dir():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Pasta não encontrada: {req.folder}",
-        )
+    if not Path(req.folder).is_dir():
+        raise HTTPException(status_code=400, detail=f"Pasta não encontrada: {req.folder}")
 
     background_tasks.add_task(_run_indexing, req)
-
     return IndexResponse(
         status="started",
-        message=f"Indexação iniciada para '{req.folder}'. Use GET /api/index/status para acompanhar.",
+        message=f"Indexação iniciada para '{req.folder}'. Acompanhe em GET /api/index/status",
     )
 
 
 @app.get("/api/index/status", tags=["Admin"])
 def indexing_status() -> Dict[str, Any]:
-    """Retorna o status atual da indexação."""
-    return {
-        "running": _indexing_status["running"],
-        "last_stats": _indexing_status["last_stats"],
-    }
+    return {"running": _indexing["running"], "last_stats": _indexing["last_stats"]}
 
 
-# ─── Visualização de grafo ────────────────────────────────────────────────────
+# ─── Grafos GraphRAG ──────────────────────────────────────────────────────────
 
 @app.get("/api/graph/{filename}", tags=["GraphRAG"])
 def serve_graph(filename: str) -> FileResponse:
-    """Serve o HTML de visualização do grafo GraphRAG."""
-    # Sanitizar nome do arquivo
-    safe_name = Path(filename).name
-    if not safe_name.endswith(".html"):
-        raise HTTPException(status_code=400, detail="Apenas arquivos .html são servidos")
-
-    file_path = Path(GRAPH_VIZ_DIR) / safe_name
-    if not file_path.is_file():
-        raise HTTPException(status_code=404, detail=f"Grafo não encontrado: {safe_name}")
-
-    return FileResponse(path=str(file_path), media_type="text/html")
+    safe = Path(filename).name
+    if not safe.endswith(".html"):
+        raise HTTPException(status_code=400, detail="Apenas .html")
+    path = Path(GRAPH_VIZ_DIR) / safe
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Grafo não encontrado")
+    return FileResponse(str(path), media_type="text/html")
 
 
 @app.get("/api/graph", tags=["GraphRAG"])
 def list_graphs() -> Dict[str, Any]:
-    """Lista os grafos GraphRAG disponíveis."""
     graph_dir = Path(GRAPH_VIZ_DIR)
     if not graph_dir.is_dir():
-        return {"graphs": []}
-
-    graphs = sorted(
-        [f.name for f in graph_dir.glob("*.html")],
-        reverse=True,
-    )
+        return {"graphs": [], "total": 0}
+    graphs = sorted([f.name for f in graph_dir.glob("*.html")], reverse=True)
     return {"graphs": graphs, "total": len(graphs)}
