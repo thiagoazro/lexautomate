@@ -40,8 +40,7 @@ QDRANT_API_KEY = (os.getenv("QDRANT_API_KEY") or "").strip()
 QDRANT_COLLECTION = (os.getenv("QDRANT_COLLECTION") or "docs-index").strip()
 CONTENT_FIELD = "content"
 
-SERPER_API_KEY = (os.getenv("SERPER_API_KEY") or "").strip()
-SERPER_ENDPOINT = (os.getenv("SERPER_ENDPOINT") or "https://google.serper.dev/search").strip()
+TAVILY_API_KEY = (os.getenv("TAVILY_API_KEY") or "").strip()
 
 RAG_FEEDBACK_PATH = (os.getenv("RAG_FEEDBACK_PATH") or "feedback_rag.jsonl").strip()
 GRAPH_VIZ_DIR = (os.getenv("GRAPH_VIZ_DIR") or "/tmp/graph_visualizations").strip()
@@ -409,35 +408,51 @@ def retrieve_context(
     return texts, details
 
 
-# ─── Web search (Serper) ──────────────────────────────────────────────────────
+# ─── Web search (Tavily) ──────────────────────────────────────────────────────
 
-def serper_search(query: str, num_results: int = 3) -> List[Dict[str, str]]:
-    if not SERPER_API_KEY:
+def web_search(query: str, num_results: int = 3, search_depth: str = "advanced") -> List[Dict[str, str]]:
+    """
+    Busca na web via Tavily API.
+    Retorna texto extraído das páginas (não só snippets).
+
+    search_depth: "basic" (rápido) ou "advanced" (extrai conteúdo completo)
+    """
+    if not TAVILY_API_KEY:
         return []
     try:
         import requests
-        payload = {"q": query, "num": max(1, min(10, int(num_results)))}
-        headers = {"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"}
-        r = requests.post(SERPER_ENDPOINT, headers=headers, json=payload, timeout=25)
+        payload = {
+            "api_key": TAVILY_API_KEY,
+            "query": query,
+            "search_depth": search_depth,
+            "max_results": max(1, min(10, int(num_results))),
+            "include_answer": False,
+            "include_raw_content": False,
+        }
+        r = requests.post(
+            "https://api.tavily.com/search",
+            json=payload,
+            timeout=30,
+        )
         r.raise_for_status()
         return [
             {
                 "title": (it.get("title") or "").strip(),
-                "snippet": (it.get("snippet") or "").strip(),
-                "link": (it.get("link") or "").strip(),
+                "snippet": (it.get("content") or "").strip(),  # Tavily retorna texto completo aqui
+                "link": (it.get("url") or "").strip(),
             }
-            for it in r.json().get("organic", [])[: payload["num"]]
+            for it in r.json().get("results", [])[:num_results]
         ]
     except Exception as exc:
-        logger.error(f"Serper search falhou: {exc}")
+        logger.error(f"Tavily search falhou: {exc}")
         return []
 
 
 def format_web_results(results: List[Dict[str, str]]) -> str:
     if not results:
         return ""
-    return "\n".join(
-        f"[Fonte web {i}] {r.get('title', '')}\n{r.get('snippet', '')}\n{r.get('link', '')}\n"
+    return "\n\n".join(
+        f"[Fonte web {i}: {r.get('title', '')}]\n{r.get('snippet', '')}\nURL: {r.get('link', '')}"
         for i, r in enumerate(results, 1)
     ).strip()
 
@@ -670,7 +685,7 @@ def generate_response_with_rag_and_web_fallback(
     web_results: List[Dict[str, str]] = []
     web_block = ""
     if use_web_fallback and len(contexts) < int(min_contexts_for_web_fallback):
-        web_results = serper_search(user_query, num_results=int(num_web_results))
+        web_results = web_search(user_query, num_results=int(num_web_results))
         web_block = format_web_results(web_results)
 
     # 6. Montar system prompt

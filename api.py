@@ -239,6 +239,17 @@ def search(req: SearchRequest) -> SearchResponse:
             content_field="content",
         )
 
+    # JuIT Rimor — jurisprudência pública (ativado se JUIT_API_KEY definida)
+    try:
+        from juit_rimor import is_available as juit_available, buscar_jurisprudencias
+        if juit_available():
+            juit_results = buscar_jurisprudencias(req.query, top_k=5)
+            if juit_results:
+                hits.extend(juit_results)
+                logger.info(f"JuIT Rimor: +{len(juit_results)} resultados adicionados")
+    except Exception as exc:
+        logger.warning(f"JuIT Rimor indisponível: {exc}")
+
     # Deduplicação
     hits = deduplicate_contexts(hits, similarity_threshold=0.85)
 

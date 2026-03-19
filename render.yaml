@@ -55,8 +55,12 @@ services:
       - key: MONGODB_COLLECTION_MODELOS
         value: modelos_pecas
 
-      # ── Serper (web fallback) ─────────────────────────────────────────────────
-      - key: SERPER_API_KEY
+      # ── Tavily (busca web para RAG — texto completo das páginas) ──────────────
+      - key: TAVILY_API_KEY
+        sync: false
+
+      # ── JuIT Rimor (jurisprudência pública — quando contratar) ────────────────
+      - key: JUIT_API_KEY
         sync: false
 
       # ── Grafos GraphRAG (ephemeral — /tmp no Render) ─────────────────────────
