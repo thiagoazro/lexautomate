@@ -7,9 +7,9 @@ Fallback:             LLM reranking via Anthropic Claude
 
 O cross-encoder avalia cada par (query, trecho) em conjunto,
 capturando interações semânticas que o bi-encoder não captura.
-Modelo: cross-encoder/ms-marco-multilingual-MiniLM-L12-en
-  – Treinado em dados multilíngues do MS MARCO
-  – Funciona bem para português jurídico
+Modelo: cross-encoder/ms-marco-MiniLM-L-12-v2
+  – Treinado no MS MARCO (público, sem autenticação HuggingFace)
+  – Funciona razoavelmente para português jurídico
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import anthropic
 
 logger = logging.getLogger(__name__)
 
-_CROSS_ENCODER_NAME = "cross-encoder/ms-marco-multilingual-MiniLM-L12-en"
+_CROSS_ENCODER_NAME = "cross-encoder/ms-marco-MiniLM-L-12-v2"
 _cross_encoder_model = None  # lazy-loaded singleton
 
 

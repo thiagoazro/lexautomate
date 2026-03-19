@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 RUN python -c "from fastembed import SparseTextEmbedding; SparseTextEmbedding(model_name='Qdrant/bm25')" || true
 
 # Pré-baixa o cross-encoder de reranking
-RUN python -c "from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-multilingual-MiniLM-L12-en')" || true
+RUN python -c "from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-12-v2')" || true
 
 # Copia o código da aplicação
 COPY . .
