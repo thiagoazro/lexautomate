@@ -33,7 +33,9 @@ logger = logging.getLogger(__name__)
 QDRANT_URL = (os.getenv("QDRANT_URL") or "http://localhost:6333").strip()
 QDRANT_API_KEY = (os.getenv("QDRANT_API_KEY") or "").strip()
 QDRANT_COLLECTION = (os.getenv("QDRANT_COLLECTION") or "docs-index").strip()
-EMBEDDING_DIM = 3072
+# text-embedding-3-small = 1536d, text-embedding-3-large = 3072d
+_emb_model = (os.getenv("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-small").strip()
+EMBEDDING_DIM = 1536 if "small" in _emb_model else 3072
 
 # ─── Singletons ───────────────────────────────────────────────────────────────
 _qdrant_client: Optional[QdrantClient] = None
