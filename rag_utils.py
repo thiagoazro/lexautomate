@@ -588,6 +588,8 @@ def generate_response_with_rag_and_web_fallback(
     use_web_fallback: bool = True,
     min_contexts_for_web_fallback: int = 1,
     num_web_results: int = 3,
+    # Jurisprudência integrada (JuIT Rimor)
+    include_jurisprudencia: bool = False,
     # LLM
     temperature: float = 0.2,
     max_tokens: int = 4096,
@@ -653,7 +655,26 @@ def generate_response_with_rag_and_web_fallback(
         except Exception as exc:
             logger.error(f"Reranking falhou: {exc}")
 
-    # 3. Deduplicação de contextos
+    # 3. Jurisprudência integrada (JuIT Rimor)
+    if include_jurisprudencia:
+        try:
+            from juit_rimor import is_available as juit_available, buscar_jurisprudencias
+            if juit_available():
+                juit_results = buscar_jurisprudencias(user_query, top_k=5)
+                if juit_results:
+                    details.extend(juit_results)
+                    contexts.extend(
+                        (r.get(CONTENT_FIELD) or "").strip()
+                        for r in juit_results
+                        if (r.get(CONTENT_FIELD) or "").strip()
+                    )
+                    logger.info(f"JuIT Rimor: +{len(juit_results)} jurisprudências injetadas no contexto")
+            else:
+                logger.debug("JuIT Rimor: JUIT_API_KEY não configurada — ignorando")
+        except Exception as exc:
+            logger.warning(f"JuIT Rimor indisponível: {exc}")
+
+    # 4. Deduplicação de contextos
     if details:
         details = deduplicate_contexts(details, similarity_threshold=0.85)
         contexts = [
@@ -662,7 +683,7 @@ def generate_response_with_rag_and_web_fallback(
             if (h.get(CONTENT_FIELD) or "").strip()
         ]
 
-    # 4. GraphRAG
+    # 5. GraphRAG (renumerado)
     graph_summary, graph_html_path = "", ""
     use_gr = (use_graph_rag or "auto").strip().lower()
     should_gr = (
@@ -681,21 +702,21 @@ def generate_response_with_rag_and_web_fallback(
         except Exception as exc:
             logger.error(f"GraphRAG build falhou: {exc}")
 
-    # 5. Web fallback
+    # 6. Web fallback
     web_results: List[Dict[str, str]] = []
     web_block = ""
     if use_web_fallback and len(contexts) < int(min_contexts_for_web_fallback):
         web_results = web_search(user_query, num_results=int(num_web_results))
         web_block = format_web_results(web_results)
 
-    # 6. Montar system prompt
+    # 7. Montar system prompt
     # Se o frontend enviou system_prompt customizado, usa ele como base + adiciona o jurídico
     if system_message_base and system_message_base.strip():
         system_prompt = f"{system_message_base.strip()}\n\n{SYSTEM_PROMPT_JURIDICO}"
     else:
         system_prompt = SYSTEM_PROMPT_JURIDICO
 
-    # 7. Montar contexto formatado com metadados
+    # 8. Montar contexto formatado com metadados
     ctx_block = format_contexts_for_llm(details) if details else ""
     final_user = user_query
 

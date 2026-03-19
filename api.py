@@ -109,12 +109,45 @@ class SearchResult(BaseModel):
     content: str
     rrf_score: Optional[float] = None
     rerank_score: Optional[float] = None
+    source: Optional[str] = None  # "qdrant" | "juit_rimor"
 
 
 class SearchResponse(BaseModel):
     query: str
     total: int
     results: List[SearchResult]
+
+
+class JurisprudenciaRequest(BaseModel):
+    query: str = Field(..., description="Termo de busca jurisprudencial")
+    tribunal: Optional[str] = Field(None, description="Filtro por tribunal: STF, STJ, TST, TRT, TRF, TJSP, TJMG, etc.")
+    search_on: str = Field("ementa,integra", description="Campos para buscar: 'ementa', 'integra', 'ementa,integra'")
+    top_k: int = Field(10, ge=1, le=30)
+    include_qdrant: bool = Field(True, description="Também buscar jurisprudência nos seus documentos do Qdrant")
+    use_rerank: bool = Field(True)
+    use_cross_encoder: bool = Field(True)
+    top_k_rerank: int = Field(10, ge=1, le=20)
+
+
+class JurisprudenciaResult(BaseModel):
+    content: str
+    tribunal: Optional[str] = None
+    numero_processo: Optional[str] = None
+    relator: Optional[str] = None
+    data_julgamento: Optional[str] = None
+    orgao_julgador: Optional[str] = None
+    arquivo_origem: Optional[str] = None
+    tipo_documento: Optional[str] = None
+    source: str  # "juit_rimor" | "qdrant"
+    relevance_score: Optional[float] = None
+
+
+class JurisprudenciaResponse(BaseModel):
+    query: str
+    total: int
+    juit_count: int
+    qdrant_count: int
+    results: List[JurisprudenciaResult]
 
 
 class GenerateRequest(BaseModel):
@@ -128,6 +161,10 @@ class GenerateRequest(BaseModel):
     use_cross_encoder: bool = Field(True)
     use_graph_rag: str = Field("auto", description="'auto' | 'on' | 'off'")
     use_web_fallback: bool = Field(True)
+    include_jurisprudencia: bool = Field(
+        False,
+        description="Se True, busca jurisprudência na JuIT Rimor e injeta no contexto do Claude. Conta como 1 search extra no plano.",
+    )
     temperature: float = Field(0.2, ge=0.0, le=1.0)
     max_tokens: int = Field(4096, ge=100, le=16000)
     save_graph_html: bool = Field(True)
@@ -139,6 +176,7 @@ class GenerateResponse(BaseModel):
     graph_summary: str
     graph_html_path: str
     web_results_count: int
+    jurisprudencia_count: int = 0
 
 
 class IndexRequest(BaseModel):
@@ -270,6 +308,133 @@ def search(req: SearchRequest) -> SearchResponse:
     return SearchResponse(query=req.query, total=len(results), results=results)
 
 
+# ─── Pesquisa Jurisprudencial ────────────────────────────────────────────────
+
+@app.post("/api/jurisprudencia", response_model=JurisprudenciaResponse, tags=["Jurisprudência"])
+def pesquisa_jurisprudencial(req: JurisprudenciaRequest) -> JurisprudenciaResponse:
+    """Pesquisa jurisprudencial focada: JuIT Rimor (principal) + Qdrant (complementar).
+
+    Busca jurisprudência pública na API JuIT Rimor com filtros por tribunal.
+    Opcionalmente complementa com jurisprudência dos seus documentos no Qdrant.
+    Não chama LLM — retorna resultados diretamente.
+    """
+    from rag_utils import (
+        get_qdrant_client, get_openai_client, get_anthropic_client,
+        get_embedding, expand_query, deduplicate_contexts,
+    )
+    from qdrant_utils import QDRANT_COLLECTION
+    from hybrid_search import hybrid_search
+    from reranker import rerank
+
+    all_results: List[JurisprudenciaResult] = []
+    juit_count = 0
+    qdrant_count = 0
+
+    # Query expansion
+    expanded = expand_query(req.query)
+
+    # 1. JuIT Rimor — fonte principal
+    try:
+        from juit_rimor import is_available as juit_available, buscar_jurisprudencias
+        if juit_available():
+            juit_hits = buscar_jurisprudencias(
+                query=expanded,
+                search_on=req.search_on,
+                top_k=req.top_k,
+                tribunal=req.tribunal,
+            )
+            for hit in juit_hits:
+                raw = hit.get("_juit_raw", {})
+                all_results.append(JurisprudenciaResult(
+                    content=hit.get("content", ""),
+                    tribunal=(
+                        raw.get("court") or raw.get("tribunal") or ""
+                    ).strip() or None,
+                    numero_processo=(
+                        raw.get("case_number") or raw.get("numero_processo") or raw.get("number") or ""
+                    ).strip() or None,
+                    relator=(
+                        raw.get("rapporteur") or raw.get("relator") or ""
+                    ).strip() or None,
+                    data_julgamento=(
+                        raw.get("judgment_date") or raw.get("data_julgamento") or raw.get("date") or ""
+                    ).strip() or None,
+                    orgao_julgador=(
+                        raw.get("judging_body") or raw.get("orgao_julgador") or ""
+                    ).strip() or None,
+                    arquivo_origem=hit.get("arquivo_origem", ""),
+                    tipo_documento="jurisprudencia",
+                    source="juit_rimor",
+                    relevance_score=None,
+                ))
+            juit_count = len(juit_hits)
+            logger.info(f"JuIT Rimor: {juit_count} jurisprudências para '{req.query[:50]}'")
+        else:
+            logger.warning("JuIT Rimor: JUIT_API_KEY não configurada")
+    except Exception as exc:
+        logger.error(f"JuIT Rimor falhou: {exc}")
+
+    # 2. Qdrant — complementar (jurisprudência dos seus documentos)
+    if req.include_qdrant:
+        try:
+            qdrant = get_qdrant_client()
+            oai = get_openai_client()
+            anth = get_anthropic_client()
+
+            if qdrant and oai:
+                vec = get_embedding(expanded, oai)
+                if vec:
+                    hits = hybrid_search(
+                        qdrant, QDRANT_COLLECTION, expanded, vec,
+                        top_k=req.top_k,
+                        bm25_candidates=30,
+                        dense_candidates=30,
+                    )
+
+                    # Filtrar apenas jurisprudência do Qdrant
+                    juris_hits = [
+                        h for h in hits
+                        if (h.get("tipo_documento") or "").lower() in (
+                            "jurisprudencia", "jurisprudência", "acordao", "acórdão"
+                        )
+                    ]
+
+                    if req.use_rerank and juris_hits and anth:
+                        juris_hits = rerank(
+                            req.query, juris_hits,
+                            top_k=min(req.top_k_rerank, len(juris_hits)),
+                            anthropic_client=anth,
+                            use_cross_encoder=req.use_cross_encoder,
+                            content_field="content",
+                        )
+
+                    for hit in juris_hits:
+                        all_results.append(JurisprudenciaResult(
+                            content=(hit.get("content") or "").strip(),
+                            tribunal=None,
+                            numero_processo=None,
+                            relator=None,
+                            data_julgamento=None,
+                            orgao_julgador=None,
+                            arquivo_origem=hit.get("arquivo_origem", ""),
+                            tipo_documento=hit.get("tipo_documento", "jurisprudencia"),
+                            source="qdrant",
+                            relevance_score=hit.get("_rerank_score") or hit.get("_rrf_score"),
+                        ))
+                    qdrant_count = len(juris_hits)
+                    logger.info(f"Qdrant jurisp.: {qdrant_count} resultados complementares")
+        except Exception as exc:
+            logger.error(f"Qdrant jurisprudência falhou: {exc}")
+
+    return JurisprudenciaResponse(
+        query=req.query,
+        total=len(all_results),
+        juit_count=juit_count,
+        qdrant_count=qdrant_count,
+        results=all_results,
+    )
+
+
 # ─── Geração RAG ──────────────────────────────────────────────────────────────
 
 @app.post("/api/generate", response_model=GenerateResponse, tags=["RAG"])
@@ -288,6 +453,7 @@ def generate(req: GenerateRequest) -> GenerateResponse:
                 use_cross_encoder=req.use_cross_encoder,
                 use_graph_rag=req.use_graph_rag,
                 use_web_fallback=req.use_web_fallback,
+                include_jurisprudencia=req.include_jurisprudencia,
                 temperature=req.temperature,
                 max_tokens=req.max_tokens,
                 save_graph_html=req.save_graph_html,
@@ -297,12 +463,16 @@ def generate(req: GenerateRequest) -> GenerateResponse:
         logger.error(f"Erro na geração RAG: {exc}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(exc))
 
+    # Contar quantos contextos vieram da JuIT Rimor
+    juit_count = sum(1 for d in details if d.get("_source") == "juit_rimor")
+
     return GenerateResponse(
         answer=answer,
         contexts_count=len(contexts),
         graph_summary=graph_summary or "",
         graph_html_path=graph_html_path or "",
         web_results_count=len(web_results),
+        jurisprudencia_count=juit_count,
     )
 
 
