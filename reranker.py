@@ -2,7 +2,7 @@
 reranker.py
 Reranking de chunks recuperados para RAG jurídico.
 
-Estratégia primária:  Cross-encoder multilingual (sentence-transformers — local, sem API)
+Estratégia primária:  Cross-encoder (sentence-transformers — local, sem API)
 Fallback:             LLM reranking via Anthropic Claude
 
 O cross-encoder avalia cada par (query, trecho) em conjunto,
@@ -95,12 +95,28 @@ def cross_encoder_rerank(
 
 # ─── LLM reranking (fallback) ────────────────────────────────────────────────
 
+_LLM_RERANK_SYSTEM = """Você é um especialista em direito brasileiro, atuando como reranker de documentos jurídicos.
+
+TAREFA: Ordene os trechos abaixo por relevância para responder à pergunta jurídica do usuário.
+
+CRITÉRIOS DE RELEVÂNCIA (em ordem de prioridade):
+1. Responde DIRETAMENTE à pergunta (artigo de lei, súmula, decisão sobre o tema)
+2. Fundamentação jurídica relevante (doutrina, princípios aplicáveis)
+3. Contexto complementar (casos análogos, legislação correlata)
+4. Em caso de empate: prefira jurisprudência de tribunais superiores (STF > STJ > TST > TRF/TJ)
+
+RESPONDA EXCLUSIVAMENTE com JSON válido neste formato exato:
+{"ranked_ids": [3, 1, 5, 2]}
+
+NÃO inclua explicações, markdown, ou qualquer texto fora do JSON."""
+
+
 def llm_rerank(
     query: str,
     chunks: List[Dict[str, Any]],
     anthropic_client: anthropic.Anthropic,
     top_k: int = 7,
-    pool_size: int = 15,
+    pool_size: int = 25,
     max_chars: int = 1200,
     content_field: str = "content",
 ) -> List[Dict[str, Any]]:
@@ -118,25 +134,24 @@ def llm_rerank(
     for i, ch in enumerate(pool, start=1):
         content = str(ch.get(content_field) or ch.get("text") or "")[:max_chars]
         source = str(ch.get("arquivo_origem") or ch.get("source") or "")[:120]
+        tipo = str(ch.get("tipo_documento") or "")[:50]
+        area = str(ch.get("area_direito") or "")[:50]
         raw_score = ch.get("_rrf_score") or ch.get("_score")
         cards.append({
             "id": i,
             "source": source,
+            "tipo": tipo,
+            "area": area,
             "score": float(raw_score) if isinstance(raw_score, (int, float)) and not math.isnan(float(raw_score)) else None,
             "content": content,
         })
 
-    system = (
-        "Você é um reranker especializado em documentos jurídicos brasileiros. "
-        "Ordene os trechos pelo quanto ajudam a responder a pergunta. "
-        "Responda SOMENTE com JSON válido, sem explicações adicionais."
-    )
     user_payload = {
         "query": query,
         "instrucoes": (
-            "Ordene os trechos do mais ao menos relevante para responder a query jurídica. "
+            f"Ordene os {len(cards)} trechos do mais ao menos relevante para a pergunta jurídica. "
             f"Retorne no máximo {min(top_k, len(cards))} ids. "
-            'Formato exato: {"ranked_ids": [3, 1, 2]}'
+            'Formato: {"ranked_ids": [3, 1, 2]}'
         ),
         "chunks": cards,
     }
@@ -145,7 +160,7 @@ def llm_rerank(
         resp = anthropic_client.messages.create(
             model=model_name,
             max_tokens=512,
-            system=system,
+            system=_LLM_RERANK_SYSTEM,
             messages=[
                 {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
             ],

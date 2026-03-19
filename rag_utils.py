@@ -33,7 +33,7 @@ ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
 ANTHROPIC_MODEL = (os.getenv("ANTHROPIC_MODEL") or "claude-sonnet-4-6").strip()
 
 OPENAI_API_KEY = (os.getenv("OPENAI_API_KEY") or "").strip()
-OPENAI_EMBEDDING_MODEL = (os.getenv("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-large").strip()
+OPENAI_EMBEDDING_MODEL = (os.getenv("OPENAI_EMBEDDING_MODEL") or "text-embedding-3-small").strip()
 
 QDRANT_URL = (os.getenv("QDRANT_URL") or "http://localhost:6333").strip()
 QDRANT_API_KEY = (os.getenv("QDRANT_API_KEY") or "").strip()
@@ -46,6 +46,42 @@ SERPER_ENDPOINT = (os.getenv("SERPER_ENDPOINT") or "https://google.serper.dev/se
 RAG_FEEDBACK_PATH = (os.getenv("RAG_FEEDBACK_PATH") or "feedback_rag.jsonl").strip()
 GRAPH_VIZ_DIR = (os.getenv("GRAPH_VIZ_DIR") or "/tmp/graph_visualizations").strip()
 os.makedirs(GRAPH_VIZ_DIR, exist_ok=True)
+
+
+# ─── System Prompt Jurídico Especializado ────────────────────────────────────
+
+SYSTEM_PROMPT_JURIDICO = """Você é um consultor jurídico especializado em legislação brasileira, com profundo conhecimento em todas as áreas do Direito nacional.
+
+## REGRAS DE CITAÇÃO (OBRIGATÓRIAS)
+1. CITE SEMPRE a fonte: "Art. XX da Lei nº XXXX/XXXX", "Súmula XXX do STJ", "REsp nº XXXX".
+2. NUNCA invente números de artigos, súmulas, leis ou processos. Se não encontrou nos documentos recuperados, diga explicitamente "não localizei referência específica nos documentos disponíveis".
+3. Diferencie claramente entre: legislação vigente, jurisprudência e doutrina.
+
+## HIERARQUIA DE PRECEDENTES
+- Constituição Federal > Leis Complementares > Leis Ordinárias > Decretos
+- STF (Supremo) > STJ (Superior) > TST/TSE/STM > TRF/TJ (Regionais) > Varas
+- Súmula Vinculante > Súmula Comum > Jurisprudência Pacífica > Decisão Isolada
+- Sempre que possível, indique se a jurisprudência é pacífica ou se há divergência.
+
+## CONTRADIÇÕES
+Se encontrar interpretações conflitantes nos documentos:
+- Apresente AMBAS as posições com suas respectivas fontes
+- Indique qual é majoritária ou mais recente
+- Cite os casos/artigos divergentes
+
+## ESTRUTURA DA RESPOSTA
+1. **Resumo executivo** (2-3 linhas com a resposta direta)
+2. **Fundamentação jurídica** (artigos, súmulas, jurisprudência — sempre com citação)
+3. **Análise e aplicação** (como se aplica ao caso concreto)
+4. **Ressalvas e exceções** (quando houver)
+
+## CONTEXTO RECUPERADO
+Os trechos abaixo foram recuperados automaticamente da base de documentos jurídicos. Use-os como fonte primária, mas NÃO copie parágrafos inteiros — sintetize e cite.
+Se o contexto for insuficiente para responder, diga claramente e ofereça orientação geral com a ressalva de que é baseada em conhecimento geral, não nos documentos da base.
+
+## IDIOMA
+Responda sempre em português brasileiro, com linguagem técnica jurídica adequada mas acessível."""
+
 
 # ─── Clientes (singletons) ────────────────────────────────────────────────────
 
@@ -178,6 +214,157 @@ def get_embeddings_batch(
     return results
 
 
+# ─── Query Expansion (expansão de consulta jurídica) ─────────────────────────
+
+# Mapeamento de termos jurídicos comuns para seus equivalentes legais
+_QUERY_EXPANSIONS: Dict[str, List[str]] = {
+    "rescisão indireta": ["art. 483 clt", "falta grave do empregador"],
+    "justa causa": ["art. 482 clt", "falta grave do empregado"],
+    "horas extras": ["art. 59 clt", "jornada extraordinária", "sobrejornada"],
+    "dano moral": ["art. 186 código civil", "indenização por dano extrapatrimonial"],
+    "estabilidade gestante": ["art. 10 adct", "estabilidade provisória gestante"],
+    "acidente de trabalho": ["art. 19 lei 8213", "nexo causal", "responsabilidade do empregador"],
+    "adicional de insalubridade": ["art. 189 clt", "nr-15", "agente insalubre"],
+    "adicional de periculosidade": ["art. 193 clt", "nr-16", "atividade perigosa"],
+    "aviso prévio": ["art. 487 clt", "aviso prévio proporcional"],
+    "fgts": ["fundo de garantia", "lei 8036", "multa 40%"],
+    "prescrição trabalhista": ["art. 7 xxix constituição", "prescrição quinquenal", "prescrição bienal"],
+    "assédio moral": ["dano moral no trabalho", "ambiente de trabalho hostil"],
+    "equiparação salarial": ["art. 461 clt", "trabalho de igual valor"],
+    "terceirização": ["lei 13429", "responsabilidade subsidiária", "atividade-fim"],
+    "contrato de experiência": ["art. 443 clt", "contrato por prazo determinado"],
+    "férias": ["art. 129 clt", "período aquisitivo", "período concessivo"],
+    "mandado de segurança": ["art. 5 lxix constituição", "lei 12016", "direito líquido e certo"],
+    "habeas corpus": ["art. 5 lxviii constituição", "liberdade de locomoção"],
+    "usucapião": ["art. 1238 código civil", "posse ad usucapionem", "prescrição aquisitiva"],
+    "pensão alimentícia": ["art. 1694 código civil", "alimentos", "necessidade e possibilidade"],
+    "guarda compartilhada": ["art. 1583 código civil", "lei 13058", "melhor interesse da criança"],
+    "divórcio": ["art. 226 constituição", "dissolução do casamento", "partilha de bens"],
+    "despejo": ["lei 8245", "lei do inquilinato", "retomada do imóvel"],
+    "execução fiscal": ["lei 6830", "certidão de dívida ativa", "cda"],
+    "improbidade administrativa": ["lei 8429", "enriquecimento ilícito", "dano ao erário"],
+    "licitação": ["lei 14133", "pregão", "concorrência pública"],
+    "consumidor": ["cdc", "lei 8078", "relação de consumo", "vício do produto"],
+}
+
+
+def expand_query(query: str) -> str:
+    """
+    Expande a query do usuário com termos jurídicos equivalentes.
+    Ex: "rescisão indireta" → "rescisão indireta art. 483 clt falta grave do empregador"
+    """
+    query_lower = query.lower()
+    expansions = []
+
+    for term, equivalents in _QUERY_EXPANSIONS.items():
+        if term in query_lower:
+            for eq in equivalents:
+                if eq.lower() not in query_lower:
+                    expansions.append(eq)
+
+    if expansions:
+        expanded = f"{query} ({' '.join(expansions)})"
+        logger.info(f"Query expandida: '{query}' → adicionados {len(expansions)} termos")
+        return expanded
+
+    return query
+
+
+# ─── Deduplicação de contextos ───────────────────────────────────────────────
+
+def _simple_hash(text: str) -> str:
+    """Hash normalizado para comparação rápida."""
+    normalized = " ".join(text.lower().split())
+    return hashlib.md5(normalized[:500].encode()).hexdigest()
+
+
+def deduplicate_contexts(
+    details: List[Dict[str, Any]],
+    similarity_threshold: float = 0.85,
+) -> List[Dict[str, Any]]:
+    """
+    Remove contextos quase duplicados.
+    Usa comparação de overlap de palavras (Jaccard similarity).
+    """
+    if len(details) <= 1:
+        return details
+
+    seen_hashes: set = set()
+    seen_word_sets: List[set] = []
+    unique: List[Dict[str, Any]] = []
+
+    for d in details:
+        content = (d.get(CONTENT_FIELD) or "").strip()
+        if not content:
+            continue
+
+        # Check 1: hash exato (textos idênticos)
+        h = _simple_hash(content)
+        if h in seen_hashes:
+            logger.debug(f"Dedup: removendo duplicata exata de {d.get('chunk_id', '?')}")
+            continue
+        seen_hashes.add(h)
+
+        # Check 2: Jaccard similarity (textos muito parecidos)
+        words = set(content.lower().split())
+        is_dup = False
+        for seen_words in seen_word_sets:
+            if not words or not seen_words:
+                continue
+            intersection = len(words & seen_words)
+            union = len(words | seen_words)
+            jaccard = intersection / union if union > 0 else 0
+            if jaccard >= similarity_threshold:
+                is_dup = True
+                logger.debug(f"Dedup: removendo chunk similar (jaccard={jaccard:.2f})")
+                break
+
+        if not is_dup:
+            seen_word_sets.append(words)
+            unique.append(d)
+
+    removed = len(details) - len(unique)
+    if removed > 0:
+        logger.info(f"Deduplicação: {removed} chunks removidos, {len(unique)} únicos mantidos")
+
+    return unique
+
+
+# ─── Formatação rica de contexto ─────────────────────────────────────────────
+
+def format_contexts_for_llm(details: List[Dict[str, Any]]) -> str:
+    """
+    Formata os contextos recuperados com metadados para o LLM.
+    Inclui: fonte, tipo de documento, área do direito, score de relevância.
+    """
+    if not details:
+        return ""
+
+    blocks = []
+    for i, d in enumerate(details, 1):
+        content = (d.get(CONTENT_FIELD) or "").strip()
+        if not content:
+            continue
+
+        source = d.get("arquivo_origem", "desconhecido")
+        tipo = d.get("tipo_documento", "")
+        area = d.get("area_direito", "")
+        score = d.get("_rerank_score") or d.get("_rrf_score")
+
+        header_parts = [f"[Fonte {i}: {source}"]
+        if tipo:
+            header_parts.append(f"Tipo: {tipo}")
+        if area:
+            header_parts.append(f"Área: {area}")
+        if score is not None:
+            header_parts.append(f"Relevância: {float(score):.2f}")
+        header = " | ".join(header_parts) + "]"
+
+        blocks.append(f"{header}\n{content}")
+
+    return "\n\n---\n\n".join(blocks)
+
+
 # ─── Recuperação de contexto ──────────────────────────────────────────────────
 
 def retrieve_context(
@@ -190,9 +377,13 @@ def retrieve_context(
 ) -> Tuple[List[str], List[Dict[str, Any]]]:
     """
     Recupera contextos via Qdrant hybrid search (dense + BM25 + RRF).
+    Aplica query expansion antes da busca.
     Retorna (texts, details).
     """
-    vec = get_embedding(query_text, client_openai)
+    # Query expansion: adiciona termos jurídicos equivalentes
+    expanded_query = expand_query(query_text)
+
+    vec = get_embedding(expanded_query, client_openai)
     if vec is None:
         logger.warning("Embedding falhou — sem resultados de busca semântica.")
         return [], []
@@ -200,7 +391,7 @@ def retrieve_context(
     hits = _hybrid_search(
         qdrant_client,
         QDRANT_COLLECTION,
-        query_text,
+        expanded_query,
         vec,
         top_k=top_k,
         bm25_candidates=bm25_candidates,
@@ -260,6 +451,9 @@ def _looks_complex_query(q: str) -> bool:
         "nexo", "responsabilidade", "prescrição", "decadência",
         "prova", "tutela", "liminar", "jurisprudência", "precedente",
         "contrato", "cláusula", "rescisão", "indenização", "dano", "multa",
+        "substitui", "reforma", "julgado", "divergência", "conflito",
+        "inconstitucional", "súmula", "vinculante", "repercussão geral",
+        "recurso especial", "recurso extraordinário", "embargos",
     ]
     qn = (q or "").lower()
     return any(k in qn for k in keywords) or len(qn.split()) >= 14
@@ -338,22 +532,28 @@ def _call_llm(
     messages: List[Dict[str, str]],
     temperature: float = 0.2,
     max_tokens: int = 4096,
+    retry_count: int = 2,
 ) -> str:
-    try:
-        kwargs: Dict[str, Any] = {
-            "model": ANTHROPIC_MODEL,
-            "max_tokens": int(max_tokens) if max_tokens else 4096,
-            "temperature": float(temperature),
-            "messages": messages,
-        }
-        if system_message:
-            kwargs["system"] = system_message
+    """Chama Claude com retry automático."""
+    for attempt in range(retry_count + 1):
+        try:
+            kwargs: Dict[str, Any] = {
+                "model": ANTHROPIC_MODEL,
+                "max_tokens": int(max_tokens) if max_tokens else 4096,
+                "temperature": float(temperature),
+                "messages": messages,
+            }
+            if system_message:
+                kwargs["system"] = system_message
 
-        resp = client_anthropic.messages.create(**kwargs)
-        return (resp.content[0].text or "").strip()
-    except Exception as exc:
-        logger.error(f"Erro ao chamar Claude ({ANTHROPIC_MODEL}): {exc}")
-        return ""
+            resp = client_anthropic.messages.create(**kwargs)
+            return (resp.content[0].text or "").strip()
+        except Exception as exc:
+            logger.error(f"Erro ao chamar Claude ({ANTHROPIC_MODEL}), tentativa {attempt+1}: {exc}")
+            if attempt < retry_count:
+                time.sleep(2 ** attempt)
+            else:
+                return ""
 
 
 # ─── API principal ────────────────────────────────────────────────────────────
@@ -388,6 +588,13 @@ def generate_response_with_rag_and_web_fallback(
     """
     Pipeline RAG completo com Claude + Qdrant.
 
+    Melhorias aplicadas:
+      - System prompt jurídico especializado
+      - Query expansion (termos jurídicos equivalentes)
+      - Deduplicação de contextos
+      - Formatação rica com metadados
+      - Retry automático no LLM
+
     Returns: (answer, contexts, details, web_results, graph_summary, graph_html_path)
     """
     if client_openai is None:
@@ -404,7 +611,7 @@ def generate_response_with_rag_and_web_fallback(
     if not qdrant_client:
         return "Erro: Qdrant não inicializado.", [], [], [], "", ""
 
-    # 1. Busca híbrida Qdrant
+    # 1. Busca híbrida Qdrant (com query expansion)
     contexts, details = retrieve_context(
         user_query, qdrant_client, client_openai,
         top_k=int(top_k),
@@ -431,7 +638,16 @@ def generate_response_with_rag_and_web_fallback(
         except Exception as exc:
             logger.error(f"Reranking falhou: {exc}")
 
-    # 3. GraphRAG
+    # 3. Deduplicação de contextos
+    if details:
+        details = deduplicate_contexts(details, similarity_threshold=0.85)
+        contexts = [
+            (h.get(CONTENT_FIELD) or "").strip()
+            for h in details
+            if (h.get(CONTENT_FIELD) or "").strip()
+        ]
+
+    # 4. GraphRAG
     graph_summary, graph_html_path = "", ""
     use_gr = (use_graph_rag or "auto").strip().lower()
     should_gr = (
@@ -450,26 +666,39 @@ def generate_response_with_rag_and_web_fallback(
         except Exception as exc:
             logger.error(f"GraphRAG build falhou: {exc}")
 
-    # 4. Web fallback
+    # 5. Web fallback
     web_results: List[Dict[str, str]] = []
     web_block = ""
     if use_web_fallback and len(contexts) < int(min_contexts_for_web_fallback):
         web_results = serper_search(user_query, num_results=int(num_web_results))
         web_block = format_web_results(web_results)
 
-    # 5. Prompt → Claude
-    ctx_block = "\n\n".join([f"- {c}" for c in contexts]) if contexts else ""
-    final_user = f"{user_query}\n\nContexto recuperado:\n{ctx_block}"
+    # 6. Montar system prompt
+    # Se o frontend enviou system_prompt customizado, usa ele como base + adiciona o jurídico
+    if system_message_base and system_message_base.strip():
+        system_prompt = f"{system_message_base.strip()}\n\n{SYSTEM_PROMPT_JURIDICO}"
+    else:
+        system_prompt = SYSTEM_PROMPT_JURIDICO
+
+    # 7. Montar contexto formatado com metadados
+    ctx_block = format_contexts_for_llm(details) if details else ""
+    final_user = user_query
+
+    if ctx_block:
+        final_user += f"\n\n===== DOCUMENTOS RECUPERADOS DA BASE =====\n\n{ctx_block}"
 
     if graph_summary:
-        final_user += f"\n\nMAPA ESTRUTURADO (GraphRAG):\n{graph_summary}"
+        final_user += f"\n\n===== MAPA ESTRUTURADO (GraphRAG) =====\n{graph_summary}"
+
     if web_block:
-        final_user += f"\n\nContexto da web (use com cautela):\n{web_block}"
+        final_user += (
+            f"\n\n===== RESULTADOS DA WEB (use com cautela — verificar fontes) =====\n{web_block}"
+        )
 
     messages = _build_anthropic_messages(chat_history, final_user)
     answer = _call_llm(
         client_anthropic,
-        system_message=system_message_base,
+        system_message=system_prompt,
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens,

@@ -195,8 +195,16 @@ def health_check() -> Dict[str, Any]:
 
 @app.post("/api/search", response_model=SearchResponse, tags=["RAG"])
 def search(req: SearchRequest) -> SearchResponse:
-    """Busca híbrida: dense (OpenAI) + sparse BM25 + RRF nativo Qdrant + reranking."""
-    from rag_utils import get_qdrant_client, get_openai_client, get_anthropic_client, get_embedding
+    """Busca híbrida: dense (OpenAI) + sparse BM25 + RRF nativo Qdrant + reranking.
+
+    Pesquisa pura — retorna trechos de documentos sem chamar LLM.
+    Usa query expansion e deduplicação para melhorar resultados.
+    No futuro pode ser substituído/complementado pela API JurisRimor.
+    """
+    from rag_utils import (
+        get_qdrant_client, get_openai_client, get_anthropic_client,
+        get_embedding, expand_query, deduplicate_contexts,
+    )
     from qdrant_utils import QDRANT_COLLECTION
     from hybrid_search import hybrid_search
     from reranker import rerank
@@ -208,12 +216,15 @@ def search(req: SearchRequest) -> SearchResponse:
     if not qdrant or not oai:
         raise HTTPException(status_code=503, detail="Serviços não disponíveis")
 
-    vec = get_embedding(req.query, oai)
+    # Query expansion: adiciona termos jurídicos equivalentes
+    expanded = expand_query(req.query)
+
+    vec = get_embedding(expanded, oai)
     if vec is None:
         raise HTTPException(status_code=500, detail="Falha ao gerar embedding")
 
     hits = hybrid_search(
-        qdrant, QDRANT_COLLECTION, req.query, vec,
+        qdrant, QDRANT_COLLECTION, expanded, vec,
         top_k=req.top_k,
         bm25_candidates=req.bm25_candidates,
         dense_candidates=req.dense_candidates,
@@ -227,6 +238,9 @@ def search(req: SearchRequest) -> SearchResponse:
             use_cross_encoder=req.use_cross_encoder,
             content_field="content",
         )
+
+    # Deduplicação
+    hits = deduplicate_contexts(hits, similarity_threshold=0.85)
 
     results = [
         SearchResult(

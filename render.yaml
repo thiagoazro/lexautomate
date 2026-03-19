@@ -33,7 +33,7 @@ services:
         sync: false
 
       - key: OPENAI_EMBEDDING_MODEL
-        value: text-embedding-3-large
+        value: text-embedding-3-small
 
       # ── Qdrant Cloud ─────────────────────────────────────────────────────────
       - key: QDRANT_URL
