@@ -213,60 +213,43 @@ def get_embeddings_batch(
     return results
 
 
-# ─── Query Expansion (expansão de consulta jurídica) ─────────────────────────
-
-# Mapeamento de termos jurídicos comuns para seus equivalentes legais
-_QUERY_EXPANSIONS: Dict[str, List[str]] = {
-    "rescisão indireta": ["art. 483 clt", "falta grave do empregador"],
-    "justa causa": ["art. 482 clt", "falta grave do empregado"],
-    "horas extras": ["art. 59 clt", "jornada extraordinária", "sobrejornada"],
-    "dano moral": ["art. 186 código civil", "indenização por dano extrapatrimonial"],
-    "estabilidade gestante": ["art. 10 adct", "estabilidade provisória gestante"],
-    "acidente de trabalho": ["art. 19 lei 8213", "nexo causal", "responsabilidade do empregador"],
-    "adicional de insalubridade": ["art. 189 clt", "nr-15", "agente insalubre"],
-    "adicional de periculosidade": ["art. 193 clt", "nr-16", "atividade perigosa"],
-    "aviso prévio": ["art. 487 clt", "aviso prévio proporcional"],
-    "fgts": ["fundo de garantia", "lei 8036", "multa 40%"],
-    "prescrição trabalhista": ["art. 7 xxix constituição", "prescrição quinquenal", "prescrição bienal"],
-    "assédio moral": ["dano moral no trabalho", "ambiente de trabalho hostil"],
-    "equiparação salarial": ["art. 461 clt", "trabalho de igual valor"],
-    "terceirização": ["lei 13429", "responsabilidade subsidiária", "atividade-fim"],
-    "contrato de experiência": ["art. 443 clt", "contrato por prazo determinado"],
-    "férias": ["art. 129 clt", "período aquisitivo", "período concessivo"],
-    "mandado de segurança": ["art. 5 lxix constituição", "lei 12016", "direito líquido e certo"],
-    "habeas corpus": ["art. 5 lxviii constituição", "liberdade de locomoção"],
-    "usucapião": ["art. 1238 código civil", "posse ad usucapionem", "prescrição aquisitiva"],
-    "pensão alimentícia": ["art. 1694 código civil", "alimentos", "necessidade e possibilidade"],
-    "guarda compartilhada": ["art. 1583 código civil", "lei 13058", "melhor interesse da criança"],
-    "divórcio": ["art. 226 constituição", "dissolução do casamento", "partilha de bens"],
-    "despejo": ["lei 8245", "lei do inquilinato", "retomada do imóvel"],
-    "execução fiscal": ["lei 6830", "certidão de dívida ativa", "cda"],
-    "improbidade administrativa": ["lei 8429", "enriquecimento ilícito", "dano ao erário"],
-    "licitação": ["lei 14133", "pregão", "concorrência pública"],
-    "consumidor": ["cdc", "lei 8078", "relação de consumo", "vício do produto"],
-}
-
+# ─── Query Expansion (via Knowledge Graph ou fallback) ───────────────────────
 
 def expand_query(query: str) -> str:
     """
-    Expande a query do usuário com termos jurídicos equivalentes.
-    Ex: "rescisão indireta" → "rescisão indireta art. 483 clt falta grave do empregador"
+    Expande a query com termos jurídicos via Knowledge Graph.
+    Fallback: dicionário fixo se KG indisponível.
+    Retorna apenas a query expandida (string).
     """
-    query_lower = query.lower()
-    expansions = []
+    try:
+        from kg_query_expander import kg_expand_query
+        result = kg_expand_query(query)
+        return result.get("expanded_query", query)
+    except Exception as exc:
+        logger.debug(f"KG expand fallback: {exc}")
+        from kg_query_expander import fallback_expand_query
+        return fallback_expand_query(query)
 
-    for term, equivalents in _QUERY_EXPANSIONS.items():
-        if term in query_lower:
-            for eq in equivalents:
-                if eq.lower() not in query_lower:
-                    expansions.append(eq)
 
-    if expansions:
-        expanded = f"{query} ({' '.join(expansions)})"
-        logger.info(f"Query expandida: '{query}' → adicionados {len(expansions)} termos")
-        return expanded
-
-    return query
+def expand_query_full(query: str) -> Dict[str, Any]:
+    """
+    Expansão completa via KG — retorna query expandida + contexto estruturado.
+    Usado no pipeline principal para injetar triplas no prompt do LLM.
+    """
+    try:
+        from kg_query_expander import kg_expand_query
+        return kg_expand_query(query)
+    except Exception as exc:
+        logger.debug(f"KG expand_full fallback: {exc}")
+        return {
+            "original_query": query,
+            "expanded_query": query,
+            "recognized_entities": [],
+            "expansion_terms": [],
+            "kg_context": "",
+            "triples": [],
+            "kg_available": False,
+        }
 
 
 # ─── Deduplicação de contextos ───────────────────────────────────────────────
@@ -628,7 +611,17 @@ def generate_response_with_rag_and_web_fallback(
     if not qdrant_client:
         return "Erro: Qdrant não inicializado.", [], [], [], "", ""
 
-    # 1. Busca híbrida Qdrant (com query expansion)
+    # 0. KG Query Expansion (Knowledge Graph — ontologia jurídica)
+    kg_result = expand_query_full(user_query)
+    kg_context = kg_result.get("kg_context", "")
+    if kg_result.get("recognized_entities"):
+        logger.info(
+            f"KG: {len(kg_result['recognized_entities'])} entidades, "
+            f"{len(kg_result.get('triples', []))} triplas, "
+            f"{len(kg_result.get('expansion_terms', []))} termos de expansão"
+        )
+
+    # 1. Busca híbrida Qdrant (com query expandida via KG)
     contexts, details = retrieve_context(
         user_query, qdrant_client, client_openai,
         top_k=int(top_k),
@@ -719,6 +712,10 @@ def generate_response_with_rag_and_web_fallback(
     # 8. Montar contexto formatado com metadados
     ctx_block = format_contexts_for_llm(details) if details else ""
     final_user = user_query
+
+    # KG context (triplas estruturadas, hierarquias, normas)
+    if kg_context:
+        final_user += f"\n\n{kg_context}"
 
     if ctx_block:
         final_user += f"\n\n===== DOCUMENTOS RECUPERADOS DA BASE =====\n\n{ctx_block}"

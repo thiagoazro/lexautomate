@@ -214,6 +214,17 @@ def health_check() -> Dict[str, Any]:
     anthropic_ok = get_anthropic_client() is not None
     openai_ok = get_openai_client() is not None
 
+    # Knowledge Graph
+    kg_ok = False
+    kg_entities = 0
+    try:
+        from legal_ontology import get_ontology
+        ont = get_ontology()
+        kg_ok = ont.is_loaded
+        kg_entities = len(ont.entities) if kg_ok else 0
+    except Exception:
+        pass
+
     status = "ok" if (qdrant_ok and anthropic_ok and openai_ok) else "degraded"
     return {
         "status": status,
@@ -221,10 +232,15 @@ def health_check() -> Dict[str, Any]:
             "qdrant": "ok" if qdrant_ok else "unavailable",
             "anthropic_llm": "ok" if anthropic_ok else "unavailable",
             "openai_embeddings": "ok" if openai_ok else "unavailable",
+            "knowledge_graph": "ok" if kg_ok else "unavailable",
         },
         "collection": {
             "name": QDRANT_COLLECTION,
             "points": points_count,
+        },
+        "knowledge_graph": {
+            "entities": kg_entities,
+            "loaded": kg_ok,
         },
     }
 
