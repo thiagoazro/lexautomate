@@ -4698,6 +4698,1757 @@
         "serviço público"
       ],
       "description": "Tema que abrange concurso público, processo disciplinar e regime jurídico do servidor."
+    },
+    "sumula_14_tst": {
+      "label": "Súmula 14 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 14 tst"
+      ],
+      "description": "Reconhecida a culpa recíproca, o empregado tem direito a 50% do aviso prévio, férias proporcionais e 13º salário."
+    },
+    "sumula_17_tst": {
+      "label": "Súmula 17 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 17 tst"
+      ],
+      "description": "Equiparação salarial — quadro de carreira."
+    },
+    "sumula_44_tst": {
+      "label": "Súmula 44 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 44 tst"
+      ],
+      "description": "Transferência de empregado — adicional de 25%."
+    },
+    "sumula_46_tst": {
+      "label": "Súmula 46 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 46 tst"
+      ],
+      "description": "Acidente de trabalho — estabilidade provisória."
+    },
+    "sumula_77_tst": {
+      "label": "Súmula 77 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 77 tst"
+      ],
+      "description": "Nula a punição de empregado se não precedida de inquérito."
+    },
+    "sumula_126_tst": {
+      "label": "Súmula 126 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 126 tst"
+      ],
+      "description": "Reexame de provas em recurso de revista."
+    },
+    "sumula_244_tst": {
+      "label": "Súmula 244 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 244 tst"
+      ],
+      "description": "Estabilidade da gestante — contrato por prazo determinado."
+    },
+    "sumula_269_tst": {
+      "label": "Súmula 269 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 269 tst"
+      ],
+      "description": "Empregado eleito dirigente sindical — estabilidade."
+    },
+    "sumula_277_tst": {
+      "label": "Súmula 277 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 277 tst"
+      ],
+      "description": "Ultratividade das normas coletivas."
+    },
+    "sumula_282_tst": {
+      "label": "Súmula 282 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 282 tst"
+      ],
+      "description": "Abono de faltas — trabalhador convocado para júri."
+    },
+    "sumula_330_tst": {
+      "label": "Súmula 330 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 330 tst"
+      ],
+      "description": "TRCT — quitação apenas das parcelas discriminadas."
+    },
+    "sumula_339_tst": {
+      "label": "Súmula 339 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 339 tst"
+      ],
+      "description": "CIPA — suplente — estabilidade."
+    },
+    "sumula_340_tst": {
+      "label": "Súmula 340 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 340 tst"
+      ],
+      "description": "Comissão — horas extras sobre salário fixo."
+    },
+    "sumula_342_tst_2": {
+      "label": "Súmula 342 do TST (descontos)",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 342 tst descontos"
+      ],
+      "description": "Descontos salariais com autorização prévia."
+    },
+    "sumula_346_tst": {
+      "label": "Súmula 346 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 346 tst"
+      ],
+      "description": "Digitador — aplicação por analogia do art. 72 CLT."
+    },
+    "sumula_369_tst": {
+      "label": "Súmula 369 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 369 tst"
+      ],
+      "description": "Dirigente sindical — estabilidade."
+    },
+    "sumula_370_tst": {
+      "label": "Súmula 370 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 370 tst"
+      ],
+      "description": "Médico — jornada de 4 horas."
+    },
+    "sumula_371_tst": {
+      "label": "Súmula 371 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 371 tst"
+      ],
+      "description": "Aviso prévio indenizado — projeção."
+    },
+    "sumula_372_tst": {
+      "label": "Súmula 372 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 372 tst"
+      ],
+      "description": "Gratificação de função — reversão."
+    },
+    "sumula_377_tst": {
+      "label": "Súmula 377 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 377 tst"
+      ],
+      "description": "Preposto não precisa ser empregado."
+    },
+    "sumula_378_tst": {
+      "label": "Súmula 378 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 378 tst"
+      ],
+      "description": "Estabilidade acidentária — requisitos."
+    },
+    "sumula_382_tst": {
+      "label": "Súmula 382 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 382 tst"
+      ],
+      "description": "Mudança de regime — unicidade contratual."
+    },
+    "sumula_386_tst": {
+      "label": "Súmula 386 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 386 tst"
+      ],
+      "description": "Policial militar — vínculo empregatício."
+    },
+    "sumula_390_tst": {
+      "label": "Súmula 390 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 390 tst"
+      ],
+      "description": "Estabilidade — art. 41 CF — celetista."
+    },
+    "sumula_392_tst": {
+      "label": "Súmula 392 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 392 tst"
+      ],
+      "description": "Dano moral — competência da Justiça do Trabalho."
+    },
+    "sumula_396_tst": {
+      "label": "Súmula 396 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 396 tst"
+      ],
+      "description": "Estabilidade — reintegração — período."
+    },
+    "sumula_439_tst": {
+      "label": "Súmula 439 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 439 tst"
+      ],
+      "description": "Dano moral — juros e correção."
+    },
+    "sumula_441_tst": {
+      "label": "Súmula 441 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 441 tst"
+      ],
+      "description": "Aviso prévio proporcional — art. 7 XXI CF."
+    },
+    "sumula_442_tst": {
+      "label": "Súmula 442 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 442 tst"
+      ],
+      "description": "Salário-hora — jornada 12x36."
+    },
+    "sumula_444_tst": {
+      "label": "Súmula 444 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 444 tst"
+      ],
+      "description": "Jornada 12x36 — validade."
+    },
+    "sumula_448_tst": {
+      "label": "Súmula 448 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 448 tst"
+      ],
+      "description": "Insalubridade — limpeza de banheiros."
+    },
+    "sumula_450_tst": {
+      "label": "Súmula 450 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 450 tst"
+      ],
+      "description": "Férias — dobra salarial."
+    },
+    "sumula_451_tst": {
+      "label": "Súmula 451 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 451 tst"
+      ],
+      "description": "PLR — participação proporcional."
+    },
+    "sumula_452_tst": {
+      "label": "Súmula 452 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 452 tst"
+      ],
+      "description": "Diferenças salariais — desvio de função."
+    },
+    "sumula_453_tst": {
+      "label": "Súmula 453 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 453 tst"
+      ],
+      "description": "Adicional de periculosidade — radiações ionizantes."
+    },
+    "sumula_460_tst": {
+      "label": "Súmula 460 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 460 tst"
+      ],
+      "description": "Vale transporte — ônus da prova."
+    },
+    "sumula_461_tst": {
+      "label": "Súmula 461 do TST",
+      "type": "sumula",
+      "domain": "trabalhista",
+      "synonyms": [
+        "súmula 461 tst"
+      ],
+      "description": "FGTS — prescrição trintenária."
+    },
+    "sumula_7_stj": {
+      "label": "Súmula 7 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 7 stj"
+      ],
+      "description": "Reexame de provas — inadmissível em recurso especial."
+    },
+    "sumula_13_stj": {
+      "label": "Súmula 13 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 13 stj"
+      ],
+      "description": "Divergência entre julgados do mesmo tribunal não enseja recurso especial."
+    },
+    "sumula_83_stj": {
+      "label": "Súmula 83 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 83 stj"
+      ],
+      "description": "Não se conhece do REsp quando decisão recorrida está em consonância com jurisprudência."
+    },
+    "sumula_106_stj": {
+      "label": "Súmula 106 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 106 stj"
+      ],
+      "description": "Proposta a ação no prazo fixado para seu exercício, a demora na citação não prejudica o autor."
+    },
+    "sumula_211_stj": {
+      "label": "Súmula 211 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 211 stj"
+      ],
+      "description": "Inadmissível recurso especial de questão não prequestionada."
+    },
+    "sumula_227_stj_2": {
+      "label": "Súmula 227 do STJ (PJ dano moral)",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 227 stj pessoa jurídica"
+      ],
+      "description": "Pessoa jurídica pode sofrer dano moral."
+    },
+    "sumula_281_stj": {
+      "label": "Súmula 281 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 281 stj"
+      ],
+      "description": "Conversão de depósito em renda resolve em perdas e danos."
+    },
+    "sumula_326_stj": {
+      "label": "Súmula 326 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 326 stj"
+      ],
+      "description": "Na ação de indenização por dano moral, a condenação em montante inferior ao postulado não implica sucumbência recíproca."
+    },
+    "sumula_356_stj": {
+      "label": "Súmula 356 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 356 stj"
+      ],
+      "description": "Legítima a cobrança de tarifa básica pelo uso dos serviços de telefonia."
+    },
+    "sumula_370_stj": {
+      "label": "Súmula 370 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 370 stj"
+      ],
+      "description": "Caracteriza dano moral a apresentação antecipada de cheque pré-datado."
+    },
+    "sumula_380_stj": {
+      "label": "Súmula 380 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 380 stj"
+      ],
+      "description": "A simples propositura da ação não interrompe a prescrição."
+    },
+    "sumula_382_stj": {
+      "label": "Súmula 382 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 382 stj"
+      ],
+      "description": "Desarrazoabilidade da taxa de juros não se presume."
+    },
+    "sumula_387_stj": {
+      "label": "Súmula 387 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 387 stj"
+      ],
+      "description": "Lícita a cumulação de indenizações de dano estético com dano moral."
+    },
+    "sumula_388_stj": {
+      "label": "Súmula 388 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 388 stj"
+      ],
+      "description": "Simples devolução indevida de cheque não configura dano moral."
+    },
+    "sumula_403_stj": {
+      "label": "Súmula 403 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 403 stj"
+      ],
+      "description": "Independe de prova do prejuízo a indenização pela publicação não autorizada de imagem."
+    },
+    "sumula_412_stj": {
+      "label": "Súmula 412 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 412 stj"
+      ],
+      "description": "Ação de repetição de indébito tributário — prazo prescricional de 5 anos."
+    },
+    "sumula_421_stj": {
+      "label": "Súmula 421 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 421 stj"
+      ],
+      "description": "Somente nas execuções fiscais os honorários podem ser fixados em percentual do débito."
+    },
+    "sumula_479_stj_2": {
+      "label": "Súmula 479 do STJ (bancos)",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 479 stj banco"
+      ],
+      "description": "Instituições financeiras respondem objetivamente por fraudes de terceiros."
+    },
+    "sumula_529_stj": {
+      "label": "Súmula 529 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 529 stj"
+      ],
+      "description": "No seguro de responsabilidade civil facultativo, não cabe ação do terceiro prejudicado contra a seguradora."
+    },
+    "sumula_543_stj": {
+      "label": "Súmula 543 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 543 stj"
+      ],
+      "description": "Na hipótese de resolução de contrato de promessa de compra e venda, deve haver restituição."
+    },
+    "sumula_548_stj": {
+      "label": "Súmula 548 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 548 stj"
+      ],
+      "description": "Incumbe ao credor a exclusão do devedor no cadastro de inadimplentes após pagamento."
+    },
+    "sumula_549_stj": {
+      "label": "Súmula 549 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 549 stj"
+      ],
+      "description": "Válida penhora de cotas de cooperativa."
+    },
+    "sumula_563_stj": {
+      "label": "Súmula 563 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 563 stj"
+      ],
+      "description": "O CDC aplica-se às entidades abertas de previdência complementar."
+    },
+    "sumula_596_stj": {
+      "label": "Súmula 596 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 596 stj"
+      ],
+      "description": "Incidência de ICMS na comercialização de software customizado."
+    },
+    "sumula_616_stj": {
+      "label": "Súmula 616 do STJ",
+      "type": "sumula",
+      "domain": "civil",
+      "synonyms": [
+        "súmula 616 stj"
+      ],
+      "description": "Inviável a incidência de multa decendial do art. 477 CLT no âmbito da competência da Justiça Comum."
+    },
+    "sv_1": {
+      "label": "Súmula Vinculante 1",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 1",
+        "súmula vinculante 1"
+      ],
+      "description": "Ofende a garantia constitucional do ato jurídico perfeito a decisão que aplica lei nova a situação já consolidada."
+    },
+    "sv_2": {
+      "label": "Súmula Vinculante 2",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 2",
+        "súmula vinculante 2"
+      ],
+      "description": "Inconstitucional a lei que estabeleça vínculo entre remuneração de servidores."
+    },
+    "sv_4": {
+      "label": "Súmula Vinculante 4",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 4",
+        "súmula vinculante 4"
+      ],
+      "description": "Salário mínimo não pode ser usado como indexador de base de cálculo."
+    },
+    "sv_5": {
+      "label": "Súmula Vinculante 5",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 5",
+        "súmula vinculante 5"
+      ],
+      "description": "Falta de defesa técnica por advogado em PAD não ofende a CF."
+    },
+    "sv_10": {
+      "label": "Súmula Vinculante 10",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 10",
+        "súmula vinculante 10"
+      ],
+      "description": "Viola a cláusula de reserva de plenário a decisão que afasta lei sem declarar inconstitucionalidade."
+    },
+    "sv_11": {
+      "label": "Súmula Vinculante 11",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 11",
+        "súmula vinculante 11"
+      ],
+      "description": "Uso de algemas — excepcionalidade."
+    },
+    "sv_13": {
+      "label": "Súmula Vinculante 13",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 13",
+        "súmula vinculante 13",
+        "súmula antinepotismo"
+      ],
+      "description": "Vedação do nepotismo."
+    },
+    "sv_14": {
+      "label": "Súmula Vinculante 14",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 14",
+        "súmula vinculante 14"
+      ],
+      "description": "Direito do defensor de acesso aos elementos de prova já documentados."
+    },
+    "sv_21": {
+      "label": "Súmula Vinculante 21",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 21",
+        "súmula vinculante 21"
+      ],
+      "description": "Inconstitucional a exigência de depósito ou arrolamento prévio como condição de admissibilidade de recurso."
+    },
+    "sv_25": {
+      "label": "Súmula Vinculante 25",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 25",
+        "súmula vinculante 25"
+      ],
+      "description": "Ilícita a prisão civil de depositário infiel."
+    },
+    "sv_26": {
+      "label": "Súmula Vinculante 26",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 26",
+        "súmula vinculante 26"
+      ],
+      "description": "Progressão de regime em crimes hediondos."
+    },
+    "sv_33": {
+      "label": "Súmula Vinculante 33",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 33",
+        "súmula vinculante 33"
+      ],
+      "description": "Aposentadoria especial de servidores — aplicação do RGPS."
+    },
+    "sv_37": {
+      "label": "Súmula Vinculante 37",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 37",
+        "súmula vinculante 37"
+      ],
+      "description": "Não cabe ao Poder Judiciário aumentar vencimentos de servidores a título de isonomia."
+    },
+    "sv_56": {
+      "label": "Súmula Vinculante 56",
+      "type": "sumula",
+      "domain": "constitucional",
+      "synonyms": [
+        "sv 56",
+        "súmula vinculante 56"
+      ],
+      "description": "Falta de vagas em regime semiaberto — regime mais benéfico."
+    },
+    "cc_art_421": {
+      "label": "Art. 421 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 421 código civil"
+      ],
+      "description": "Função social do contrato."
+    },
+    "cc_art_422": {
+      "label": "Art. 422 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 422 código civil"
+      ],
+      "description": "Boa-fé objetiva nos contratos."
+    },
+    "cc_art_476": {
+      "label": "Art. 476 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 476 código civil",
+        "exceção de contrato não cumprido"
+      ],
+      "description": "Exceção de contrato não cumprido."
+    },
+    "cc_art_478": {
+      "label": "Art. 478 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 478 código civil",
+        "resolução por onerosidade excessiva"
+      ],
+      "description": "Resolução por onerosidade excessiva."
+    },
+    "cc_art_389": {
+      "label": "Art. 389 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 389 código civil"
+      ],
+      "description": "Inadimplência — perdas e danos, juros, atualização e honorários."
+    },
+    "cc_art_206": {
+      "label": "Art. 206 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 206 código civil",
+        "prazos prescricionais"
+      ],
+      "description": "Prazos prescricionais do Código Civil."
+    },
+    "cc_art_884": {
+      "label": "Art. 884 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 884 código civil",
+        "enriquecimento sem causa"
+      ],
+      "description": "Enriquecimento sem causa."
+    },
+    "cc_art_966": {
+      "label": "Art. 966 do CC",
+      "type": "artigo",
+      "domain": "empresarial",
+      "synonyms": [
+        "art 966 código civil",
+        "empresário"
+      ],
+      "description": "Conceito de empresário."
+    },
+    "cc_art_1228": {
+      "label": "Art. 1228 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 1228 código civil"
+      ],
+      "description": "Direito de propriedade — faculdades e limitações."
+    },
+    "cc_art_1723": {
+      "label": "Art. 1723 do CC",
+      "type": "artigo",
+      "domain": "familia",
+      "synonyms": [
+        "art 1723 código civil",
+        "união estável"
+      ],
+      "description": "Reconhecimento da união estável."
+    },
+    "cc_art_1829": {
+      "label": "Art. 1829 do CC",
+      "type": "artigo",
+      "domain": "civil",
+      "synonyms": [
+        "art 1829 código civil",
+        "ordem de vocação hereditária"
+      ],
+      "description": "Ordem de vocação hereditária na sucessão legítima."
+    },
+    "cf_art_7": {
+      "label": "Art. 7º da CF",
+      "type": "artigo",
+      "domain": "constitucional",
+      "synonyms": [
+        "art 7 constituição",
+        "direitos dos trabalhadores"
+      ],
+      "description": "Direitos dos trabalhadores urbanos e rurais."
+    },
+    "cf_art_37_2": {
+      "label": "Art. 37 da CF (completo)",
+      "type": "artigo",
+      "domain": "administrativo",
+      "synonyms": [
+        "art 37 constituição",
+        "princípios da administração pública"
+      ],
+      "description": "Legalidade, impessoalidade, moralidade, publicidade e eficiência."
+    },
+    "cf_art_93": {
+      "label": "Art. 93 da CF",
+      "type": "artigo",
+      "domain": "constitucional",
+      "synonyms": [
+        "art 93 constituição"
+      ],
+      "description": "Estatuto da Magistratura — Lei complementar."
+    },
+    "cf_art_97": {
+      "label": "Art. 97 da CF",
+      "type": "artigo",
+      "domain": "constitucional",
+      "synonyms": [
+        "art 97 constituição",
+        "cláusula de reserva de plenário",
+        "full bench"
+      ],
+      "description": "Somente pelo voto da maioria absoluta pode declarar inconstitucionalidade."
+    },
+    "cf_art_102": {
+      "label": "Art. 102 da CF",
+      "type": "artigo",
+      "domain": "constitucional",
+      "synonyms": [
+        "art 102 constituição"
+      ],
+      "description": "Competência do STF — guarda da Constituição."
+    },
+    "cf_art_105": {
+      "label": "Art. 105 da CF",
+      "type": "artigo",
+      "domain": "constitucional",
+      "synonyms": [
+        "art 105 constituição"
+      ],
+      "description": "Competência do STJ."
+    },
+    "cf_art_109": {
+      "label": "Art. 109 da CF",
+      "type": "artigo",
+      "domain": "constitucional",
+      "synonyms": [
+        "art 109 constituição"
+      ],
+      "description": "Competência dos juízes federais."
+    },
+    "cf_art_114": {
+      "label": "Art. 114 da CF",
+      "type": "artigo",
+      "domain": "trabalhista",
+      "synonyms": [
+        "art 114 constituição",
+        "competência justiça do trabalho"
+      ],
+      "description": "Competência da Justiça do Trabalho."
+    },
+    "cf_art_150": {
+      "label": "Art. 150 da CF",
+      "type": "artigo",
+      "domain": "tributario",
+      "synonyms": [
+        "art 150 constituição",
+        "limitações ao poder de tributar"
+      ],
+      "description": "Limitações ao poder de tributar."
+    },
+    "cf_art_155": {
+      "label": "Art. 155 da CF",
+      "type": "artigo",
+      "domain": "tributario",
+      "synonyms": [
+        "art 155 constituição",
+        "icms"
+      ],
+      "description": "Competência tributária estadual (ICMS, IPVA, ITCMD)."
+    },
+    "cf_art_156": {
+      "label": "Art. 156 da CF",
+      "type": "artigo",
+      "domain": "tributario",
+      "synonyms": [
+        "art 156 constituição",
+        "iss iptu itbi"
+      ],
+      "description": "Competência tributária municipal (ISS, IPTU, ITBI)."
+    },
+    "cf_art_170": {
+      "label": "Art. 170 da CF",
+      "type": "artigo",
+      "domain": "constitucional",
+      "synonyms": [
+        "art 170 constituição",
+        "ordem econômica"
+      ],
+      "description": "Ordem econômica — princípios."
+    },
+    "cf_art_196": {
+      "label": "Art. 196 da CF",
+      "type": "artigo",
+      "domain": "constitucional",
+      "synonyms": [
+        "art 196 constituição",
+        "direito à saúde"
+      ],
+      "description": "Saúde é direito de todos e dever do Estado."
+    },
+    "cf_art_225": {
+      "label": "Art. 225 da CF",
+      "type": "artigo",
+      "domain": "ambiental",
+      "synonyms": [
+        "art 225 constituição",
+        "meio ambiente"
+      ],
+      "description": "Direito ao meio ambiente ecologicamente equilibrado."
+    },
+    "cpc_art_82": {
+      "label": "Art. 82 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 82 cpc"
+      ],
+      "description": "Intervenção do MP como fiscal da ordem jurídica."
+    },
+    "cpc_art_98": {
+      "label": "Art. 98 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 98 cpc",
+        "gratuidade de justiça",
+        "justiça gratuita"
+      ],
+      "description": "Gratuidade da justiça."
+    },
+    "cpc_art_139": {
+      "label": "Art. 139 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 139 cpc",
+        "poderes do juiz"
+      ],
+      "description": "Poderes do juiz — medidas atípicas (IV)."
+    },
+    "cpc_art_294": {
+      "label": "Art. 294 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 294 cpc",
+        "tutela provisória"
+      ],
+      "description": "Tutela provisória — espécies."
+    },
+    "cpc_art_300_2": {
+      "label": "Art. 300 do CPC (completo)",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 300 cpc",
+        "tutela de urgência"
+      ],
+      "description": "Tutela de urgência — probabilidade do direito e perigo de dano."
+    },
+    "cpc_art_311": {
+      "label": "Art. 311 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 311 cpc",
+        "tutela de evidência"
+      ],
+      "description": "Tutela da evidência."
+    },
+    "cpc_art_319_2": {
+      "label": "Art. 319 do CPC (completo)",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 319 cpc",
+        "requisitos petição inicial"
+      ],
+      "description": "Requisitos da petição inicial."
+    },
+    "cpc_art_330": {
+      "label": "Art. 330 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 330 cpc",
+        "petição inicial inepta"
+      ],
+      "description": "Casos de inépcia da petição inicial."
+    },
+    "cpc_art_332": {
+      "label": "Art. 332 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 332 cpc",
+        "improcedência liminar"
+      ],
+      "description": "Improcedência liminar do pedido."
+    },
+    "cpc_art_373": {
+      "label": "Art. 373 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 373 cpc",
+        "ônus da prova"
+      ],
+      "description": "Ônus da prova."
+    },
+    "cpc_art_496": {
+      "label": "Art. 496 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 496 cpc",
+        "remessa necessária"
+      ],
+      "description": "Remessa necessária."
+    },
+    "cpc_art_525": {
+      "label": "Art. 525 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 525 cpc",
+        "impugnação ao cumprimento de sentença"
+      ],
+      "description": "Impugnação ao cumprimento de sentença."
+    },
+    "cpc_art_674": {
+      "label": "Art. 674 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 674 cpc",
+        "embargos de terceiro"
+      ],
+      "description": "Embargos de terceiro."
+    },
+    "cpc_art_994": {
+      "label": "Art. 994 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 994 cpc",
+        "recursos"
+      ],
+      "description": "Espécies de recurso."
+    },
+    "cpc_art_1015": {
+      "label": "Art. 1015 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 1015 cpc",
+        "agravo de instrumento"
+      ],
+      "description": "Cabimento do agravo de instrumento."
+    },
+    "cpc_art_1029": {
+      "label": "Art. 1029 do CPC",
+      "type": "artigo",
+      "domain": "processual",
+      "synonyms": [
+        "art 1029 cpc",
+        "recurso especial recurso extraordinário"
+      ],
+      "description": "Interposição de RE e REsp."
+    },
+    "cp_art_121": {
+      "label": "Art. 121 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 121 código penal",
+        "homicídio"
+      ],
+      "description": "Homicídio simples — pena 6 a 20 anos."
+    },
+    "cp_art_129_2": {
+      "label": "Art. 129 do CP (completo)",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 129 código penal",
+        "lesão corporal"
+      ],
+      "description": "Lesão corporal."
+    },
+    "cp_art_147": {
+      "label": "Art. 147 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 147 código penal",
+        "ameaça"
+      ],
+      "description": "Crime de ameaça."
+    },
+    "cp_art_155": {
+      "label": "Art. 155 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 155 código penal",
+        "furto"
+      ],
+      "description": "Furto simples e qualificado."
+    },
+    "cp_art_157": {
+      "label": "Art. 157 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 157 código penal",
+        "roubo"
+      ],
+      "description": "Roubo simples e qualificado."
+    },
+    "cp_art_171": {
+      "label": "Art. 171 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 171 código penal",
+        "estelionato"
+      ],
+      "description": "Estelionato."
+    },
+    "cp_art_213": {
+      "label": "Art. 213 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 213 código penal",
+        "estupro"
+      ],
+      "description": "Estupro."
+    },
+    "cp_art_217a": {
+      "label": "Art. 217-A do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 217-a código penal",
+        "estupro de vulnerável"
+      ],
+      "description": "Estupro de vulnerável."
+    },
+    "cp_art_250": {
+      "label": "Art. 250 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 250 código penal",
+        "incêndio"
+      ],
+      "description": "Crime de incêndio."
+    },
+    "cp_art_288": {
+      "label": "Art. 288 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 288 código penal",
+        "associação criminosa"
+      ],
+      "description": "Associação criminosa (3+ pessoas)."
+    },
+    "cp_art_297": {
+      "label": "Art. 297 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 297 código penal",
+        "falsificação de documento público"
+      ],
+      "description": "Falsificação de documento público."
+    },
+    "cp_art_312": {
+      "label": "Art. 312 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 312 código penal",
+        "peculato"
+      ],
+      "description": "Peculato."
+    },
+    "cp_art_316": {
+      "label": "Art. 316 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 316 código penal",
+        "concussão"
+      ],
+      "description": "Concussão."
+    },
+    "cp_art_317": {
+      "label": "Art. 317 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 317 código penal",
+        "corrupção passiva"
+      ],
+      "description": "Corrupção passiva."
+    },
+    "cp_art_333": {
+      "label": "Art. 333 do CP",
+      "type": "artigo",
+      "domain": "criminal",
+      "synonyms": [
+        "art 333 código penal",
+        "corrupção ativa"
+      ],
+      "description": "Corrupção ativa."
+    },
+    "cdc_art_2": {
+      "label": "Art. 2º do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 2 cdc",
+        "conceito de consumidor"
+      ],
+      "description": "Conceito de consumidor."
+    },
+    "cdc_art_6": {
+      "label": "Art. 6º do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 6 cdc",
+        "direitos básicos do consumidor"
+      ],
+      "description": "Direitos básicos do consumidor."
+    },
+    "cdc_art_12": {
+      "label": "Art. 12 do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 12 cdc",
+        "responsabilidade pelo fato do produto"
+      ],
+      "description": "Responsabilidade pelo fato do produto."
+    },
+    "cdc_art_18": {
+      "label": "Art. 18 do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 18 cdc",
+        "vício do produto"
+      ],
+      "description": "Responsabilidade por vício do produto."
+    },
+    "cdc_art_20": {
+      "label": "Art. 20 do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 20 cdc",
+        "vício do serviço"
+      ],
+      "description": "Responsabilidade por vício do serviço."
+    },
+    "cdc_art_26": {
+      "label": "Art. 26 do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 26 cdc",
+        "prazo reclamação"
+      ],
+      "description": "Prazo para reclamação de vícios."
+    },
+    "cdc_art_27": {
+      "label": "Art. 27 do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 27 cdc",
+        "prescrição cdc"
+      ],
+      "description": "Prescrição — pretensão reparação danos — 5 anos."
+    },
+    "cdc_art_47": {
+      "label": "Art. 47 do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 47 cdc",
+        "interpretação favorável ao consumidor"
+      ],
+      "description": "Cláusulas contratuais interpretadas de maneira mais favorável ao consumidor."
+    },
+    "cdc_art_49": {
+      "label": "Art. 49 do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 49 cdc",
+        "direito de arrependimento",
+        "7 dias"
+      ],
+      "description": "Direito de arrependimento — 7 dias."
+    },
+    "cdc_art_54": {
+      "label": "Art. 54 do CDC",
+      "type": "artigo",
+      "domain": "consumidor",
+      "synonyms": [
+        "art 54 cdc",
+        "contrato de adesão"
+      ],
+      "description": "Contrato de adesão."
+    },
+    "clt_art_72": {
+      "label": "Art. 72 da CLT",
+      "type": "artigo",
+      "domain": "trabalhista",
+      "synonyms": [
+        "art 72 clt",
+        "digitador intervalo"
+      ],
+      "description": "Intervalo para digitadores — 10min a cada 90min."
+    },
+    "clt_art_462": {
+      "label": "Art. 462 da CLT",
+      "type": "artigo",
+      "domain": "trabalhista",
+      "synonyms": [
+        "art 462 clt",
+        "descontos salariais"
+      ],
+      "description": "Descontos no salário."
+    },
+    "clt_art_469": {
+      "label": "Art. 469 da CLT",
+      "type": "artigo",
+      "domain": "trabalhista",
+      "synonyms": [
+        "art 469 clt",
+        "transferência"
+      ],
+      "description": "Transferência do empregado."
+    },
+    "clt_art_484": {
+      "label": "Art. 484 da CLT",
+      "type": "artigo",
+      "domain": "trabalhista",
+      "synonyms": [
+        "art 484 clt",
+        "culpa recíproca"
+      ],
+      "description": "Culpa recíproca na rescisão."
+    },
+    "clt_art_611a": {
+      "label": "Art. 611-A da CLT",
+      "type": "artigo",
+      "domain": "trabalhista",
+      "synonyms": [
+        "art 611-a clt",
+        "prevalência do negociado sobre legislado"
+      ],
+      "description": "Prevalência do negociado sobre o legislado (Reforma Trabalhista)."
+    },
+    "clt_art_611b": {
+      "label": "Art. 611-B da CLT",
+      "type": "artigo",
+      "domain": "trabalhista",
+      "synonyms": [
+        "art 611-b clt",
+        "objeto ilícito de convenção"
+      ],
+      "description": "Objeto ilícito de convenção/acordo coletivo."
+    },
+    "cpc_2015": {
+      "label": "Código de Processo Civil - Lei 13.105/2015",
+      "type": "lei",
+      "domain": "processual",
+      "synonyms": [
+        "cpc",
+        "código de processo civil",
+        "lei 13105"
+      ],
+      "description": "Normas de processo civil."
+    },
+    "codigo_penal": {
+      "label": "Código Penal - Decreto-Lei 2.848/1940",
+      "type": "lei",
+      "domain": "criminal",
+      "synonyms": [
+        "código penal",
+        "cp",
+        "decreto-lei 2848"
+      ],
+      "description": "Código Penal Brasileiro."
+    },
+    "cpp": {
+      "label": "Código de Processo Penal - Decreto-Lei 3.689/1941",
+      "type": "lei",
+      "domain": "criminal",
+      "synonyms": [
+        "cpp",
+        "código de processo penal",
+        "decreto-lei 3689"
+      ],
+      "description": "Normas de processo penal."
+    },
+    "eca": {
+      "label": "Estatuto da Criança e do Adolescente - Lei 8.069/1990",
+      "type": "lei",
+      "domain": "familia",
+      "synonyms": [
+        "eca",
+        "lei 8069",
+        "estatuto da criança"
+      ],
+      "description": "Proteção integral da criança e adolescente."
+    },
+    "estatuto_idoso": {
+      "label": "Estatuto do Idoso - Lei 10.741/2003",
+      "type": "lei",
+      "domain": "civil",
+      "synonyms": [
+        "estatuto do idoso",
+        "lei 10741"
+      ],
+      "description": "Proteção do idoso."
+    },
+    "lei_9504": {
+      "label": "Lei das Eleições - Lei 9.504/1997",
+      "type": "lei",
+      "domain": "eleitoral",
+      "synonyms": [
+        "lei das eleições",
+        "lei 9504",
+        "lei eleitoral"
+      ],
+      "description": "Normas para as eleições."
+    },
+    "lei_9784": {
+      "label": "Lei do Processo Administrativo - Lei 9.784/1999",
+      "type": "lei",
+      "domain": "administrativo",
+      "synonyms": [
+        "lei 9784",
+        "processo administrativo federal"
+      ],
+      "description": "Regula o processo administrativo federal."
+    },
+    "lei_12153": {
+      "label": "Lei dos Juizados Especiais da Fazenda Pública - Lei 12.153/2009",
+      "type": "lei",
+      "domain": "processual",
+      "synonyms": [
+        "lei 12153",
+        "juizado fazenda pública"
+      ],
+      "description": "Juizados Especiais da Fazenda Pública."
+    },
+    "lei_7210": {
+      "label": "Lei de Execução Penal - Lei 7.210/1984",
+      "type": "lei",
+      "domain": "criminal",
+      "synonyms": [
+        "lep",
+        "lei 7210",
+        "lei de execução penal",
+        "execução penal"
+      ],
+      "description": "Execução penal."
+    },
+    "lei_12850": {
+      "label": "Lei de Organizações Criminosas - Lei 12.850/2013",
+      "type": "lei",
+      "domain": "criminal",
+      "synonyms": [
+        "lei 12850",
+        "organização criminosa",
+        "orcrim"
+      ],
+      "description": "Define organização criminosa e dispõe sobre investigação criminal."
+    },
+    "lei_9605": {
+      "label": "Lei de Crimes Ambientais - Lei 9.605/1998",
+      "type": "lei",
+      "domain": "ambiental",
+      "synonyms": [
+        "lei 9605",
+        "crimes ambientais",
+        "lei ambiental"
+      ],
+      "description": "Sanções penais e administrativas para crimes ambientais."
+    },
+    "lei_8078_cdc": {
+      "label": "Código de Defesa do Consumidor completo",
+      "type": "lei",
+      "domain": "consumidor",
+      "synonyms": [
+        "cdc completo",
+        "lei 8078 completa"
+      ],
+      "description": "CDC."
+    },
+    "lei_10406_cc": {
+      "label": "Código Civil completo",
+      "type": "lei",
+      "domain": "civil",
+      "synonyms": [
+        "código civil completo",
+        "lei 10406"
+      ],
+      "description": "CC."
+    },
+    "lei_11101": {
+      "label": "Lei de Falência e Recuperação Judicial - Lei 11.101/2005",
+      "type": "lei",
+      "domain": "empresarial",
+      "synonyms": [
+        "lei 11101",
+        "lei de falência",
+        "recuperação judicial",
+        "falência"
+      ],
+      "description": "Regula a recuperação judicial, extrajudicial e falência."
+    },
+    "lei_13105_cpc": {
+      "label": "CPC completo",
+      "type": "lei",
+      "domain": "processual",
+      "synonyms": [
+        "cpc completo",
+        "lei 13105"
+      ],
+      "description": "CPC."
+    },
+    "lei_6830_exec_fiscal": {
+      "label": "Lei de Execução Fiscal - Lei 6.830/1980",
+      "type": "lei",
+      "domain": "tributario",
+      "synonyms": [
+        "lei 6830",
+        "execução fiscal",
+        "lef"
+      ],
+      "description": "Cobrança judicial da dívida ativa."
+    },
+    "tutela_provisoria": {
+      "label": "Tutela Provisória",
+      "type": "concept",
+      "domain": "processual",
+      "synonyms": [
+        "tutela provisória",
+        "tutela antecipada",
+        "medida liminar"
+      ],
+      "description": "Proteção judicial de urgência ou evidência — arts. 294-311 CPC."
+    },
+    "execucao_titulo_extrajudicial": {
+      "label": "Execução de Título Extrajudicial",
+      "type": "concept",
+      "domain": "processual",
+      "synonyms": [
+        "execução título extrajudicial",
+        "ação de execução"
+      ],
+      "description": "Processo para cobrança de título executivo extrajudicial."
+    },
+    "agravo_instrumento": {
+      "label": "Agravo de Instrumento",
+      "type": "concept",
+      "domain": "processual",
+      "synonyms": [
+        "agravo de instrumento",
+        "AI"
+      ],
+      "description": "Recurso contra decisões interlocutórias — art. 1015 CPC."
+    },
+    "compliance": {
+      "label": "Compliance",
+      "type": "concept",
+      "domain": "empresarial",
+      "synonyms": [
+        "compliance",
+        "programa de integridade",
+        "conformidade"
+      ],
+      "description": "Programa de integridade empresarial."
+    },
+    "crime_hediondo": {
+      "label": "Crime Hediondo",
+      "type": "concept",
+      "domain": "criminal",
+      "synonyms": [
+        "crime hediondo",
+        "lei 8072",
+        "hediondo"
+      ],
+      "description": "Crimes de especial gravidade — Lei 8.072/1990."
+    },
+    "legítima_defesa": {
+      "label": "Legítima Defesa",
+      "type": "concept",
+      "domain": "criminal",
+      "synonyms": [
+        "legítima defesa",
+        "art 25 cp",
+        "excludente de ilicitude"
+      ],
+      "description": "Excludente de ilicitude — art. 25 CP."
+    },
+    "obrigacao_fazer": {
+      "label": "Obrigação de Fazer",
+      "type": "concept",
+      "domain": "civil",
+      "synonyms": [
+        "obrigação de fazer",
+        "tutela específica"
+      ],
+      "description": "Obrigação cuja prestação consiste em ato positivo."
+    },
+    "obrigacao_nao_fazer": {
+      "label": "Obrigação de Não Fazer",
+      "type": "concept",
+      "domain": "civil",
+      "synonyms": [
+        "obrigação de não fazer"
+      ],
+      "description": "Obrigação de abstenção."
+    },
+    "responsabilidade_subjetiva": {
+      "label": "Responsabilidade Subjetiva",
+      "type": "concept",
+      "domain": "civil",
+      "synonyms": [
+        "responsabilidade subjetiva",
+        "responsabilidade com culpa"
+      ],
+      "description": "Responsabilidade que exige culpa — art. 186 CC."
+    },
+    "principio_legalidade": {
+      "label": "Princípio da Legalidade",
+      "type": "concept",
+      "domain": "constitucional",
+      "synonyms": [
+        "princípio da legalidade",
+        "legalidade"
+      ],
+      "description": "Ninguém é obrigado a fazer senão em virtude de lei — art. 5º II CF."
+    },
+    "principio_contraditorio": {
+      "label": "Princípio do Contraditório",
+      "type": "concept",
+      "domain": "constitucional",
+      "synonyms": [
+        "contraditório",
+        "ampla defesa",
+        "contraditório e ampla defesa"
+      ],
+      "description": "Art. 5º LV CF — direito ao contraditório e ampla defesa."
+    },
+    "due_process": {
+      "label": "Devido Processo Legal",
+      "type": "concept",
+      "domain": "constitucional",
+      "synonyms": [
+        "devido processo legal",
+        "due process of law"
+      ],
+      "description": "Art. 5º LIV CF — ninguém será privado da liberdade ou de seus bens sem o devido processo legal."
+    },
+    "lei_8666": {
+      "label": "Lei de Licitações antiga - Lei 8.666/1993",
+      "type": "lei",
+      "domain": "administrativo",
+      "synonyms": [
+        "lei 8666",
+        "lei de licitações antiga",
+        "lei 8666/93"
+      ],
+      "description": "Revogada pela Lei 14.133/2021."
+    },
+    "cpc_1973": {
+      "label": "CPC de 1973 - Lei 5.869/1973",
+      "type": "lei",
+      "domain": "processual",
+      "synonyms": [
+        "cpc 1973",
+        "cpc antigo",
+        "código de processo civil antigo"
+      ],
+      "description": "Revogado pelo CPC 2015 (Lei 13.105/2015)."
+    },
+    "cc_1916": {
+      "label": "Código Civil de 1916 - Lei 3.071/1916",
+      "type": "lei",
+      "domain": "civil",
+      "synonyms": [
+        "cc 1916",
+        "código civil antigo",
+        "código civil de 1916"
+      ],
+      "description": "Revogado pelo CC 2002 (Lei 10.406/2002)."
+    },
+    "lei_8666_2": {
+      "label": "Lei 8.666/1993 (Licitações)",
+      "type": "lei",
+      "domain": "administrativo",
+      "synonyms": [
+        "lei 8666/93"
+      ],
+      "description": "Revogada pela Nova Lei de Licitações (14.133/2021)."
     }
   },
   "relations": [
@@ -9725,6 +11476,361 @@
       "source": "adocao",
       "target": "investigacao_paternidade",
       "type": "related_theme"
+    },
+    {
+      "source": "boa_fe_objetiva",
+      "target": "cc_art_422",
+      "type": "regulates"
+    },
+    {
+      "source": "funcao_social_contrato",
+      "target": "cc_art_421",
+      "type": "regulates"
+    },
+    {
+      "source": "inversao_onus_prova",
+      "target": "cpc_art_373",
+      "type": "regulates"
+    },
+    {
+      "source": "tutela_provisoria",
+      "target": "cpc_art_294",
+      "type": "regulates"
+    },
+    {
+      "source": "tutela_provisoria",
+      "target": "cpc_art_300_2",
+      "type": "regulates"
+    },
+    {
+      "source": "tutela_provisoria",
+      "target": "cpc_art_311",
+      "type": "regulates"
+    },
+    {
+      "source": "agravo_instrumento",
+      "target": "cpc_art_1015",
+      "type": "regulates"
+    },
+    {
+      "source": "recurso_especial",
+      "target": "cf_art_105",
+      "type": "regulates"
+    },
+    {
+      "source": "recurso_extraordinario",
+      "target": "cf_art_102",
+      "type": "regulates"
+    },
+    {
+      "source": "recuperacao_judicial",
+      "target": "lei_11101",
+      "type": "regulates"
+    },
+    {
+      "source": "falencia",
+      "target": "lei_11101",
+      "type": "regulates"
+    },
+    {
+      "source": "responsabilidade_objetiva",
+      "target": "responsabilidade_civil",
+      "type": "narrower"
+    },
+    {
+      "source": "responsabilidade_subjetiva",
+      "target": "responsabilidade_civil",
+      "type": "narrower"
+    },
+    {
+      "source": "dano_existencial",
+      "target": "dano_moral",
+      "type": "narrower"
+    },
+    {
+      "source": "recuperacao_judicial",
+      "target": "falencia",
+      "type": "related_theme"
+    },
+    {
+      "source": "lei_11101",
+      "target": "cpc_2015",
+      "type": "cites"
+    },
+    {
+      "source": "lei_7210",
+      "target": "codigo_penal",
+      "type": "cites"
+    },
+    {
+      "source": "lei_12850",
+      "target": "codigo_penal",
+      "type": "cites"
+    },
+    {
+      "source": "tutela_provisoria",
+      "target": "mandado_seguranca",
+      "type": "related_theme"
+    },
+    {
+      "source": "legítima_defesa",
+      "target": "estado_necessidade",
+      "type": "related_theme"
+    },
+    {
+      "source": "responsabilidade_objetiva",
+      "target": "responsabilidade_subjetiva",
+      "type": "related_theme"
+    },
+    {
+      "source": "sumula_14_tst",
+      "target": "clt_art_484",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_44_tst",
+      "target": "clt_art_469",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_244_tst",
+      "target": "cf_art_7",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_269_tst",
+      "target": "cf_art_7",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_346_tst",
+      "target": "clt_art_72",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_369_tst",
+      "target": "cf_art_7",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_390_tst",
+      "target": "cf_art_7",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_392_tst",
+      "target": "cf_art_114",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_441_tst",
+      "target": "cf_art_7",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_444_tst",
+      "target": "cf_art_7",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_7_stj",
+      "target": "cf_art_105",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_211_stj",
+      "target": "cf_art_105",
+      "type": "cites"
+    },
+    {
+      "source": "sumula_83_stj",
+      "target": "cf_art_105",
+      "type": "cites"
+    },
+    {
+      "source": "sv_10",
+      "target": "cf_art_97",
+      "type": "cites"
+    },
+    {
+      "source": "sv_4",
+      "target": "cf_art_7",
+      "type": "cites"
+    },
+    {
+      "source": "eca",
+      "target": "codigo_penal",
+      "type": "cites"
+    },
+    {
+      "source": "lei_12850",
+      "target": "cpp",
+      "type": "cites"
+    },
+    {
+      "source": "cpc_2015",
+      "target": "cpc_1973",
+      "type": "supersedes"
+    },
+    {
+      "source": "cc_art_421",
+      "target": "funcao_social_contrato",
+      "type": "regulates"
+    },
+    {
+      "source": "cc_art_422",
+      "target": "boa_fe_objetiva",
+      "type": "regulates"
+    },
+    {
+      "source": "cc_art_476",
+      "target": "contrato",
+      "type": "regulates"
+    },
+    {
+      "source": "cc_art_478",
+      "target": "contrato",
+      "type": "regulates"
+    },
+    {
+      "source": "cc_art_884",
+      "target": "enriquecimento_sem_causa",
+      "type": "regulates"
+    },
+    {
+      "source": "cc_art_966",
+      "target": "compliance",
+      "type": "regulates"
+    },
+    {
+      "source": "cc_art_1723",
+      "target": "uniao_estavel",
+      "type": "regulates"
+    },
+    {
+      "source": "cf_art_7",
+      "target": "horas_extras",
+      "type": "regulates"
+    },
+    {
+      "source": "cf_art_7",
+      "target": "sobreaviso",
+      "type": "regulates"
+    },
+    {
+      "source": "cf_art_7",
+      "target": "ferias",
+      "type": "regulates"
+    },
+    {
+      "source": "cf_art_7",
+      "target": "aviso_previo",
+      "type": "regulates"
+    },
+    {
+      "source": "cf_art_7",
+      "target": "fgts",
+      "type": "regulates"
+    },
+    {
+      "source": "cf_art_114",
+      "target": "justa_causa",
+      "type": "regulates"
+    },
+    {
+      "source": "cf_art_114",
+      "target": "rescisao_indireta",
+      "type": "regulates"
+    },
+    {
+      "source": "cpc_art_98",
+      "target": "inversao_onus_prova",
+      "type": "regulates"
+    },
+    {
+      "source": "cpc_art_139",
+      "target": "tutela_provisoria",
+      "type": "regulates"
+    },
+    {
+      "source": "cpc_art_373",
+      "target": "inversao_onus_prova",
+      "type": "regulates"
+    },
+    {
+      "source": "cpc_art_1015",
+      "target": "agravo_instrumento",
+      "type": "regulates"
+    },
+    {
+      "source": "cpc_art_1029",
+      "target": "recurso_especial",
+      "type": "regulates"
+    },
+    {
+      "source": "cpc_art_1029",
+      "target": "recurso_extraordinario",
+      "type": "regulates"
+    },
+    {
+      "source": "obrigacao_fazer",
+      "target": "obrigacao_nao_fazer",
+      "type": "related_theme"
+    },
+    {
+      "source": "agravo_instrumento",
+      "target": "recurso_especial",
+      "type": "related_theme"
+    },
+    {
+      "source": "crime_hediondo",
+      "target": "legítima_defesa",
+      "type": "related_theme"
+    },
+    {
+      "source": "compliance",
+      "target": "recuperacao_judicial",
+      "type": "related_theme"
+    },
+    {
+      "source": "due_process",
+      "target": "principio_contraditorio",
+      "type": "related_theme"
+    },
+    {
+      "source": "due_process",
+      "target": "principio_legalidade",
+      "type": "related_theme"
+    },
+    {
+      "source": "principio_contraditorio",
+      "target": "principio_legalidade",
+      "type": "related_theme"
+    },
+    {
+      "source": "dano_existencial",
+      "target": "dano_moral",
+      "type": "broader"
+    },
+    {
+      "source": "obrigacao_fazer",
+      "target": "obrigacao",
+      "type": "broader"
+    },
+    {
+      "source": "obrigacao_nao_fazer",
+      "target": "obrigacao",
+      "type": "broader"
+    },
+    {
+      "source": "responsabilidade_objetiva",
+      "target": "responsabilidade_civil",
+      "type": "broader"
+    },
+    {
+      "source": "responsabilidade_subjetiva",
+      "target": "responsabilidade_civil",
+      "type": "broader"
     }
   ]
 }
