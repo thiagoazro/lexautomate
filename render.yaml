@@ -59,9 +59,15 @@ services:
       - key: TAVILY_API_KEY
         sync: false
 
-      # ── JuIT Rimor (jurisprudência pública — quando contratar) ────────────────
-      - key: JUIT_API_KEY
+      # ── JuIT Rimor (jurisprudência pública — 92 tribunais) ───────────────────
+      - key: JUIT_USERNAME
         sync: false
+
+      - key: JUIT_PASSWORD
+        sync: false
+
+      - key: JUIT_OWNER
+        sync: false          # email cadastrado na JuIT
 
       # ── Grafos GraphRAG (ephemeral — /tmp no Render) ─────────────────────────
       - key: GRAPH_VIZ_DIR

@@ -119,10 +119,21 @@ class SearchResponse(BaseModel):
 
 
 class JurisprudenciaRequest(BaseModel):
-    query: str = Field(..., description="Termo de busca jurisprudencial")
-    tribunal: Optional[str] = Field(None, description="Filtro por tribunal: STF, STJ, TST, TRT, TRF, TJSP, TJMG, etc.")
-    search_on: str = Field("ementa,integra", description="Campos para buscar: 'ementa', 'integra', 'ementa,integra'")
+    query: str = Field(..., description="Termo de busca (suporta operadores E, OU, MASNAO, \"aspas\")")
+    tribunal: Optional[str] = Field(None, description="Filtro por tribunal: STF, STJ, TST, TRT1-24, TRF1-6, TJSP, TJMG, CARF, etc.")
+    search_on: List[str] = Field(
+        ["headnote", "full_text"],
+        description="Campos: 'headnote' (ementa), 'full_text' (íntegra), 'title' (número processo)",
+    )
     top_k: int = Field(10, ge=1, le=30)
+    ordenar_por: str = Field("relevancia", description="'relevancia' | 'recentes' | 'antigos'")
+    relator: Optional[str] = Field(None, description="Filtro por magistrado (ex: 'Alexandre de Moraes')")
+    orgao_julgador: Optional[str] = Field(None, description="Filtro por órgão (ex: '3ª Turma')")
+    tipo_documento: Optional[str] = Field(None, description="'Acórdão', 'Decisão Monocrática', 'Sentença', etc.")
+    grau: Optional[str] = Field(None, description="'1ª Instância', '2ª Instância', 'Tribunal Superior', 'Administrativo'")
+    data_inicio: Optional[str] = Field(None, description="Data mínima formato YYYYMMDD (ex: '20240101')")
+    data_fim: Optional[str] = Field(None, description="Data máxima formato YYYYMMDD (ex: '20241231')")
+    estado_origem: Optional[str] = Field(None, description="UF de origem (ex: 'SP', 'MG')")
     include_qdrant: bool = Field(True, description="Também buscar jurisprudência nos seus documentos do Qdrant")
     use_rerank: bool = Field(True)
     use_cross_encoder: bool = Field(True)
@@ -133,11 +144,18 @@ class JurisprudenciaResult(BaseModel):
     content: str
     tribunal: Optional[str] = None
     numero_processo: Optional[str] = None
+    numero_cnj: Optional[str] = None
     relator: Optional[str] = None
     data_julgamento: Optional[str] = None
+    data_publicacao: Optional[str] = None
     orgao_julgador: Optional[str] = None
-    arquivo_origem: Optional[str] = None
     tipo_documento: Optional[str] = None
+    grau: Optional[str] = None
+    assuntos: Optional[List[str]] = None
+    classes: Optional[List[str]] = None
+    rimor_url: Optional[str] = None
+    has_pdf: bool = False
+    arquivo_origem: Optional[str] = None
     source: str  # "juit_rimor" | "qdrant"
     relevance_score: Optional[float] = None
 
@@ -358,35 +376,39 @@ def pesquisa_jurisprudencial(req: JurisprudenciaRequest) -> JurisprudenciaRespon
                 search_on=req.search_on,
                 top_k=req.top_k,
                 tribunal=req.tribunal,
+                relator=req.relator,
+                orgao_julgador=req.orgao_julgador,
+                tipo_documento=req.tipo_documento,
+                grau=req.grau,
+                data_inicio=req.data_inicio,
+                data_fim=req.data_fim,
+                estado_origem=req.estado_origem,
+                ordenar_por=req.ordenar_por,
             )
             for hit in juit_hits:
-                raw = hit.get("_juit_raw", {})
                 all_results.append(JurisprudenciaResult(
                     content=hit.get("content", ""),
-                    tribunal=(
-                        raw.get("court") or raw.get("tribunal") or ""
-                    ).strip() or None,
-                    numero_processo=(
-                        raw.get("case_number") or raw.get("numero_processo") or raw.get("number") or ""
-                    ).strip() or None,
-                    relator=(
-                        raw.get("rapporteur") or raw.get("relator") or ""
-                    ).strip() or None,
-                    data_julgamento=(
-                        raw.get("judgment_date") or raw.get("data_julgamento") or raw.get("date") or ""
-                    ).strip() or None,
-                    orgao_julgador=(
-                        raw.get("judging_body") or raw.get("orgao_julgador") or ""
-                    ).strip() or None,
+                    tribunal=hit.get("_juit_tribunal") or None,
+                    numero_processo=hit.get("_juit_numero_processo") or None,
+                    numero_cnj=hit.get("_juit_numero_cnj") or None,
+                    relator=hit.get("_juit_relator") or None,
+                    data_julgamento=hit.get("_juit_data_julgamento") or None,
+                    data_publicacao=hit.get("_juit_data_publicacao") or None,
+                    orgao_julgador=hit.get("_juit_orgao_julgador") or None,
+                    tipo_documento=hit.get("_juit_tipo_documento") or None,
+                    grau=hit.get("_juit_grau") or None,
+                    assuntos=hit.get("_juit_assuntos") or None,
+                    classes=hit.get("_juit_classes") or None,
+                    rimor_url=hit.get("_juit_rimor_url") or None,
+                    has_pdf=hit.get("_juit_has_pdf", False),
                     arquivo_origem=hit.get("arquivo_origem", ""),
-                    tipo_documento="jurisprudencia",
                     source="juit_rimor",
                     relevance_score=None,
                 ))
             juit_count = len(juit_hits)
             logger.info(f"JuIT Rimor: {juit_count} jurisprudências para '{req.query[:50]}'")
         else:
-            logger.warning("JuIT Rimor: JUIT_API_KEY não configurada")
+            logger.warning("JuIT Rimor: credenciais não configuradas (JUIT_USERNAME/JUIT_PASSWORD/JUIT_OWNER)")
     except Exception as exc:
         logger.error(f"JuIT Rimor falhou: {exc}")
 
