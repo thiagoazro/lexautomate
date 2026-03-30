@@ -3,10 +3,10 @@ juit_rimor.py
 Integração com a API JuIT Rimor para busca de jurisprudência pública brasileira.
 
 Base: 70M+ precedentes de 92 tribunais + fontes administrativas/regulatórias.
-Auth: Basic Auth (username:password)
+Auth: Basic Auth (client_id:api_key)
 Docs: https://api.juit.io/v1/data-products/search
 
-Ativação: definir JUIT_USERNAME e JUIT_PASSWORD no .env.
+Ativação: definir JUIT_CLIENT_ID e JUIT_API_KEY no .env.
 Se não definidas, o módulo é desativado silenciosamente.
 
 Campos de busca (search_on):
@@ -52,8 +52,8 @@ logger = logging.getLogger(__name__)
 
 # ─── Configuração ────────────────────────────────────────────────────────────
 
-JUIT_USERNAME = (os.getenv("JUIT_USERNAME") or "").strip()
-JUIT_PASSWORD = (os.getenv("JUIT_PASSWORD") or "").strip()
+JUIT_CLIENT_ID = (os.getenv("JUIT_CLIENT_ID") or "").strip()
+JUIT_API_KEY = (os.getenv("JUIT_API_KEY") or "").strip()
 JUIT_OWNER = (os.getenv("JUIT_OWNER") or "").strip()  # email do usuário
 JUIT_BASE_URL = (
     os.getenv("JUIT_BASE_URL")
@@ -65,7 +65,7 @@ JUIT_BASE_URL = (
 
 def is_available() -> bool:
     """Retorna True se a API JuIT Rimor está configurada."""
-    return bool(JUIT_USERNAME and JUIT_PASSWORD and JUIT_OWNER)
+    return bool(JUIT_CLIENT_ID and JUIT_API_KEY and JUIT_OWNER)
 
 
 # ─── Busca principal ─────────────────────────────────────────────────────────
@@ -209,7 +209,7 @@ def buscar_jurisprudencias(
                 f"{JUIT_BASE_URL}/jurisprudence",
                 params=current_params,
                 headers=headers,
-                auth=(JUIT_USERNAME, JUIT_PASSWORD),
+                auth=(JUIT_CLIENT_ID, JUIT_API_KEY),
                 timeout=timeout,
             )
             response.raise_for_status()
@@ -429,7 +429,7 @@ def download_artifact(
                 "Accept": "application/json",
                 "Accept-Language": "pt-br",
             },
-            auth=(JUIT_USERNAME, JUIT_PASSWORD),
+            auth=(JUIT_CLIENT_ID, JUIT_API_KEY),
             timeout=timeout,
             stream=True,
         )

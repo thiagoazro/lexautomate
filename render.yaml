@@ -60,10 +60,10 @@ services:
         sync: false
 
       # ── JuIT Rimor (jurisprudência pública — 92 tribunais) ───────────────────
-      - key: JUIT_USERNAME
+      - key: JUIT_CLIENT_ID
         sync: false
 
-      - key: JUIT_PASSWORD
+      - key: JUIT_API_KEY
         sync: false
 
       - key: JUIT_OWNER
